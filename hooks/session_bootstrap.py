@@ -52,6 +52,14 @@ def main() -> int:
     interviews = _read_json(ws / ".startup" / "interviews.json", [])
     pacts = _read_json(ws / ".startup" / "pacts.json", [])
     sprints = _read_json(ws / ".startup" / "sprints.json", [])
+    pmf = _read_json(ws / ".startup" / "pmf.json", {})
+    pmf_surveys = pmf.get("surveys", []) if isinstance(pmf, dict) else []
+    if pmf_surveys:
+        very_cnt = sum(1 for s in pmf_surveys if s.get("disappointment") == "very_disappointed")
+        pmf_pct = round((very_cnt / len(pmf_surveys)) * 100.0, 1)
+        pmf_line = f"{pmf_pct}% Very Disappointed (n={len(pmf_surveys)}, bar=40%)"
+    else:
+        pmf_line = "Unmeasured — verify real customer pull via pmf_engine_manage"
 
     untested = [a for a in assumptions if a.get("status") not in ("validated", "invalidated")]
     untested.sort(key=lambda x: x.get("riskScore", 0), reverse=True)
@@ -78,6 +86,7 @@ def main() -> int:
         f"- FI Stage: {state.get('stage', 'idea')} | MRR: ${state.get('mrrUsd', 0):,.0f} | "
         f"Customer PACTs: ${cust_pacts:,.0f} | Interviews: {len(interviews)}/15\n"
         f"- Active Sprint: {sprint_line}\n"
+        f"- PMF Signal: {pmf_line}\n"
         f"- Top Untested Risk: {top_risk}\n"
         f"- For-Progress iKPI: {ikpi_str}"
     )

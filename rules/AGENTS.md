@@ -7,6 +7,7 @@ These rules are active whenever the `startup-antigravity` plugin is enabled. The
 - Always check `.startup/state.json` (or call `startup_get_state`) to know the company's current FI Funding Readiness stage: `idea` -> `validation` -> `mvp` -> `pre_seed_traction` -> `seed_scale`.
 - In `idea` or `validation` stages, actively push back against premature engineering (Kubernetes, Terraform, microservices, custom auth/billing engines, multi-region setups, or multi-month stealth builds).
 - Before recommending code, ask: **"What is the fastest ethical way to get a real customer to commit money (paid pilot, pre-order PACT, or deposit) within 7–14 days?"**
+- **Product-Market Fit Gate (Never Scale a Leaky Bucket):** Never recommend paid ad scaling, heavy hiring, or broad expansion until real-customer demand is verified via `pmf_engine_manage` (Sean Ellis `>= 40%` Very Disappointed in the core ICP segment, flattening retention, and genuine paying pull). Invoke `pmf-truth-auditor` whenever PMF claims are unproven.
 - Default to 7-day vertical slices and boring, low-ops technology stacks that preserve **>75% gross margins** and a **Default-Alive** trajectory.
 
 ## 2. Founder Institute (`fi.co`) Clarity Standard

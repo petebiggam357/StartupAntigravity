@@ -40,7 +40,7 @@ class TestMCPServer(unittest.TestCase):
         self.assertEqual(len(resps), 2)
         self.assertEqual(resps[0]["result"]["serverInfo"]["name"], "startup-antigravity-os")
         tool_names = {t["name"] for t in resps[1]["result"]["tools"]}
-        self.assertEqual(len(tool_names), 16)
+        self.assertEqual(len(tool_names), 17)
         self.assertIn("financial_calc", tool_names)
         self.assertIn("fi_pitch_lint", tool_names)
         self.assertIn("pact_pipeline_manage", tool_names)
@@ -51,6 +51,7 @@ class TestMCPServer(unittest.TestCase):
         self.assertIn("replit_workspace_prepare", tool_names)
         self.assertIn("product_hunt_kit_build", tool_names)
         self.assertIn("ai_connectors_manage", tool_names)
+        self.assertIn("pmf_engine_manage", tool_names)
 
     def test_financial_calculators_deterministic(self) -> None:
         calls = [
@@ -499,6 +500,114 @@ class TestMCPServer(unittest.TestCase):
             dry = json.loads(resps[3]["result"]["content"][0]["text"])
             self.assertEqual(dry["mode"], "dry_run")
             self.assertIn("ClaimGuard", dry["readyPrompt"])
+
+    def test_pmf_engine_segmentation_retention_and_report(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            calls = [
+                {
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "pmf_engine_manage",
+                        "arguments": {
+                            "action": "log_survey",
+                            "workspace_path": td,
+                            "user_segment": "Independent Dental Clinics",
+                            "disappointment": "very_disappointed",
+                            "main_benefit": "Recovers $4K/mo in rejected claims automatically",
+                            "paying": True,
+                            "referred_someone": True,
+                        },
+                    },
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 2,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "pmf_engine_manage",
+                        "arguments": {
+                            "action": "log_survey",
+                            "workspace_path": td,
+                            "user_segment": "Independent Dental Clinics",
+                            "disappointment": "very_disappointed",
+                            "main_benefit": "Saves 10 hours/week of billing reconciliation",
+                            "paying": True,
+                            "referred_someone": False,
+                        },
+                    },
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 3,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "pmf_engine_manage",
+                        "arguments": {
+                            "action": "log_survey",
+                            "workspace_path": td,
+                            "user_segment": "Solo Hobbyists",
+                            "disappointment": "somewhat_disappointed",
+                            "requested_improvement": "Faster CSV import",
+                            "paying": False,
+                        },
+                    },
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 4,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "pmf_engine_manage",
+                        "arguments": {
+                            "action": "log_survey",
+                            "workspace_path": td,
+                            "user_segment": "Solo Hobbyists",
+                            "disappointment": "not_disappointed",
+                            "paying": False,
+                        },
+                    },
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 5,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "pmf_engine_manage",
+                        "arguments": {
+                            "action": "record_retention",
+                            "workspace_path": td,
+                            "cohort_label": "2026-Q3",
+                            "cohort_size": 25,
+                            "day7_pct": 88,
+                            "day30_pct": 80,
+                            "day90_pct": 76,
+                            "net_dollar_retention_pct": 112,
+                        },
+                    },
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 6,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "pmf_engine_manage",
+                        "arguments": {"action": "generate_report", "workspace_path": td},
+                    },
+                },
+            ]
+            resps = self._run_rpc(calls)
+            rep = json.loads(resps[5]["result"]["content"][0]["text"])
+            sc = rep["scorecard"]
+            self.assertEqual(sc["seanEllisScorePct"], 50.0)
+            self.assertEqual(sc["verdict"], "PMF_PROVEN_READY_TO_SCALE")
+            self.assertTrue(sc["retentionFlattening"])
+            self.assertEqual(sc["strongestSegment"]["segment"], "Independent Dental Clinics")
+            self.assertEqual(sc["strongestSegment"]["pmfScorePct"], 100.0)
+            md = Path(rep["reportPath"]).read_text(encoding="utf-8")
+            self.assertIn("Superhuman 50/50 PMF Roadmap", md)
+            self.assertIn("Faster CSV import", md)
 
 
 if __name__ == "__main__":

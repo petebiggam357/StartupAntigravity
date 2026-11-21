@@ -1147,6 +1147,215 @@ def tool_ai_connectors_manage(args: dict[str, Any]) -> dict[str, Any]:
     raise ValueError("Invalid action. Use 'detect', 'sync_context', or 'second_opinion'.")
 
 
+def _compute_pmf_scorecard(pmf_data: dict[str, Any]) -> dict[str, Any]:
+    surveys: list[dict[str, Any]] = pmf_data.get("surveys") or []
+    cohorts: list[dict[str, Any]] = pmf_data.get("cohorts") or []
+    total = len(surveys)
+
+    if total == 0:
+        return {
+            "totalResponses": 0,
+            "recommendedMinSample": 15,
+            "seanEllisScorePct": 0.0,
+            "payingPct": 0.0,
+            "organicReferralPct": 0.0,
+            "segmentBreakdown": [],
+            "strongestSegment": None,
+            "retentionLatest": cohorts[-1] if cohorts else None,
+            "roadmap5050": {"doubleDownOn": [], "fixFrictionFor": [], "ignoreCount": 0},
+            "verdict": "NO_DATA",
+            "recommendation": "Log real user responses via pmf_engine_manage(action='log_survey') before scaling GTM.",
+        }
+
+    very = [s for s in surveys if s.get("disappointment") == "very_disappointed"]
+    somewhat = [s for s in surveys if s.get("disappointment") == "somewhat_disappointed"]
+    not_dis = [s for s in surveys if s.get("disappointment") == "not_disappointed"]
+
+    se_score = round((len(very) / total) * 100.0, 1)
+    paying_pct = round((sum(1 for s in surveys if s.get("paying")) / total) * 100.0, 1)
+    ref_pct = round((sum(1 for s in surveys if s.get("referredSomeone")) / total) * 100.0, 1)
+
+    # Per-segment Superhuman HXC breakdown
+    seg_buckets: dict[str, list[dict[str, Any]]] = {}
+    for s in surveys:
+        seg = str(s.get("userSegment") or "Unspecified").strip()
+        seg_buckets.setdefault(seg, []).append(s)
+
+    seg_rows: list[dict[str, Any]] = []
+    for seg, rows in seg_buckets.items():
+        v_cnt = sum(1 for r in rows if r.get("disappointment") == "very_disappointed")
+        pct = round((v_cnt / len(rows)) * 100.0, 1)
+        seg_rows.append(
+            {
+                "segment": seg,
+                "responses": len(rows),
+                "veryDisappointedCount": v_cnt,
+                "pmfScorePct": pct,
+                "meets40PctRule": pct >= 40.0,
+            }
+        )
+    seg_rows.sort(key=lambda x: (-x["pmfScorePct"], -x["responses"]))
+    strongest = seg_rows[0] if seg_rows else None
+    has_winning_niche = any(r["pmfScorePct"] >= 40.0 and r["responses"] >= 3 for r in seg_rows)
+
+    latest_cohort = cohorts[-1] if cohorts else None
+    retention_flattening = None
+    if latest_cohort:
+        d30 = float(latest_cohort.get("day30Pct", 0))
+        d90 = latest_cohort.get("day90Pct")
+        if d90 is not None:
+            retention_flattening = float(d90) >= max(20.0, d30 * 0.75)
+        else:
+            retention_flattening = d30 >= 40.0
+
+    if se_score >= 40.0 and (retention_flattening is not False):
+        verdict = "PMF_PROVEN_READY_TO_SCALE"
+        rec = (
+            f"Strong PMF signal ({se_score}% Very Disappointed >= 40% Sean Ellis bar). "
+            "Green light to scale repeatable GTM channels and document validated proof for investors."
+        )
+    elif se_score >= 25.0 or has_winning_niche:
+        verdict = "APPROACHING_PMF_NARROW_ICP"
+        niche_hint = (
+            f" Segment '{strongest['segment']}' is already at {strongest['pmfScorePct']}%!"
+            if strongest and strongest["pmfScorePct"] >= 40.0
+            else ""
+        )
+        rec = (
+            f"Emerging PMF ({se_score}% overall).{niche_hint} Narrow ICP to your High-Expectation "
+            "Customer segment and execute the 50/50 roadmap before spending on broad acquisition."
+        )
+    else:
+        verdict = "PRE_PMF_PIVOT_RISK"
+        rec = (
+            f"Weak PMF signal ({se_score}% Very Disappointed < 25%). Do NOT spend on paid ads or heavy "
+            "engineering—re-run Mom Test discovery (`revenue-first-validation`) or pivot ICP/problem."
+        )
+
+    return {
+        "totalResponses": total,
+        "recommendedMinSample": 15,
+        "sampleConfidence": "high" if total >= 30 else ("moderate" if total >= 15 else "early_signal"),
+        "seanEllisScorePct": se_score,
+        "counts": {
+            "veryDisappointed": len(very),
+            "somewhatDisappointed": len(somewhat),
+            "notDisappointed": len(not_dis),
+        },
+        "payingPct": paying_pct,
+        "organicReferralPct": ref_pct,
+        "segmentBreakdown": seg_rows,
+        "strongestSegment": strongest,
+        "retentionLatest": latest_cohort,
+        "retentionFlattening": retention_flattening,
+        "roadmap5050": {
+            "doubleDownOn": [s["mainBenefit"] for s in very if s.get("mainBenefit")][:5],
+            "fixFrictionFor": [s["requestedImprovement"] for s in somewhat if s.get("requestedImprovement")][:5],
+            "ignoreCount": len(not_dis),
+        },
+        "verdict": verdict,
+        "recommendation": rec,
+    }
+
+
+def tool_pmf_engine_manage(args: dict[str, Any]) -> dict[str, Any]:
+    action = str(args.get("action", "scorecard")).lower()
+    ws = _resolve_workspace(args.get("workspace_path"))
+    sdir = _startup_dir(args.get("workspace_path"))
+    pmf_path = sdir / "pmf.json"
+    pmf_data: dict[str, Any] = _read_json(pmf_path, {"surveys": [], "cohorts": []})
+
+    if action == "log_survey":
+        dis = str(args.get("disappointment", "")).lower().strip()
+        if dis not in ("very_disappointed", "somewhat_disappointed", "not_disappointed"):
+            raise ValueError("'disappointment' must be 'very_disappointed', 'somewhat_disappointed', or 'not_disappointed'.")
+        entry = {
+            "id": f"PMF-{len(pmf_data['surveys']) + 1:03d}",
+            "userSegment": str(args.get("user_segment") or "Core ICP").strip(),
+            "disappointment": dis,
+            "mainBenefit": str(args.get("main_benefit") or "").strip(),
+            "requestedImprovement": str(args.get("requested_improvement") or "").strip(),
+            "paying": bool(args.get("paying", False)),
+            "referredSomeone": bool(args.get("referred_someone", False)),
+            "loggedAt": _now_iso(),
+        }
+        pmf_data["surveys"].append(entry)
+        _write_json(pmf_path, pmf_data)
+        return {"logged": entry, "scorecard": _compute_pmf_scorecard(pmf_data)}
+
+    if action == "record_retention":
+        label = str(args.get("cohort_label") or "").strip()
+        if not label:
+            raise ValueError("'cohort_label' is required when action='record_retention'.")
+        cohort = {
+            "cohortLabel": label,
+            "cohortSize": max(1, int(args.get("cohort_size", 1))),
+            "day7Pct": float(args.get("day7_pct", 0)),
+            "day30Pct": float(args.get("day30_pct", 0)),
+            "day90Pct": float(args["day90_pct"]) if args.get("day90_pct") is not None else None,
+            "netDollarRetentionPct": float(args["net_dollar_retention_pct"])
+            if args.get("net_dollar_retention_pct") is not None
+            else None,
+            "recordedAt": _now_iso(),
+        }
+        pmf_data["cohorts"].append(cohort)
+        _write_json(pmf_path, pmf_data)
+        return {"recorded": cohort, "scorecard": _compute_pmf_scorecard(pmf_data)}
+
+    scorecard = _compute_pmf_scorecard(pmf_data)
+    if action == "generate_report":
+        state = _read_json(sdir / "state.json", {})
+        company = state.get("companyName", "Startup")
+        seg_lines = [
+            f"| {r['segment']} | {r['responses']} | {r['pmfScorePct']}% | {'YES (>=40%)' if r['meets40PctRule'] else 'Below 40%'} |"
+            for r in scorecard["segmentBreakdown"]
+        ] or ["| No survey responses logged yet | 0 | 0% | — |"]
+        double_down = scorecard["roadmap5050"]["doubleDownOn"] or ["Collect more `very_disappointed` main-benefit responses."]
+        fix_friction = scorecard["roadmap5050"]["fixFrictionFor"] or ["Collect more `somewhat_disappointed` improvement requests."]
+        ret = scorecard["retentionLatest"]
+        ret_line = (
+            f"Cohort `{ret['cohortLabel']}` (n={ret['cohortSize']}): D7={ret['day7Pct']}%, D30={ret['day30Pct']}%"
+            + (f", D90={ret['day90Pct']}%" if ret.get("day90Pct") is not None else "")
+            + (f", NDR={ret['netDollarRetentionPct']}%" if ret.get("netDollarRetentionPct") is not None else "")
+            if ret
+            else "No retention cohorts logged yet — log via `pmf_engine_manage(action='record_retention')`."
+        )
+
+        md = "\n".join(
+            [
+                f"# {company} — Product-Market Fit (PMF) Scorecard",
+                "",
+                f"- **Verdict:** `{scorecard['verdict']}`",
+                f"- **Sean Ellis Score (% Very Disappointed):** `{scorecard['seanEllisScorePct']}%` (Target: `>= 40%` | Responses: `{scorecard['totalResponses']}`)",
+                f"- **Paying Customers Share:** `{scorecard['payingPct']}%` | **Organic Referral Share:** `{scorecard['organicReferralPct']}%`",
+                f"- **Retention Check:** {ret_line}",
+                "",
+                f"> **Actionable Guidance:** {scorecard['recommendation']}",
+                "",
+                "## Segment-by-Segment PMF Breakdown (Superhuman HXC Discovery)",
+                "| User Segment | Responses | % Very Disappointed | 40% Rule |",
+                "| :--- | ---: | ---: | :--- |",
+                *seg_lines,
+                "",
+                "## Superhuman 50/50 PMF Roadmap",
+                "### 50% — Double Down On What `Very Disappointed` Users Love",
+                *[f"- {x}" for x in double_down],
+                "",
+                "### 50% — Fix Top Blockers for `Somewhat Disappointed` Users",
+                *[f"- {x}" for x in fix_friction],
+                "",
+                f"*Ignored `{scorecard['roadmap5050']['ignoreCount']}` `not_disappointed` responses so the roadmap stays razor-focused on true high-fit buyers.*",
+                "",
+            ]
+        )
+        out_path = ws / "docs" / "PMF_SCORECARD.md"
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(md, encoding="utf-8")
+        return {"reportPath": str(out_path), "scorecard": scorecard, "markdown": md}
+
+    return scorecard
+
+
 def tool_landing_page_build(args: dict[str, Any]) -> dict[str, Any]:
     ws = _resolve_workspace(args.get("workspace_path"))
     overrides = args.get("overrides") if isinstance(args.get("overrides"), dict) else {}
@@ -1646,6 +1855,30 @@ TOOLS: list[dict[str, Any]] = [
             "required": ["action"],
         },
     },
+    {
+        "name": "pmf_engine_manage",
+        "description": "Measure and prove Product-Market Fit in .startup/pmf.json using Sean Ellis's 40% Very Disappointed rule, Superhuman per-segment HXC discovery & 50/50 roadmap, cohort retention flattening checks, and docs/PMF_SCORECARD.md report generation.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "action": {"type": "string", "enum": ["log_survey", "record_retention", "scorecard", "generate_report"]},
+                "workspace_path": {"type": "string"},
+                "user_segment": {"type": "string"},
+                "disappointment": {"type": "string", "enum": ["very_disappointed", "somewhat_disappointed", "not_disappointed"]},
+                "main_benefit": {"type": "string"},
+                "requested_improvement": {"type": "string"},
+                "paying": {"type": "boolean"},
+                "referred_someone": {"type": "boolean"},
+                "cohort_label": {"type": "string"},
+                "cohort_size": {"type": "integer"},
+                "day7_pct": {"type": "number"},
+                "day30_pct": {"type": "number"},
+                "day90_pct": {"type": "number"},
+                "net_dollar_retention_pct": {"type": "number"},
+            },
+            "required": ["action"],
+        },
+    },
 ]
 
 TOOL_HANDLERS = {
@@ -1665,6 +1898,7 @@ TOOL_HANDLERS = {
     "sprint_manage": tool_sprint_manage,
     "product_hunt_kit_build": tool_product_hunt_kit_build,
     "ai_connectors_manage": tool_ai_connectors_manage,
+    "pmf_engine_manage": tool_pmf_engine_manage,
 }
 
 
