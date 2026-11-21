@@ -14,6 +14,7 @@ AI-Forward & Programmable Finance expansion for **Startup Antigravity — Ethica
 - **22nd MCP Tool — `ai_x402_calc`**: Deterministic engine supporting `ai_cogs_margin` (token routing + prompt caching vs 75% margin floor), `x402_micropayment_model` (legacy card `2.9% + $0.30` vs x402 USDC settlement + auto-generating `docs/X402_AGENT_MONETIZATION_SPEC.md`), and `tokenization_readiness` (ethical & Howey-awareness scorecard).
 - **12 New Curated Founder Resources (`36 -> 48` in `mcp_server/founder_resources.json`)**: Added **`ai-native`** (6 all-level AI resources) and **`blockchain-x402`** (6 x402, USDC, Base, ERC-3643 RWA, and Mensarius token-ethics resources).
 - **1-Click Starter Prompt Palette in Desktop Launcher (`launcher/app.py`)**: Pick any of 6 battle-tested Antigravity starter prompts (Day-0 Kickstart, AI Margin & x402 Audit, PMF Audit, Call Transcript Extractor, Pitch Deck Roast, Investor Data Room) and copy to clipboard in 1 click (or `--prompts` via CLI).
+- **Hardened AI, x402 & Privacy Rules + Hooks (`rules/AGENTS.md`, `hooks/pre_tool_guard.py`, `hooks/post_deck_rebuild.py`, `hooks/stop_integrity_check.py`)**: Added Section 6 (AI `>=75%` margin floor, eval-before-ship, x402/token ethics, human-in-the-loop financial writes), blocked hardcoded wallet private keys & live API keys on `write_file`/`edit_file`, added mainnet broadcast confirmation & Data Room PII email guard, auto-synced `data-room/` on `.startup/` or `deck.json` edits, and added stale-artifact drift detection on `Stop`.
 
 ## [0.0.3-alpha] - 2026-11-21
 

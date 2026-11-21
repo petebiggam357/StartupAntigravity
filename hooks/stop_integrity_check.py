@@ -55,6 +55,34 @@ def main() -> int:
         )
         return 0
 
+    stale: list[str] = []
+    deck_json = ws / "pitch-deck" / "deck.json"
+    deck_html = ws / "pitch-deck" / "index.html"
+    if deck_json.exists() and deck_html.exists():
+        if deck_json.stat().st_mtime - deck_html.stat().st_mtime > 1.0:
+            stale.append("pitch-deck/index.html (stale vs pitch-deck/deck.json — run pitch_deck_build)")
+
+    state_json = ws / ".startup" / "state.json"
+    dash_html = ws / "dashboard" / "index.html"
+    if state_json.exists() and dash_html.exists():
+        if state_json.stat().st_mtime - dash_html.stat().st_mtime > 1.0:
+            stale.append("dashboard/index.html (stale vs .startup/state.json — run founder_dashboard_build)")
+
+    if stale:
+        print(
+            json.dumps(
+                {
+                    "decision": "continue",
+                    "reason": (
+                        "Startup Antigravity Drift Check detected outdated compiled artifacts: "
+                        + "; ".join(stale)
+                        + "."
+                    ),
+                }
+            )
+        )
+        return 0
+
     print("{}")
     return 0
 

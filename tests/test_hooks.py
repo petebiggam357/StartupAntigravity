@@ -92,6 +92,51 @@ class TestHooks(unittest.TestCase):
             )
             self.assertEqual(out_ok["decision"], "allow")
 
+            # Mainnet broadcast -> ask
+            out_mainnet = _run_hook(
+                "hooks/pre_tool_guard.py",
+                {
+                    "workspacePaths": [td],
+                    "toolCall": {
+                        "name": "run_command",
+                        "args": {"CommandLine": "forge script Deploy.s.sol --rpc-url base --broadcast"},
+                    },
+                },
+            )
+            self.assertEqual(out_mainnet["decision"], "ask")
+
+            # Hardcoded wallet private key in write_file -> deny
+            out_key = _run_hook(
+                "hooks/pre_tool_guard.py",
+                {
+                    "workspacePaths": [td],
+                    "toolCall": {
+                        "name": "write_file",
+                        "args": {
+                            "Path": f"{td}/src/config.py",
+                            "Content": "WALLET_PRIVATE_KEY = '0x" + ("a" * 64) + "'",
+                        },
+                    },
+                },
+            )
+            self.assertEqual(out_key["decision"], "deny")
+
+            # Raw email written into data-room/ -> ask
+            out_pii = _run_hook(
+                "hooks/pre_tool_guard.py",
+                {
+                    "workspacePaths": [td],
+                    "toolCall": {
+                        "name": "write_file",
+                        "args": {
+                            "Path": f"{td}/data-room/04_Pipeline_and_Proof/notes.md",
+                            "Content": "Buyer contact: alice@bigcorp.com",
+                        },
+                    },
+                },
+            )
+            self.assertEqual(out_pii["decision"], "ask")
+
     def test_post_deck_rebuild_compiles_html_and_md(self) -> None:
         with tempfile.TemporaryDirectory() as td:
             pdir = Path(td) / "pitch-deck"
@@ -99,6 +144,15 @@ class TestHooks(unittest.TestCase):
             deck_json = pdir / "deck.json"
             tpl = ROOT / "skills" / "pitch-deck-builder" / "resources" / "deck.problem-solution.json"
             deck_json.write_text(tpl.read_text(encoding="utf-8"), encoding="utf-8")
+
+            # Also seed .startup/state.json + existing data-room/index.html to verify auto-sync
+            sdir = Path(td) / ".startup"
+            sdir.mkdir()
+            state_json = sdir / "state.json"
+            state_json.write_text(json.dumps({"companyName": "SyncCo", "stage": "mvp"}), encoding="utf-8")
+            dr_dir = Path(td) / "data-room"
+            dr_dir.mkdir()
+            (dr_dir / "index.html").write_text("old", encoding="utf-8")
 
             out = _run_hook(
                 "hooks/post_deck_rebuild.py",
@@ -110,6 +164,7 @@ class TestHooks(unittest.TestCase):
             self.assertEqual(out, {})
             self.assertTrue((pdir / "index.html").exists())
             self.assertTrue((pdir / "DECK.md").exists())
+            self.assertIn("SyncCo", (dr_dir / "index.html").read_text(encoding="utf-8"))
 
     def test_stop_integrity_check_and_loop_guard(self) -> None:
         with tempfile.TemporaryDirectory() as td:
@@ -138,6 +193,32 @@ class TestHooks(unittest.TestCase):
                 },
             )
             self.assertEqual(out_stop, {})
+
+        # Stale dashboard drift check
+        with tempfile.TemporaryDirectory() as td:
+            import os
+
+            sdir = Path(td) / ".startup"
+            sdir.mkdir()
+            ddir = Path(td) / "dashboard"
+            ddir.mkdir()
+            dash = ddir / "index.html"
+            state = sdir / "state.json"
+            dash.write_text("<html>old</html>", encoding="utf-8")
+            state.write_text(json.dumps({"companyName": "DriftCo", "stage": "mvp"}), encoding="utf-8")
+            os.utime(dash, (1_700_000_000, 1_700_000_000))
+            os.utime(state, (1_700_000_100, 1_700_000_100))
+
+            out_drift = _run_hook(
+                "hooks/stop_integrity_check.py",
+                {
+                    "workspacePaths": [td],
+                    "terminationReason": "NO_TOOL_CALL",
+                    "continuationActive": False,
+                },
+            )
+            self.assertEqual(out_drift["decision"], "continue")
+            self.assertIn("dashboard/index.html", out_drift["reason"])
 
 
 if __name__ == "__main__":

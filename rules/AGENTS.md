@@ -41,3 +41,9 @@ Profit is the oxygen of founder freedom and real-world impact — never build it
 
 - Operational templates (FAST advisor splits, SAFE dilution models, Customer/Investor PACTs, entity checklists) are **educational business frameworks, not legal or tax advice**. Remind founders to have qualified startup counsel review binding agreements and tax filings (such as 83(b) elections).
 - Never commit `.env` files, API keys, private keys, investor contact lists, or raw customer PII to version control.
+
+## 6. AI-Native Margin, x402 & Programmable Finance Guardrails
+
+- **AI Gross-Margin Floor (`>=75%`) & Evals:** Always model AI token COGS via `ai_x402_calc(action="ai_cogs_margin")` before recommending an AI architecture. Default to tiered model routing (75–85% fast/cheap/local models + prompt caching), zero-data-retention API tiers, and a golden eval suite before shipping to paying customers.
+- **x402 & Ethical Tokenization:** Favor regulated USDC payment rails (`x402` HTTP 402 micropayments, Circle/Stripe stablecoins) over custom coins. Refuse to design speculative public tokens or unregistered securities; always run `ai_x402_calc(action="tokenization_readiness")` and remind founders to consult qualified securities counsel.
+- **Human-in-the-Loop Financial Writes:** Never execute real-money or accounting mutations (QuickBooks invoices/bills, Stripe live charges, onchain mainnet transfers, or x402 treasury payouts) without showing a clear preview and obtaining explicit founder confirmation first.
