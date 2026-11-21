@@ -40,13 +40,14 @@ class TestMCPServer(unittest.TestCase):
         self.assertEqual(len(resps), 2)
         self.assertEqual(resps[0]["result"]["serverInfo"]["name"], "startup-antigravity-os")
         tool_names = {t["name"] for t in resps[1]["result"]["tools"]}
-        self.assertEqual(len(tool_names), 12)
+        self.assertEqual(len(tool_names), 13)
         self.assertIn("financial_calc", tool_names)
         self.assertIn("fi_pitch_lint", tool_names)
         self.assertIn("pact_pipeline_manage", tool_names)
         self.assertIn("landing_page_build", tool_names)
         self.assertIn("ikpi_catalog_search", tool_names)
         self.assertIn("sprint_manage", tool_names)
+        self.assertIn("pitch_deck_design_brief", tool_names)
 
     def test_financial_calculators_deterministic(self) -> None:
         calls = [

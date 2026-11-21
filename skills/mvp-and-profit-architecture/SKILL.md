@@ -33,3 +33,5 @@ Before finalizing the architecture, calculate variable cost per customer per mon
 ## Step 4: Architecture Review
 
 Delegate the drafted `docs/MVP_SPEC.md` to the `lean-cto-margin-architect` subagent to cut another 30% of unnecessary complexity before coding starts.
+
+- **Figma UI & Code Sync (Optional Companion):** If the official Figma plugin (`figma_figma`) is active, activate `design-studio-canva-figma` to push your 48-hour landing page into Figma frames (`figma-generate-design`) or turn approved Figma wireframes directly into your 7-day vertical slice (`figma-design-to-code`).

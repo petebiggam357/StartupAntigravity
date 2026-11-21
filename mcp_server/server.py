@@ -26,7 +26,7 @@ for _p in (DECK_SCRIPTS_DIR, LANDING_SCRIPTS_DIR):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
-from build_deck import build_deck, lint_deck, lint_one_sentence_pitch  # noqa: E402
+from build_deck import build_deck, export_design_briefs, lint_deck, lint_one_sentence_pitch  # noqa: E402
 from build_landing_page import build_landing_page  # noqa: E402
 
 SERVER_NAME = "startup-antigravity-os"
@@ -787,6 +787,20 @@ def tool_pitch_deck_build(args: dict[str, Any]) -> dict[str, Any]:
     return build_deck(p, export_pptx=bool(args.get("export_pptx", False)))
 
 
+def tool_pitch_deck_design_brief(args: dict[str, Any]) -> dict[str, Any]:
+    deck_path = args.get("deck_path")
+    if not deck_path:
+        ws = _resolve_workspace(args.get("workspace_path"))
+        deck_path = str(ws / "pitch-deck" / "deck.json")
+    p = Path(deck_path).expanduser().resolve()
+    if not p.exists():
+        raise FileNotFoundError(f"Pitch deck JSON not found: {p}")
+    target = str(args.get("target", "both")).lower()
+    if target not in ("both", "canva", "figma"):
+        raise ValueError("'target' must be 'both', 'canva', or 'figma'.")
+    return export_design_briefs(p, target=target)
+
+
 def tool_landing_page_build(args: dict[str, Any]) -> dict[str, Any]:
     ws = _resolve_workspace(args.get("workspace_path"))
     overrides = args.get("overrides") if isinstance(args.get("overrides"), dict) else {}
@@ -1178,6 +1192,18 @@ TOOLS: list[dict[str, Any]] = [
         },
     },
     {
+        "name": "pitch_deck_design_brief",
+        "description": "Export FI-linted pitch-deck/deck.json into Canva (`CANVA_DECK_BRIEF.md`) and Figma Slides (`FIGMA_SLIDES_BRIEF.md` + W3C `FIGMA_TOKENS.json`) production handoffs for companion Canva/Figma MCP plugins.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "workspace_path": {"type": "string"},
+                "deck_path": {"type": "string"},
+                "target": {"type": "string", "enum": ["both", "canva", "figma"]},
+            },
+        },
+    },
+    {
         "name": "landing_page_build",
         "description": "Generate a deploy-ready, zero-dependency 48-hour ethical smoke-test landing page (landing/index.html + landing/landing.json) with interactive ROI calculator, transparent 3-tier pricing, and Paid-Pilot PACT intake.",
         "inputSchema": {
@@ -1241,6 +1267,7 @@ TOOL_HANDLERS = {
     "pact_pipeline_manage": tool_pact_pipeline_manage,
     "financial_calc": tool_financial_calc,
     "pitch_deck_build": tool_pitch_deck_build,
+    "pitch_deck_design_brief": tool_pitch_deck_design_brief,
     "landing_page_build": tool_landing_page_build,
     "ikpi_catalog_search": tool_ikpi_catalog_search,
     "sprint_manage": tool_sprint_manage,

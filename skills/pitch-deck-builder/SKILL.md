@@ -54,3 +54,6 @@ This skill manages the startup's single-source-of-truth pitch deck in `pitch-dec
      - `G` for Slide Overview Grid
      - `B` to hide `[VALIDATED]`/`[HYPOTHESIS]` tags for clean investor mode
      - **Export PDF** (`Ctrl+P`) for a crisp 16:9 PDF deck
+
+6. **Optional Designer-Grade Export (Canva or Figma Slides)**:
+   - When the founder wants an agency-polished Canva presentation or native Figma Slides deck, activate the `design-studio-canva-figma` skill and call `pitch_deck_design_brief(target="both")` to generate `CANVA_DECK_BRIEF.md`, `FIGMA_SLIDES_BRIEF.md`, and W3C `FIGMA_TOKENS.json`, then drive the official `canva_canva` or `figma_figma` companion MCP tools directly.

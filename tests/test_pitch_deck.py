@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "skills" / "pitch-deck-builder" / "scripts"))
 sys.path.insert(0, str(ROOT / "skills" / "startup-kickstart" / "scripts"))
 
-from build_deck import build_deck, lint_deck, lint_one_sentence_pitch  # noqa: E402
+from build_deck import build_deck, export_design_briefs, lint_deck, lint_one_sentence_pitch  # noqa: E402
 from scaffold_startup import scaffold_workspace  # noqa: E402
 
 
@@ -129,6 +129,20 @@ class TestPitchDeckAndScaffolder(unittest.TestCase):
             state = json.loads((Path(td) / ".startup" / "state.json").read_text(encoding="utf-8"))
             self.assertEqual(state["companyName"], "ClaimGuard")
             self.assertEqual(state["stage"], "idea")
+
+    def test_design_brief_exports_canva_and_figma_handoffs(self) -> None:
+        res_dir = ROOT / "skills" / "pitch-deck-builder" / "resources"
+        with tempfile.TemporaryDirectory() as td:
+            src = Path(td) / "deck.json"
+            src.write_text((res_dir / "deck.traction.json").read_text(encoding="utf-8"), encoding="utf-8")
+            res = export_design_briefs(src, target="both")
+            canva_md = Path(res["files"]["canvaBrief"]).read_text(encoding="utf-8")
+            figma_md = Path(res["files"]["figmaBrief"]).read_text(encoding="utf-8")
+            tokens = json.loads(Path(res["files"]["figmaTokens"]).read_text(encoding="utf-8"))
+            self.assertIn("Canva MCP Execution Recipe", canva_md)
+            self.assertIn("Figma MCP Execution Recipe", figma_md)
+            self.assertEqual(tokens["meta"]["slideDimensions"]["width"], 1920)
+            self.assertEqual(tokens["meta"]["slideDimensions"]["height"], 1080)
 
 
 if __name__ == "__main__":

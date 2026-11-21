@@ -32,3 +32,4 @@ Select based on ACV:
 
 - Track every serious buyer conversation in `pact_pipeline_manage(kind="customer", ...)` — convert vague interest into written Paid Pilot PACTs or direct checkout links.
 - Delegate copy, offer positioning, and outbound teardowns to the `ethical-growth-strategist` subagent.
+- **Canva Launch Visuals (Optional Companion):** If the official Canva plugin (`canva_canva`) is active, activate `design-studio-canva-figma` to generate brand-checked Product Hunt gallery cards, LinkedIn carousels, and social launch variants via `canva-resize-for-social-media`.

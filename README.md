@@ -25,10 +25,11 @@
 - [Quickstart: Your First 30 Minutes](#quickstart-your-first-30-minutes)
 - [What's Inside the Plugin](#whats-inside-the-plugin)
   - [1. Visual Interactive FI Pitch Deck 2.0](#1-visual-interactive-fi-pitch-deck-20)
-  - [2. Ten Progressive-Disclosure Startup Skills](#2-ten-progressive-disclosure-startup-skills)
-  - [3. Five Founding Advisory Subagents](#3-five-founding-advisory-subagents)
-  - [4. Twelve-Tool Local MCP Server (`startup-antigravity-os`)](#4-twelve-tool-local-mcp-server-startup-antigravity-os)
-  - [5. Always-On Guardrails & Four Lifecycle Hooks](#5-always-on-guardrails--four-lifecycle-hooks)
+  - [2. Companion Design Studio (Canva & Figma)](#2-companion-design-studio-canva--figma)
+  - [3. Eleven Progressive-Disclosure Startup Skills](#3-eleven-progressive-disclosure-startup-skills)
+  - [4. Five Founding Advisory Subagents](#4-five-founding-advisory-subagents)
+  - [5. Thirteen-Tool Local MCP Server (`startup-antigravity-os`)](#5-thirteen-tool-local-mcp-server-startup-antigravity-os)
+  - [6. Always-On Guardrails & Four Lifecycle Hooks](#6-always-on-guardrails--four-lifecycle-hooks)
 - [Troubleshooting (Windows, macOS & Linux)](#troubleshooting-windows-macos--linux)
 - [License & Legal Notice](#license--legal-notice)
 
@@ -246,7 +247,7 @@ git clone https://github.com/petebiggam357/StartupAntigravity.git ".agents\plugi
 
 ## Verifying Your Installation
 
-### 1. Run the Built-In Automated Self-Test (All 22 Checks)
+### 1. Run the Built-In Automated Self-Test (All 23 Checks)
 
 **macOS / Linux:**
 ```bash
@@ -260,11 +261,11 @@ cd "$env:USERPROFILE\.gemini\config\plugins\startup-antigravity"
 python3 -m unittest discover -s tests -v
 ```
 
-Expected result: **`Ran 22 tests ... OK`** (under 1 second).
+Expected result: **`Ran 23 tests ... OK`** (under 1 second).
 
 ### 2. Verify Inside Antigravity
-1. **Customizations > Plugins:** You should see **Startup Antigravity — Ethical Venture OS (`v0.0.1-alpha`)** enabled with **10 skills**, **5 agents**, **1 rule file**, **4 hooks**, and **1 MCP server**.
-2. **Additional Options (`...`) > MCP Servers:** Confirm `startup-antigravity_startup-antigravity-os` shows as connected with **12 tools**.
+1. **Customizations > Plugins:** You should see **Startup Antigravity — Ethical Venture OS (`v0.0.1-alpha`)** enabled with **11 skills**, **5 agents**, **1 rule file**, **4 hooks**, and **1 MCP server**.
+2. **Additional Options (`...`) > MCP Servers:** Confirm `startup-antigravity_startup-antigravity-os` shows as connected with **13 tools**.
 3. **Antigravity CLI (optional):**
    ```bash
    agy plugin enable startup-antigravity
@@ -355,12 +356,20 @@ MyStartup/
   - `B` — Toggle `[VALIDATED]` / `[HYPOTHESIS]` / `[TARGET]` badges (hide for clean investor mode)
   - **Export PDF** (`Ctrl+P` / `Cmd+P`) — Crisp 16:9 slide-per-page PDF export
 
-### 2. Ten Progressive-Disclosure Startup Skills
+### 2. Companion Design Studio (Canva & Figma)
+Startup Antigravity works 100% offline with zero dependencies, and composes seamlessly with Antigravity's official **Canva** and **Figma** Marketplace plugins when installed:
+- **Install from Antigravity Marketplace:** Add **Canva** (`antigravity-plugins-partners/plugin/canva`) and/or **Figma** (`antigravity-plugins-partners/plugin/figma`) and sign in once via OAuth.
+- **Pitch Deck -> Canva Presentation:** Run `pitch_deck_design_brief(target="canva")` to export `pitch-deck/design-handoff/CANVA_DECK_BRIEF.md`, then let the `design-studio-canva-figma` skill generate, edit, brand-check (`canva-brand-check`), and export investor-ready PDF/PPTX decks directly in Canva.
+- **Pitch Deck -> Native Figma Slides:** Run `pitch_deck_design_brief(target="figma")` to export `FIGMA_SLIDES_BRIEF.md` + W3C `FIGMA_TOKENS.json`, then generate a 1920x1080 variable-bound Figma Slides deck (`figma-use-slides`).
+- **GTM Visuals & MVP Sync:** Turn launch copy into resized Canva social kits (`canva-resize-for-social-media`), push `landing/index.html` into editable Figma frames (`figma-generate-design`), or turn Figma wireframes into your 7-day vertical slice MVP (`figma-design-to-code`).
+
+### 3. Eleven Progressive-Disclosure Startup Skills
 | Skill | Purpose |
 | :--- | :--- |
 | `startup-kickstart` | Day-0 5-question intake, FI One-Sentence Pitch linting, UN SDG iKPI selection, and full workspace scaffold |
 | `revenue-first-validation` | Mom Test discovery, RAT experiments, Customer Paid-Pilot PACTs, and 48-hour deploy-ready landing page generator |
 | `pitch-deck-builder` | Author, edit, re-theme, switch modes (`problem-solution` / `traction` / `teaser`), lint, and compile pitch decks |
+| `design-studio-canva-figma` | Bridge FI-linted decks, landing pages, and launch kits directly into official Canva & Figma Slides MCP workflows |
 | `mvp-and-profit-architecture` | 7-day vertical slice MVP spec, explicit *NOT-Building-Yet* Cut-List, and `>= 75%` gross margin COGS audit |
 | `market-and-unfair-moat` | Bottom-up TAM/SAM/SOM calculation, competitive teardowns, Why-Now analysis, and Secret Sauce audit |
 | `gtm-and-cash-velocity` | Value-based pricing (10x ROI), ethical cold outbound, Show HN / Product Hunt launches, and first-100-customers loops |
@@ -369,14 +378,14 @@ MyStartup/
 | `vc-lab-fundraising-os` | VC fund thesis mapping, PACT soft-circle pipeline, multi-round cap table & SAFE math, Data Room, and partner drills |
 | `weekly-sprint-review` | FI weekly sprint accountability (`.startup/sprints.json`, 1.0–5.0 velocity) and VC Lab `docs/INVESTOR_UPDATE.md` generator |
 
-### 3. Five Founding Advisory Subagents
+### 4. Five Founding Advisory Subagents
 - **`fi-mentor-pitch-critic`** — Veteran FI Mentor who shreds buzzwords, grades slides 1.0–5.0, and sets 7-day homework sprints.
 - **`vc-lab-partner-skeptic`** — Mensarius-bound VC Lab General Partner who audits fundability, math, moat, and runs 10-question partner drills.
 - **`customer-revenue-coach`** — *Mom Test* & paid-pilot coach who role-plays skeptical ICP buyers and turns pain into signed Customer PACTs.
 - **`lean-cto-margin-architect`** — Pragmatic founding CTO who cuts engineering scope 50–70% and protects `>= 75%` gross margins.
 - **`ethical-growth-strategist`** — Value-pricing, positioning, and ethical acquisition strategist (zero dark patterns).
 
-### 4. Twelve-Tool Local MCP Server (`startup-antigravity-os`)
+### 5. Thirteen-Tool Local MCP Server (`startup-antigravity-os`)
 Runs locally via Python 3 stdio (zero external API keys):
 1. `startup_get_state` — Live telemetry, FI stage benchmark, interviews, PACT totals, and deck score
 2. `startup_update_stage` — Persist stage, FI pitch, MRR, burn, cash, gross margin, and iKPI
@@ -387,11 +396,12 @@ Runs locally via Python 3 stdio (zero external API keys):
 7. `pact_pipeline_manage` — Customer Paid-Pilot & Investor Soft-Circle PACT pipeline with weighted totals
 8. `financial_calc` — Deterministic math for `runway`, `unit_economics`, `tam_bottom_up`, `safe_dilution`, `fast_advisor_equity`, and `cap_table_model`
 9. `pitch_deck_build` — Lint + compile interactive SVG `index.html` and Marp `DECK.md`
-10. `landing_page_build` — Generate deploy-ready `landing/index.html` with interactive ROI calculator & PACT intake
-11. `ikpi_catalog_search` — Offline search across all 17 UN SDGs (34 concrete FI *For-Progress* iKPIs)
-12. `sprint_manage` — Weekly FI sprint tracker (`start`, `close`, `list`) + `docs/INVESTOR_UPDATE.md` compiler
+10. `pitch_deck_design_brief` — Export Canva (`CANVA_DECK_BRIEF.md`) and Figma Slides (`FIGMA_SLIDES_BRIEF.md` + W3C `FIGMA_TOKENS.json`) production handoffs
+11. `landing_page_build` — Generate deploy-ready `landing/index.html` with interactive ROI calculator & PACT intake
+12. `ikpi_catalog_search` — Offline search across all 17 UN SDGs (34 concrete FI *For-Progress* iKPIs)
+13. `sprint_manage` — Weekly FI sprint tracker (`start`, `close`, `list`) + `docs/INVESTOR_UPDATE.md` compiler
 
-### 5. Always-On Guardrails & Four Lifecycle Hooks
+### 6. Always-On Guardrails & Four Lifecycle Hooks
 - **Always-On Rules (`rules/AGENTS.md`):** Enforces Revenue-First velocity, FI buzzword-free clarity, `[VALIDATED]` vs `[HYPOTHESIS]` radical honesty, Mensarius Oath zero-dark-pattern ethics, and legal/secret hygiene.
 - **`SessionStart` (`session_bootstrap.py`):** Cues `startup-kickstart` in empty folders or injects a concise 5-line Founder Pulse (Stage, MRR, PACTs, Active Sprint, Top Risk, iKPI).
 - **`PreToolUse` (`pre_tool_guard.py`):** Blocks accidental Git commits of `.env`/keys/PII (`deny`) and nudges before heavy cluster infra (`terraform`/`kubectl`/`helm`) during `idea`/`validation` stages (`ask`).

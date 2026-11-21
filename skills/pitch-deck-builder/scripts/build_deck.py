@@ -927,6 +927,189 @@ def _export_optional_pptx(deck_data: dict[str, Any], out_path: Path) -> str | No
     return str(out_path)
 
 
+def export_design_briefs(
+    deck_json_path: str | Path,
+    output_dir: str | Path | None = None,
+    target: str = "both",
+) -> dict[str, Any]:
+    """Generate structured Canva & Figma Slides production briefs + W3C Design Tokens."""
+    src = Path(deck_json_path).resolve()
+    deck_data = json.loads(src.read_text(encoding="utf-8"))
+    out_dir = Path(output_dir).resolve() if output_dir else (src.parent / "design-handoff")
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    meta = deck_data.get("meta", {})
+    company = meta.get("companyName", "Startup")
+    deck_mode = meta.get("deckMode", "problem-solution")
+    raw_theme = deck_data.get("theme", {})
+    preset = raw_theme.get("preset", "midnight-emerald")
+    theme = {**THEME_PRESETS.get(preset, THEME_PRESETS["midnight-emerald"]), **raw_theme}
+    slides = deck_data.get("slides", [])
+    lint_report = lint_deck(deck_data)
+
+    def _slide_summary_lines(slide: dict[str, Any], idx: int) -> list[str]:
+        stype = slide.get("type", "bullets")
+        out = [
+            f"### Slide {idx}: {slide.get('headline', '')}",
+            f"- **ID / Layout Type:** `{slide.get('id', f'slide-{idx}')}` (`{stype}`)",
+            f"- **Kicker:** `{slide.get('kicker', '')}`",
+        ]
+        if stype == "cover":
+            out.append(f"- **Subheadline:** {_strip_tags(str(slide.get('subheadline', '')))}")
+            out.append(f"- **Footer:** {slide.get('footer', '')}")
+        elif stype == "bullets":
+            for b in slide.get("bullets", []):
+                if isinstance(b, dict):
+                    out.append(f"- **Bullet — {b.get('label', '')}:** {_strip_tags(str(b.get('text', '')))}")
+                else:
+                    out.append(f"- **Bullet:** {_strip_tags(str(b))}")
+        elif stype == "metrics":
+            for m in slide.get("metrics", []):
+                out.append(f"- **KPI Card:** `{m.get('value', '')}` — {_strip_tags(str(m.get('label', '')))}")
+        elif stype == "two-column":
+            out.append(f"- **Left Column ({slide.get('leftTitle', '')}):** " + " | ".join(_strip_tags(str(x)) for x in slide.get("leftItems", [])))
+            out.append(f"- **Right Column ({slide.get('rightTitle', '')}):** " + " | ".join(_strip_tags(str(x)) for x in slide.get("rightItems", [])))
+        elif stype == "comparison":
+            out.append(f"- **Table Columns:** {', '.join(str(h) for h in slide.get('headers', []))}")
+            for row in slide.get("rows", []):
+                out.append(f"  - {' | '.join(_strip_tags(str(c)) for c in row)}")
+        elif stype in ("chart-line", "chart-bar"):
+            prefix = str(slide.get("unitPrefix", ""))
+            suffix = str(slide.get("unitSuffix", ""))
+            pts = ", ".join(
+                f"{p.get('label', '')}={_format_num(float(p.get('value', 0)), prefix, suffix)}"
+                for p in slide.get("series", [])
+            )
+            out.append(f"- **Chart ({stype}):** {slide.get('chartTitle', '')} -> `{pts}`")
+        elif stype == "quadrant-2x2":
+            out.append(
+                f"- **2x2 Axes:** X (`{slide.get('xAxisLeft', '')}` -> `{slide.get('xAxisRight', '')}`), "
+                f"Y (`{slide.get('yAxisBottom', '')}` -> `{slide.get('yAxisTop', '')}`)"
+            )
+            for p in slide.get("points", []):
+                star = " [HIGHLIGHT]" if p.get("highlight") else ""
+                out.append(f"  - `{p.get('name', '')}`: X={p.get('x', 50)}, Y={p.get('y', 50)}{star}")
+        elif stype == "product-frame":
+            out.append(f"- **Product URL / Screenshot:** `{slide.get('appUrl', '')}` (image: `{slide.get('imagePath', 'wireframe')}`)")
+            for st in slide.get("mockupSteps", []):
+                out.append(f"  - Step: {_strip_tags(str(st))}")
+            for hl in slide.get("highlights", []):
+                out.append(f"  - Outcome: {_strip_tags(str(hl))}")
+        elif stype == "ask":
+            out.append(f"- **Ask:** `{slide.get('askAmount', '')}` ({_strip_tags(str(slide.get('instrument', '')))})")
+            allocs = ", ".join(f"{a.get('label', '')}: {a.get('percent', '')}" for a in slide.get("allocations", []))
+            out.append(f"- **Use of Funds:** {allocs}")
+            for m in slide.get("milestones", []):
+                out.append(f"  - Milestone: {_strip_tags(str(m))}")
+            if slide.get("impactMetric"):
+                out.append(f"- **For-Progress iKPI:** {_strip_tags(str(slide['impactMetric']))}")
+
+        if slide.get("callout"):
+            out.append(f"- **Callout Banner:** {_strip_tags(str(slide['callout']))}")
+        if slide.get("notes"):
+            out.append(f"- **Speaker Notes:** {slide['notes']}")
+        out.append("")
+        return out
+
+    result: dict[str, Any] = {
+        "source": str(src),
+        "companyName": company,
+        "deckMode": deck_mode,
+        "slideCount": len(slides),
+        "lintReadinessScore": lint_report["readinessScore"],
+        "files": {},
+    }
+
+    if target in ("both", "canva"):
+        canva_lines = [
+            f"# {company} — Canva Presentation Production Brief",
+            "",
+            "> Generated by Startup Antigravity (`design-studio-canva-figma`) from FI-linted `pitch-deck/deck.json`.",
+            "",
+            "## Canva MCP Execution Recipe",
+            "1. Call `canva_canva` -> `list-brand-kits` to check if the founder already has a Brand Kit.",
+            "2. Call `canva_canva` -> `generate-design` (design type: `presentation`, 16:9) or `create-design` using the exact slide copy and hex palette below.",
+            "3. Refine individual slide text, KPI cards, and visual hierarchy with the `canva-edit-design` skill (`edit-design`).",
+            "4. Run `canva-brand-check` & `canva-design-feedback` to verify contrast, spacing, and FI <=10-word headline discipline.",
+            "5. Export investor-ready PDF / PPTX via `get-export-formats` + `export-design`.",
+            "",
+            "## Brand Palette & Typography",
+            f"- **Theme Preset:** `{preset}`",
+            f"- **Background:** `{theme['bg']}` | **Card Surface:** `{theme['surface']}` | **Border:** `{theme['border']}`",
+            f"- **Primary Text:** `{theme['text']}` | **Muted Text:** `{theme['muted']}`",
+            f"- **Primary Accent:** `{theme['accent']}` | **Secondary Accent:** `{theme['accent2']}`",
+            "- **Typography:** Clean geometric sans-serif (Inter / Plus Jakarta Sans), bold 42–56pt headlines, 18–22pt body, generous whitespace.",
+            "- **Strict FI Copy Rule:** Do NOT add buzzwords or extra paragraphs. Preserve exact linted headlines and max-3-bullet density.",
+            "",
+            "## Slide-by-Slide Content Specification",
+            "",
+        ]
+        for idx, s in enumerate(slides, start=1):
+            canva_lines.extend(_slide_summary_lines(s, idx))
+        canva_path = out_dir / "CANVA_DECK_BRIEF.md"
+        canva_path.write_text("\n".join(canva_lines), encoding="utf-8")
+        result["files"]["canvaBrief"] = str(canva_path)
+
+    if target in ("both", "figma"):
+        tokens = {
+            "$schema": "https://tr.designtokens.org/format/",
+            "meta": {"company": company, "preset": preset, "slideDimensions": {"width": 1920, "height": 1080}},
+            "color": {
+                "background": {"$type": "color", "$value": theme["bg"]},
+                "surface": {"$type": "color", "$value": theme["surface"]},
+                "textPrimary": {"$type": "color", "$value": theme["text"]},
+                "textMuted": {"$type": "color", "$value": theme["muted"]},
+                "accentPrimary": {"$type": "color", "$value": theme["accent"]},
+                "accentSecondary": {"$type": "color", "$value": theme["accent2"]},
+                "border": {"$type": "color", "$value": theme["border"]},
+            },
+            "typography": {
+                "fontFamily": {"$type": "fontFamily", "$value": "Inter"},
+                "kickerSize": {"$type": "dimension", "$value": "16px"},
+                "headlineSize": {"$type": "dimension", "$value": "48px"},
+                "bodySize": {"$type": "dimension", "$value": "22px"},
+                "metricValueSize": {"$type": "dimension", "$value": "56px"},
+            },
+            "spacing": {
+                "slidePaddingX": {"$type": "dimension", "$value": "120px"},
+                "slidePaddingY": {"$type": "dimension", "$value": "96px"},
+                "cardGap": {"$type": "dimension", "$value": "24px"},
+                "cardRadius": {"$type": "dimension", "$value": "16px"},
+            },
+        }
+        tokens_path = out_dir / "FIGMA_TOKENS.json"
+        tokens_path.write_text(json.dumps(tokens, indent=2) + "\n", encoding="utf-8")
+
+        figma_lines = [
+            f"# {company} — Figma Slides & Design System Production Brief",
+            "",
+            "> Generated by Startup Antigravity (`design-studio-canva-figma`) from FI-linted `pitch-deck/deck.json`.",
+            "",
+            "## Figma MCP Execution Recipe",
+            "1. Load the mandatory prerequisite skills first: `figma-create-new-file`, `figma-use`, and `figma-use-slides`.",
+            "2. Call `figma_figma` -> `create_new_file` to create a new **Figma Slides** file (1920x1080 16:9 canvas).",
+            "3. Bind all variables from `FIGMA_TOKENS.json` (`color.*`, `spacing.*`) via `use_figma` so re-theming the entire deck takes 1 click.",
+            "4. Build slides incrementally via `use_figma` (using auto-layout frames, reusable KPI card components, and vector paths for `chart-line`/`quadrant-2x2` slides).",
+            "5. Visually inspect finished slides with `get_screenshot` to confirm zero text clipping or overlap.",
+            "",
+            "## Canvas & Token Specs",
+            f"- **Slide Frame Size:** `1920 x 1080` (16:9), Padding `120px` horizontal / `96px` vertical",
+            f"- **Tokens File:** `{tokens_path.name}` (Preset: `{preset}`)",
+            f"- **Colors:** BG `{theme['bg']}`, Surface `{theme['surface']}`, Accent `{theme['accent']}`, Accent2 `{theme['accent2']}`, Text `{theme['text']}`",
+            "",
+            "## Slide-by-Slide Frame Specification",
+            "",
+        ]
+        for idx, s in enumerate(slides, start=1):
+            figma_lines.extend(_slide_summary_lines(s, idx))
+        figma_path = out_dir / "FIGMA_SLIDES_BRIEF.md"
+        figma_path.write_text("\n".join(figma_lines), encoding="utf-8")
+        result["files"]["figmaBrief"] = str(figma_path)
+        result["files"]["figmaTokens"] = str(tokens_path)
+
+    return result
+
+
 def build_deck(
     deck_json_path: str | Path,
     output_dir: str | Path | None = None,
@@ -977,6 +1160,11 @@ def main() -> int:
     parser.add_argument(
         "--lint-only", action="store_true", help="Lint without writing output files"
     )
+    parser.add_argument(
+        "--design-brief",
+        choices=["both", "canva", "figma"],
+        help="Generate Canva/Figma production briefs & W3C design tokens into pitch-deck/design-handoff/",
+    )
     args = parser.parse_args()
 
     src = Path(args.deck_json)
@@ -987,6 +1175,10 @@ def main() -> int:
     if args.lint_only:
         data = json.loads(src.read_text(encoding="utf-8"))
         print(json.dumps(lint_deck(data), indent=2))
+        return 0
+
+    if args.design_brief:
+        print(json.dumps(export_design_briefs(src, args.out, target=args.design_brief), indent=2))
         return 0
 
     result = build_deck(src, args.out, export_pptx=args.pptx)
