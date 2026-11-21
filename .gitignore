@@ -20,6 +20,9 @@ Thumbs.db
 
 # Release builds & local test scratch workspaces
 dist/
+build/
+*.spec
 .startup/
 pitch-deck/
+dashboard/
 tmp/

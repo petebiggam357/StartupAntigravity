@@ -9,8 +9,21 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-EXCLUDE_DIRS = {".git", "__pycache__", ".pytest_cache", "dist", ".startup", "pitch-deck", "landing", "tmp", ".venv", "venv"}
-EXCLUDE_SUFFIXES = {".pyc", ".pyo", ".DS_Store"}
+EXCLUDE_DIRS = {
+    ".git",
+    "__pycache__",
+    ".pytest_cache",
+    "dist",
+    "build",
+    ".startup",
+    "pitch-deck",
+    "landing",
+    "dashboard",
+    "tmp",
+    ".venv",
+    "venv",
+}
+EXCLUDE_SUFFIXES = {".pyc", ".pyo", ".DS_Store", ".spec"}
 
 
 def package_release() -> Path:

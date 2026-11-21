@@ -4,6 +4,19 @@ All notable changes to **Startup Antigravity — Ethical Venture OS** are docume
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.0.3-alpha] - 2026-11-21
+
+Native desktop & compiled app package release for **Startup Antigravity — Ethical Venture OS**, making installation and launching your Founder Command Center & Pitch Deck a double-click experience on Linux, macOS, and Windows.
+
+### Added in 0.0.3-alpha
+- **Cross-Platform Desktop Launcher & Offline Installer (`launcher/app.py`)**: Zero-dependency dark-mode GUI (Tkinter) + full headless CLI (`--install`, `--uninstall`, `--status`, `--dashboard`, `--deck`, `--version`) that bundles the complete Startup Antigravity plugin payload for 100% offline installation into `~/.gemini/config/plugins/startup-antigravity` and 1-click launching of `dashboard/index.html` and `pitch-deck/index.html`.
+- **Native App Package Builder (`scripts/build_packages.py`)**: Builds universal `.zip` plugin bundles, native Debian / Ubuntu / Pop!_OS `.deb` packages (`startup-antigravity_0.0.3-alpha_all.deb` with desktop entry & SVG app icon), Freedesktop `StartupAntigravity.AppDir` / Linux x86_64 `.AppImage` bundles, and `SHA256SUMS.txt` integrity checksums.
+- **Automated Multi-OS Release Pipeline (`.github/workflows/release.yml`)**: On every `v*` tag push, GitHub Actions compiles and publishes native packages across all 3 desktop platforms directly to the GitHub Release:
+  - **Linux**: `StartupAntigravity-v0.0.3-alpha-x86_64.AppImage` (PyInstaller + `appimagetool`) + `startup-antigravity_0.0.3-alpha_all.deb`
+  - **macOS**: `StartupAntigravity-v0.0.3-alpha-macos-arm64.dmg` (PyInstaller `.app` bundle + `hdiutil`)
+  - **Windows**: `StartupAntigravity-v0.0.3-alpha-win64.exe` (PyInstaller single-file executable)
+  - **Universal**: `startup-antigravity-v0.0.3-alpha.zip` + `SHA256SUMS.txt`
+
 ## [0.0.2-alpha] - 2026-11-21
 
 Major Alpha expansion of **Startup Antigravity — Ethical Venture OS** (18 skills, 7 founding advisory subagents, 20 zero-dependency local MCP tools, 4 lifecycle hooks, live local Founder Command Center dashboard, one-command cross-platform installers, cross-platform GitHub Actions CI, and 36 curated founder resources).

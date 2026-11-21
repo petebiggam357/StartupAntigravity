@@ -1,0 +1,572 @@
+#!/usr/bin/env python3
+"""Startup Antigravity — Cross-Platform Desktop Launcher & Offline Plugin Installer.
+
+Works in three modes:
+  1. Native GUI (Tkinter dark-mode desktop app) when double-clicked from an
+     AppImage, .deb desktop entry, macOS .app/.dmg, or Windows .exe.
+  2. Headless CLI (`--install`, `--uninstall`, `--status`, `--dashboard`, `--deck`, `--version`).
+  3. Zero external runtime dependencies (Python 3.10+ standard library only).
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import platform
+import shutil
+import stat
+import subprocess
+import sys
+import webbrowser
+import zipfile
+from pathlib import Path
+from typing import Any
+
+APP_NAME = "Startup Antigravity"
+PLUGIN_NAME = "startup-antigravity"
+APP_VERSION = "0.0.3-alpha"
+
+
+def default_plugin_dir() -> Path:
+    """Return the Antigravity user plugins directory for startup-antigravity."""
+    return Path.home() / ".gemini" / "config" / "plugins" / PLUGIN_NAME
+
+
+def find_bundled_zip() -> Path | None:
+    """Locate the bundled startup-antigravity plugin ZIP payload."""
+    candidates: list[Path] = []
+
+    # 1. PyInstaller frozen bundle (_MEIPASS)
+    meipass = getattr(sys, "_MEIPASS", None)
+    if meipass:
+        candidates.append(Path(meipass))
+
+    # 2. AppImage $APPDIR
+    appdir = os.environ.get("APPDIR")
+    if appdir:
+        candidates.append(Path(appdir) / "usr" / "share" / PLUGIN_NAME)
+
+    # 3. Directory containing this script / executable
+    here = Path(sys.executable if getattr(sys, "frozen", False) else __file__).resolve().parent
+    candidates.extend([
+        here,
+        here.parent / "share" / PLUGIN_NAME,
+        here.parent / "dist",
+        Path("/usr/share") / PLUGIN_NAME,
+    ])
+
+    for base in candidates:
+        if not base.exists():
+            continue
+        zips = sorted(base.glob(f"{PLUGIN_NAME}-v*.zip"), reverse=True)
+        if zips:
+            return zips[0]
+        direct = base / f"{PLUGIN_NAME}.zip"
+        if direct.exists():
+            return direct
+    return None
+
+
+def detect_bundled_version(zip_path: Path | None) -> str:
+    """Read plugin.json version from the bundled ZIP, falling back to APP_VERSION."""
+    if not zip_path or not zip_path.exists():
+        return APP_VERSION
+    try:
+        with zipfile.ZipFile(zip_path, "r") as zf:
+            for member in zf.namelist():
+                if member.endswith("plugin.json") and member.count("/") <= 1:
+                    data = json.loads(zf.read(member).decode("utf-8"))
+                    return str(data.get("version", APP_VERSION))
+    except Exception:
+        pass
+    return APP_VERSION
+
+
+def detect_installed_version(plugin_dir: Path | None = None) -> str | None:
+    """Read version from an installed plugin.json if present."""
+    target = plugin_dir or default_plugin_dir()
+    manifest = target / "plugin.json"
+    if not manifest.exists():
+        return None
+    try:
+        data = json.loads(manifest.read_text(encoding="utf-8"))
+        return str(data.get("version", "unknown"))
+    except Exception:
+        return "unknown"
+
+
+def get_status(plugin_dir: Path | None = None) -> dict[str, Any]:
+    """Collect installation, runtime, and payload health status."""
+    target = plugin_dir or default_plugin_dir()
+    bundled_zip = find_bundled_zip()
+    bundled_version = detect_bundled_version(bundled_zip)
+    installed_version = detect_installed_version(target)
+    is_symlink = target.is_symlink()
+
+    return {
+        "app": APP_NAME,
+        "launcherVersion": APP_VERSION,
+        "bundledVersion": bundled_version,
+        "bundledZip": str(bundled_zip) if bundled_zip else None,
+        "installed": installed_version is not None,
+        "installedVersion": installed_version,
+        "pluginDir": str(target),
+        "isSymlink": is_symlink,
+        "pythonVersion": platform.python_version(),
+        "platform": f"{platform.system()} {platform.machine()}",
+        "agyCliDetected": shutil.which("agy") is not None,
+    }
+
+
+def _ensure_executable_bits(root: Path) -> None:
+    """Ensure shell scripts, hooks, and MCP server scripts are executable on POSIX."""
+    if os.name == "nt":
+        return
+    patterns = [
+        "install.sh",
+        "hooks/*.py",
+        "mcp_server/server.py",
+        "scripts/*.py",
+        "skills/*/scripts/*.py",
+    ]
+    for pat in patterns:
+        for path in root.glob(pat):
+            if path.is_file():
+                mode = path.stat().st_mode
+                path.chmod(mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+
+
+def _ensure_windows_python3_shim() -> str | None:
+    """On Windows, ensure python3.exe exists next to python.exe if missing."""
+    if os.name != "nt":
+        return None
+    py3 = shutil.which("python3")
+    if py3 and "WindowsApps" not in py3:
+        return None
+    py = shutil.which("python")
+    if not py or "WindowsApps" in py:
+        return None
+    py_path = Path(py)
+    shim = py_path.parent / "python3.exe"
+    if not shim.exists():
+        try:
+            shutil.copy2(py_path, shim)
+            return str(shim)
+        except OSError:
+            return None
+    return None
+
+
+def install_plugin(
+    plugin_dir: Path | None = None,
+    zip_path: Path | None = None,
+) -> dict[str, Any]:
+    """Install or update Startup Antigravity from the bundled offline ZIP."""
+    target = plugin_dir or default_plugin_dir()
+    payload = zip_path or find_bundled_zip()
+    if not payload or not payload.exists():
+        raise FileNotFoundError(
+            "Bundled plugin archive (startup-antigravity-v*.zip) was not found."
+        )
+
+    plugins_root = target.parent
+    plugins_root.mkdir(parents=True, exist_ok=True)
+
+    # Clean existing installation (remove symlink or directory)
+    if target.is_symlink():
+        target.unlink()
+    elif target.exists():
+        shutil.rmtree(target)
+
+    # Extract safely into plugins_root (ZIP contains top-level startup-antigravity/)
+    with zipfile.ZipFile(payload, "r") as zf:
+        # Guard against Zip Slip
+        root_resolved = plugins_root.resolve()
+        for member in zf.infolist():
+            dest = (plugins_root / member.filename).resolve()
+            if not str(dest).startswith(str(root_resolved)):
+                raise ValueError(f"Unsafe archive path detected: {member.filename}")
+        zf.extractall(plugins_root)
+
+    # Handle case where custom plugin_dir name differs from PLUGIN_NAME
+    extracted_default = plugins_root / PLUGIN_NAME
+    if extracted_default != target and extracted_default.exists() and not target.exists():
+        extracted_default.rename(target)
+
+    _ensure_executable_bits(target)
+    shim_created = _ensure_windows_python3_shim()
+    installed_ver = detect_installed_version(target)
+
+    return {
+        "ok": True,
+        "action": "install",
+        "installedVersion": installed_ver,
+        "pluginDir": str(target),
+        "sourceArchive": str(payload),
+        "windowsPython3Shim": shim_created,
+    }
+
+
+def uninstall_plugin(plugin_dir: Path | None = None) -> dict[str, Any]:
+    """Remove Startup Antigravity from the user's Antigravity plugins directory."""
+    target = plugin_dir or default_plugin_dir()
+    if target.is_symlink():
+        target.unlink()
+        removed = True
+    elif target.exists():
+        shutil.rmtree(target)
+        removed = True
+    else:
+        removed = False
+    return {"ok": True, "action": "uninstall", "removed": removed, "pluginDir": str(target)}
+
+
+def open_dashboard(workspace: Path, plugin_dir: Path | None = None) -> dict[str, Any]:
+    """Build (if possible) and open dashboard/index.html for a startup workspace."""
+    ws = workspace.resolve()
+    dash_html = ws / "dashboard" / "index.html"
+    target = plugin_dir or default_plugin_dir()
+    builder = target / "skills" / "unit-economics-and-profit-os" / "scripts" / "build_dashboard.py"
+
+    if builder.exists() and (ws / ".startup").exists():
+        subprocess.run(
+            [sys.executable, str(builder), "--workspace", str(ws)],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+    if not dash_html.exists():
+        raise FileNotFoundError(
+            f"No dashboard found at {dash_html}. Initialize your startup workspace in Antigravity first."
+        )
+    webbrowser.open(dash_html.as_uri())
+    return {"ok": True, "opened": str(dash_html)}
+
+
+def open_pitch_deck(workspace: Path) -> dict[str, Any]:
+    """Open pitch-deck/index.html for a startup workspace."""
+    ws = workspace.resolve()
+    deck_html = ws / "pitch-deck" / "index.html"
+    if not deck_html.exists():
+        raise FileNotFoundError(
+            f"No pitch deck found at {deck_html}. Run startup-kickstart or pitch-deck-builder first."
+        )
+    webbrowser.open(deck_html.as_uri())
+    return {"ok": True, "opened": str(deck_html)}
+
+
+def launch_gui() -> int:
+    """Launch the native dark-mode Tkinter desktop launcher."""
+    try:
+        import tkinter as tk
+        from tkinter import filedialog, messagebox
+    except Exception as exc:
+        print(
+            f"GUI unavailable ({exc}). Use CLI flags instead: --install, --status, --dashboard.",
+            file=sys.stderr,
+        )
+        return 1
+
+    root = tk.Tk()
+    root.title(f"{APP_NAME} — Launcher")
+    root.geometry("680x520")
+    root.minsize(620, 480)
+    root.configure(bg="#0F172A")
+
+    # Colors matching Startup Antigravity palette
+    BG = "#0F172A"
+    CARD = "#1E293B"
+    BORDER = "#334155"
+    TEXT = "#F8FAFC"
+    MUTED = "#94A3B8"
+    EMERALD = "#10B981"
+    EMERALD_DARK = "#059669"
+    AMBER = "#F59E0B"
+    SLATE_BTN = "#334155"
+
+    workspace_var = tk.StringVar(value=str(Path.cwd()))
+    status_vars = {
+        "installed": tk.StringVar(value="Checking..."),
+        "bundled": tk.StringVar(value="Checking..."),
+        "path": tk.StringVar(value=str(default_plugin_dir())),
+        "runtime": tk.StringVar(value="Checking..."),
+    }
+
+    # Header
+    header = tk.Frame(root, bg=BG, padx=24, pady=18)
+    header.pack(fill="x")
+    tk.Label(
+        header,
+        text="STARTUP ANTIGRAVITY",
+        font=("Sans", 18, "bold"),
+        fg=EMERALD,
+        bg=BG,
+    ).pack(anchor="w")
+    tk.Label(
+        header,
+        text="Ethical Venture OS — Offline Installer & Founder Command Center Launcher",
+        font=("Sans", 10),
+        fg=MUTED,
+        bg=BG,
+    ).pack(anchor="w", pady=(2, 0))
+
+    # Status Card
+    card = tk.Frame(root, bg=CARD, padx=18, pady=14, highlightbackground=BORDER, highlightthickness=1)
+    card.pack(fill="x", padx=24, pady=(0, 14))
+
+    rows = [
+        ("Plugin Status:", status_vars["installed"]),
+        ("Bundled Release:", status_vars["bundled"]),
+        ("Install Path:", status_vars["path"]),
+        ("Runtime:", status_vars["runtime"]),
+    ]
+    for idx, (label, var) in enumerate(rows):
+        tk.Label(card, text=label, font=("Sans", 10, "bold"), fg=MUTED, bg=CARD).grid(
+            row=idx, column=0, sticky="w", pady=2, padx=(0, 12)
+        )
+        tk.Label(card, textvariable=var, font=("Sans", 10), fg=TEXT, bg=CARD).grid(
+            row=idx, column=1, sticky="w", pady=2
+        )
+
+    # Workspace Selector
+    ws_frame = tk.Frame(root, bg=BG, padx=24)
+    ws_frame.pack(fill="x", pady=(0, 12))
+    tk.Label(
+        ws_frame,
+        text="Startup Workspace Folder (for Dashboard & Pitch Deck):",
+        font=("Sans", 9, "bold"),
+        fg=MUTED,
+        bg=BG,
+    ).pack(anchor="w")
+    ws_row = tk.Frame(ws_frame, bg=BG)
+    ws_row.pack(fill="x", pady=(4, 0))
+    tk.Entry(
+        ws_row,
+        textvariable=workspace_var,
+        bg=CARD,
+        fg=TEXT,
+        insertbackground=TEXT,
+        relief="flat",
+        font=("Monospace", 9),
+    ).pack(side="left", fill="x", expand=True, ipady=6, padx=(0, 8))
+
+    def browse_workspace() -> None:
+        chosen = filedialog.askdirectory(initialdir=workspace_var.get() or str(Path.home()))
+        if chosen:
+            workspace_var.set(chosen)
+
+    tk.Button(
+        ws_row,
+        text="Browse...",
+        command=browse_workspace,
+        bg=SLATE_BTN,
+        fg=TEXT,
+        activebackground=BORDER,
+        activeforeground=TEXT,
+        relief="flat",
+        padx=12,
+        pady=5,
+        cursor="hand2",
+    ).pack(side="right")
+
+    # Log area
+    log_box = tk.Text(
+        root,
+        height=7,
+        bg="#020617",
+        fg="#CBD5E1",
+        font=("Monospace", 9),
+        relief="flat",
+        padx=10,
+        pady=8,
+        state="disabled",
+    )
+
+    def log(msg: str) -> None:
+        log_box.configure(state="normal")
+        log_box.insert("end", msg + "\n")
+        log_box.see("end")
+        log_box.configure(state="disabled")
+
+    def refresh_status() -> None:
+        st = get_status()
+        if st["installed"]:
+            mode = " (symlink)" if st["isSymlink"] else ""
+            status_vars["installed"].set(f"Installed — v{st['installedVersion']}{mode}")
+        else:
+            status_vars["installed"].set("Not installed yet")
+        status_vars["bundled"].set(
+            f"v{st['bundledVersion']}" + (" (offline bundle ready)" if st["bundledZip"] else " (no zip found)")
+        )
+        status_vars["path"].set(st["pluginDir"])
+        status_vars["runtime"].set(f"Python {st['pythonVersion']} • {st['platform']}")
+
+    def on_install() -> None:
+        try:
+            res = install_plugin()
+            log(f"[OK] Installed Startup Antigravity v{res['installedVersion']} -> {res['pluginDir']}")
+            if res.get("windowsPython3Shim"):
+                log(f"[OK] Created Windows python3.exe shim -> {res['windowsPython3Shim']}")
+            log("Restart Antigravity or reload plugins to activate all 18 skills & 20 MCP tools.")
+            refresh_status()
+            messagebox.showinfo(
+                APP_NAME,
+                f"Startup Antigravity v{res['installedVersion']} installed!\n\n"
+                f"Path: {res['pluginDir']}\n\n"
+                "Open Antigravity in your startup workspace to start.",
+            )
+        except Exception as exc:
+            log(f"[ERROR] Install failed: {exc}")
+            messagebox.showerror(APP_NAME, f"Install failed:\n{exc}")
+
+    def on_dashboard() -> None:
+        try:
+            res = open_dashboard(Path(workspace_var.get()))
+            log(f"[OK] Opened Founder Command Center -> {res['opened']}")
+        except Exception as exc:
+            log(f"[WARN] {exc}")
+            messagebox.showwarning(APP_NAME, str(exc))
+
+    def on_deck() -> None:
+        try:
+            res = open_pitch_deck(Path(workspace_var.get()))
+            log(f"[OK] Opened Interactive Pitch Deck -> {res['opened']}")
+        except Exception as exc:
+            log(f"[WARN] {exc}")
+            messagebox.showwarning(APP_NAME, str(exc))
+
+    def on_uninstall() -> None:
+        if not messagebox.askyesno(
+            APP_NAME,
+            f"Remove Startup Antigravity plugin from:\n{default_plugin_dir()}?",
+        ):
+            return
+        res = uninstall_plugin()
+        log(f"[OK] Uninstalled plugin (removed={res['removed']})")
+        refresh_status()
+
+    # Action Buttons
+    btn_frame = tk.Frame(root, bg=BG, padx=24)
+    btn_frame.pack(fill="x", pady=(0, 12))
+
+    tk.Button(
+        btn_frame,
+        text="Install / Update Antigravity Plugin",
+        command=on_install,
+        bg=EMERALD,
+        fg="#022C22",
+        activebackground=EMERALD_DARK,
+        activeforeground=TEXT,
+        font=("Sans", 10, "bold"),
+        relief="flat",
+        padx=16,
+        pady=10,
+        cursor="hand2",
+    ).pack(fill="x", pady=(0, 8))
+
+    row2 = tk.Frame(btn_frame, bg=BG)
+    row2.pack(fill="x")
+    tk.Button(
+        row2,
+        text="Open Founder Dashboard",
+        command=on_dashboard,
+        bg=SLATE_BTN,
+        fg=TEXT,
+        activebackground=BORDER,
+        activeforeground=TEXT,
+        relief="flat",
+        padx=12,
+        pady=8,
+        cursor="hand2",
+    ).pack(side="left", expand=True, fill="x", padx=(0, 6))
+
+    tk.Button(
+        row2,
+        text="Open Pitch Deck",
+        command=on_deck,
+        bg=SLATE_BTN,
+        fg=TEXT,
+        activebackground=BORDER,
+        activeforeground=TEXT,
+        relief="flat",
+        padx=12,
+        pady=8,
+        cursor="hand2",
+    ).pack(side="left", expand=True, fill="x", padx=(0, 6))
+
+    tk.Button(
+        row2,
+        text="Uninstall",
+        command=on_uninstall,
+        bg="#7F1D1D",
+        fg=TEXT,
+        activebackground="#991B1B",
+        activeforeground=TEXT,
+        relief="flat",
+        padx=12,
+        pady=8,
+        cursor="hand2",
+    ).pack(side="right")
+
+    log_box.pack(fill="both", expand=True, padx=24, pady=(0, 16))
+    refresh_status()
+    log(f"Ready — {APP_NAME} Launcher v{APP_VERSION}. Click 'Install / Update' to deploy offline.")
+    root.mainloop()
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(
+        prog="startup-antigravity",
+        description="Startup Antigravity — Offline Plugin Installer & Founder Command Center Launcher",
+    )
+    parser.add_argument("--install", action="store_true", help="Install or update the plugin offline")
+    parser.add_argument("--uninstall", action="store_true", help="Remove the installed plugin")
+    parser.add_argument("--status", action="store_true", help="Print installation & runtime status")
+    parser.add_argument("--dashboard", metavar="WORKSPACE", help="Open Founder Command Center for WORKSPACE")
+    parser.add_argument("--deck", metavar="WORKSPACE", help="Open interactive Pitch Deck for WORKSPACE")
+    parser.add_argument("--plugin-dir", metavar="DIR", help="Override target plugin installation directory")
+    parser.add_argument("--zip", metavar="ARCHIVE", help="Override bundled plugin ZIP path")
+    parser.add_argument("--version", action="store_true", help="Print launcher version and exit")
+    parser.add_argument("--json", action="store_true", help="Output JSON for CLI subcommands")
+
+    args = parser.parse_args(argv)
+    plugin_dir = Path(args.plugin_dir) if args.plugin_dir else None
+    zip_override = Path(args.zip) if args.zip else None
+
+    if args.version:
+        print(f"{PLUGIN_NAME} {APP_VERSION}")
+        return 0
+
+    if args.status:
+        st = get_status(plugin_dir)
+        print(json.dumps(st, indent=2))
+        return 0
+
+    if args.install:
+        res = install_plugin(plugin_dir=plugin_dir, zip_path=zip_override)
+        print(json.dumps(res, indent=2))
+        return 0
+
+    if args.uninstall:
+        res = uninstall_plugin(plugin_dir=plugin_dir)
+        print(json.dumps(res, indent=2))
+        return 0
+
+    if args.dashboard:
+        res = open_dashboard(Path(args.dashboard), plugin_dir=plugin_dir)
+        print(json.dumps(res, indent=2))
+        return 0
+
+    if args.deck:
+        res = open_pitch_deck(Path(args.deck))
+        print(json.dumps(res, indent=2))
+        return 0
+
+    return launch_gui()
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

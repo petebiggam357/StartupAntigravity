@@ -1,7 +1,7 @@
 {
   "name": "startup-antigravity",
   "displayName": "Startup Antigravity — Ethical Venture OS",
-  "version": "0.0.2-alpha",
+  "version": "0.0.3-alpha",
   "description": "Independent Founder Operating System built by a former Founder Institute Director & current Mentor/Advisor (not an official FI.co or VC Lab release). Antigravity-first OS inspired by Founder Institute execution, VC Lab / Decile Group ethics, and rapid ethical profit velocity — with a visual SVG pitch deck engine, live local Founder Command Center dashboard, Canva/Figma/Replit Slides bridge, zero-double-token Replit Launchpad, Product-Market Fit Engine, QuickBooks CFO & Zapier hub, FI Alumni Scale Stack, 36+ Founder Resources Library, call-transcript Mom Test extractor, ethical Product Hunt launch kit, optional BYO-AI connectors, 48-hour landing page generator, 18 skills, 7 subagents, a 20-tool local MCP server, and 4 lifecycle hooks.",
   "logo": "assets/logo.svg",
   "author": {
