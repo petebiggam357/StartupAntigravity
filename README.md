@@ -25,9 +25,9 @@
 - [Quickstart: Your First 30 Minutes](#quickstart-your-first-30-minutes)
 - [What's Inside the Plugin](#whats-inside-the-plugin)
   - [1. Visual Interactive FI Pitch Deck 2.0](#1-visual-interactive-fi-pitch-deck-20)
-  - [2. Companion Design & Cloud Stack (Canva, Figma & Replit)](#2-companion-design--cloud-stack-canva-figma--replit)
-  - [3. Fifteen Progressive-Disclosure Startup Skills](#3-fifteen-progressive-disclosure-startup-skills)
-  - [4. Six Founding Advisory Subagents](#4-six-founding-advisory-subagents)
+  - [2. Companion Design, Cloud & Ops Stack (Canva, Figma, Replit, QuickBooks & Zapier)](#2-companion-design-cloud--ops-stack-canva-figma-replit-quickbooks--zapier)
+  - [3. Sixteen Progressive-Disclosure Startup Skills](#3-sixteen-progressive-disclosure-startup-skills)
+  - [4. Seven Founding Advisory Subagents](#4-seven-founding-advisory-subagents)
   - [5. Seventeen-Tool Local MCP Server (`startup-antigravity-os`)](#5-seventeen-tool-local-mcp-server-startup-antigravity-os)
   - [6. Optional BYO-AI Addon Connectors (Claude, OpenAI, xAI Grok, Gemini CLI & Ollama)](#6-optional-byo-ai-addon-connectors-claude-openai-xai-grok-gemini-cli--ollama)
   - [7. Always-On Guardrails & Four Lifecycle Hooks](#7-always-on-guardrails--four-lifecycle-hooks)
@@ -266,7 +266,7 @@ python3 -m unittest discover -s tests -v
 Expected result: **`Ran 27 tests ... OK`** (under 1 second).
 
 ### 2. Verify Inside Antigravity
-1. **Customizations > Plugins:** You should see **Startup Antigravity — Ethical Venture OS (`v0.0.1-alpha`)** enabled with **15 skills**, **6 agents**, **1 rule file**, **4 hooks**, and **1 MCP server**.
+1. **Customizations > Plugins:** You should see **Startup Antigravity — Ethical Venture OS (`v0.0.1-alpha`)** enabled with **16 skills**, **7 agents**, **1 rule file**, **4 hooks**, and **1 MCP server**.
 2. **Additional Options (`...`) > MCP Servers:** Confirm `startup-antigravity_startup-antigravity-os` shows as connected with **17 tools**.
 3. **Antigravity CLI (optional):**
    ```bash
@@ -358,13 +358,14 @@ MyStartup/
   - `B` — Toggle `[VALIDATED]` / `[HYPOTHESIS]` / `[TARGET]` badges (hide for clean investor mode)
   - **Export PDF** (`Ctrl+P` / `Cmd+P`) — Crisp 16:9 slide-per-page PDF export
 
-### 2. Companion Design & Cloud Stack (Canva, Figma & Replit)
-Startup Antigravity works 100% offline with zero dependencies, and pairs seamlessly with three powerhouse companion platforms:
+### 2. Companion Design, Cloud & Ops Stack (Canva, Figma, Replit, QuickBooks & Zapier)
+Startup Antigravity works 100% offline with zero dependencies, and pairs seamlessly with five powerhouse companion platforms:
 - **Replit Free-Tier Launchpad (Zero Double-Token Burn — https://replit.com/refer/peterbiggam):** Start visually in **Replit Design Mode** to shape your living design system, do heavy coding locally in **Antigravity** (avoiding duplicate AI token charges), and sync via private GitHub (`replit_workspace_prepare`) to run full-stack **Web Platforms** (`web-node`, `web-python`), **Expo / React Native Mobile Apps** (instant QR testing via Expo Go), managed DB/Secrets, 1-click hosting, and one-shot **Replit Slides** (`REPLIT_SLIDES_BRIEF.md`) all in one place.
 - **Canva (`antigravity-plugins-partners/plugin/canva`):** Run `pitch_deck_design_brief(target="canva")` to export `CANVA_DECK_BRIEF.md`, then let `design-studio-canva-figma` generate, edit, brand-check (`canva-brand-check`), resize launch visuals (`canva-resize-for-social-media`), and export investor-ready PDF/PPTX decks directly in Canva.
 - **Figma (`antigravity-plugins-partners/plugin/figma`):** Run `pitch_deck_design_brief(target="figma")` to export `FIGMA_SLIDES_BRIEF.md` + W3C `FIGMA_TOKENS.json`, build native 1920x1080 variable-bound **Figma Slides** (`figma-use-slides`), push `landing/index.html` into editable Figma frames (`figma-generate-design`), or convert Figma wireframes straight into your 7-day MVP (`figma-design-to-code`).
+- **Zapier (`antigravity-plugins-partners/plugin/zapier`) & QuickBooks Online (`intuit/quickbooks-online-mcp-server` / `intuit` CLI):** Connect **QuickBooks Online + 9,000+ apps** (Stripe, Gmail, Slack, HubSpot, Notion, Google Sheets) via 1-click Zapier OAuth or Intuit's official read-first MCP/CLI so Antigravity's `cfo-bookkeeper-copilot` answers plain-English P&L/cash/invoice questions, syncs verified numbers into `.startup/state.json` & `docs/INVESTOR_UPDATE.md`, and previews draft invoices before posting.
 
-### 3. Fifteen Progressive-Disclosure Startup Skills
+### 3. Sixteen Progressive-Disclosure Startup Skills
 | Skill | Purpose |
 | :--- | :--- |
 | `startup-kickstart` | Day-0 5-question intake, FI One-Sentence Pitch linting, UN SDG iKPI selection, and full workspace scaffold |
@@ -374,7 +375,8 @@ Startup Antigravity works 100% offline with zero dependencies, and pairs seamles
 | `design-studio-canva-figma` | Bridge FI-linted decks, landing pages, and launch kits directly into official Canva & Figma Slides MCP workflows |
 | `replit-launchpad` | Zero-double-token Antigravity ↔ Replit Free-Tier bridge: Replit Design System, Web & Expo Mobile apps, and one-shot Replit Slides |
 | `product-hunt-launch` | End-to-end ethical Product Hunt launch kit: linted <=60-char tagline, Maker Comment, `1270x760` Canva/Figma gallery storyboard, and T-14 -> 12:01 AM PT runbook |
-| `multi-ai-connectors` | Optional BYO-AI addon hub: detect CLIs/env vars (`claude`, `codex`, `xai/grok`, `gemini`, `ollama`), sync `CLAUDE.md`/`GROK_CONTEXT.md`/`AI_CONTEXT_PACK.md`, and run second-opinion critiques |
+| `multi-ai-connectors` | Optional BYO-AI addon hub: detect CLIs/env vars (`claude`, `codex`, `xai/grok`, `gemini`, `ollama`, `intuit`), sync `CLAUDE.md`/`GROK_CONTEXT.md`/`AI_CONTEXT_PACK.md`, and run second-opinion critiques |
+| `quickbooks-cfo-and-zapier` | Connect QuickBooks Online & 9,000+ apps via Zapier MCP, Intuit QBO MCP, or Intuit CLI with read-first accounting safety & preview-before-write invoicing |
 | `mvp-and-profit-architecture` | 7-day vertical slice MVP spec, explicit *NOT-Building-Yet* Cut-List, and `>= 75%` gross margin COGS audit |
 | `market-and-unfair-moat` | Bottom-up TAM/SAM/SOM calculation, competitive teardowns, Why-Now analysis, and Secret Sauce audit |
 | `gtm-and-cash-velocity` | Value-based pricing (10x ROI), ethical cold outbound, Show HN / Product Hunt launches, and first-100-customers loops |
@@ -383,10 +385,11 @@ Startup Antigravity works 100% offline with zero dependencies, and pairs seamles
 | `vc-lab-fundraising-os` | VC fund thesis mapping, PACT soft-circle pipeline, multi-round cap table & SAFE math, Stripe Atlas + QuickBooks Data Room, and partner drills |
 | `weekly-sprint-review` | FI weekly sprint accountability (`.startup/sprints.json`, 1.0–5.0 velocity) and VC Lab `docs/INVESTOR_UPDATE.md` generator |
 
-### 4. Six Founding Advisory Subagents
+### 4. Seven Founding Advisory Subagents
 - **`fi-mentor-pitch-critic`** — Veteran FI Mentor who shreds buzzwords, grades slides 1.0–5.0, and sets 7-day homework sprints.
 - **`vc-lab-partner-skeptic`** — Mensarius-bound VC Lab General Partner who audits fundability, math, moat, and runs 10-question partner drills.
 - **`pmf-truth-auditor`** — Brutally honest Product-Market Fit investigator who answers *"Is there a REAL paying customer for this?"*, exposes leaky buckets, discovers your highest-PMF HXC segment, and builds your 50/50 PMF roadmap.
+- **`cfo-bookkeeper-copilot`** — Read-first AI Fractional CFO & QuickBooks Online bookkeeper copilot (via Zapier MCP, Intuit QBO MCP, or `intuit` CLI) with strict preview-before-write accounting safety.
 - **`customer-revenue-coach`** — *Mom Test* & paid-pilot coach who role-plays skeptical ICP buyers and turns pain into signed Customer PACTs.
 - **`lean-cto-margin-architect`** — Pragmatic founding CTO who cuts engineering scope 50–70% and protects `>= 75%` gross margins.
 - **`ethical-growth-strategist`** — Value-pricing, positioning, and ethical acquisition strategist (zero dark patterns).

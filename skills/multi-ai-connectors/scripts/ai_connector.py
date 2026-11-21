@@ -50,6 +50,11 @@ CLI_PROBES = {
         "label": "Aider Multi-Model Coding CLI",
         "installHint": "pip install aider-chat",
     },
+    "intuit-qbo-cli": {
+        "binary": "intuit",
+        "label": "Intuit Official QuickBooks Online CLI",
+        "installHint": "https://github.com/intuit/intuit-cli-for-quickbooks",
+    },
 }
 
 API_ENV_PROBES = {

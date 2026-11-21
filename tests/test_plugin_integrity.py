@@ -85,7 +85,7 @@ class TestPluginIntegrity(unittest.TestCase):
         self.assertIn("matcher", post[0])
         self.assertIn("hooks", post[0])
 
-    def test_all_fifteen_skills(self) -> None:
+    def test_all_sixteen_skills(self) -> None:
         expected_skills = {
             "startup-kickstart",
             "pitch-deck-builder",
@@ -93,6 +93,7 @@ class TestPluginIntegrity(unittest.TestCase):
             "replit-launchpad",
             "product-hunt-launch",
             "multi-ai-connectors",
+            "quickbooks-cfo-and-zapier",
             "product-market-fit-engine",
             "revenue-first-validation",
             "mvp-and-profit-architecture",
@@ -120,11 +121,12 @@ class TestPluginIntegrity(unittest.TestCase):
         self.assertEqual(sdgs, set(range(1, 18)))
         self.assertGreaterEqual(len(catalog), 34)
 
-    def test_all_six_subagents(self) -> None:
+    def test_all_seven_subagents(self) -> None:
         expected_agents = {
             "fi-mentor-pitch-critic",
             "vc-lab-partner-skeptic",
             "pmf-truth-auditor",
+            "cfo-bookkeeper-copilot",
             "customer-revenue-coach",
             "lean-cto-margin-architect",
             "ethical-growth-strategist",
