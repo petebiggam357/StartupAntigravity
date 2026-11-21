@@ -2,7 +2,7 @@
 
 > **Install one Antigravity plugin, open an empty folder, and build a high-margin, ethically grounded, fundable company from scratch.**
 
-> **Independence & Attribution Notice:** **Startup Antigravity** is an **independent, community-built plugin** created by a **Previous Founder Institute Director and Current Mentor & Advisor**. It is **not** an official product, endorsement, or release of Founder Institute (`fi.co`), VC Lab, or Decile Group (`govclab.com`). All references to Founder Institute and VC Lab / Decile Group methodologies (such as the One-Sentence Pitch, FAST Agreement benchmarks, For-Progress iKPIs, Mensarius Oath, and PACT frameworks) are educational adaptations inspired by those ecosystems.
+> **Independence & Attribution Notice:** **Startup Antigravity** is an **independent, community-built plugin** created by a **Previous Founder Institute Director, Current FI Mentor & Advisor, and Former Startup Grind Monterey Bay Chapter Director**. It is **not** an official product, endorsement, or release of Founder Institute (`fi.co`), VC Lab / Decile Group (`govclab.com`), Startup Grind (`startupgrind.com`), or Founders Guild (`foundersguild.org`). All referenced frameworks are independent educational adaptations inspired by those ecosystems.
 
 **Startup Antigravity** (`startup-antigravity`) is a turnkey Founder Operating System for **Google Antigravity** (Antigravity 2.0 App, Antigravity IDE, and `agy` CLI) that fuses three battle-tested venture frameworks into one zero-dependency bundle:
 
@@ -266,7 +266,7 @@ python3 -m unittest discover -s tests -v
 Expected result: **`Ran 29 tests ... OK`** (under 1 second).
 
 ### 2. Verify Inside Antigravity
-1. **Customizations > Plugins:** You should see **Startup Antigravity — Ethical Venture OS (`v0.0.1-alpha`)** enabled with **18 skills**, **7 agents**, **1 rule file**, **4 hooks**, and **1 MCP server**.
+1. **Customizations > Plugins:** You should see **Startup Antigravity — Ethical Venture OS (`v0.0.2-alpha`)** enabled with **18 skills**, **7 agents**, **1 rule file**, **4 hooks**, and **1 MCP server**.
 2. **Additional Options (`...`) > MCP Servers:** Confirm `startup-antigravity_startup-antigravity-os` shows as connected with **18 tools**.
 3. **Antigravity CLI (optional):**
    ```bash
@@ -378,7 +378,7 @@ Startup Antigravity works 100% offline with zero dependencies, and pairs seamles
 | `multi-ai-connectors` | Optional BYO-AI addon hub: detect CLIs/env vars (`claude`, `codex`, `xai/grok`, `gemini`, `ollama`, `intuit`, `shelled`, `dipity`), sync context files, and run second-opinion critiques |
 | `quickbooks-cfo-and-zapier` | Connect QuickBooks Online & 9,000+ apps via Zapier MCP, Intuit QBO MCP, or Intuit CLI with read-first accounting safety & preview-before-write invoicing |
 | `fi-alumni-scale-stack` | Scale founder content with **Dipity Studio / Sera** (`docs/DIPITY_BRAND_BRAIN.md`) and multi-agent engineering PR pods with **Shelled AI** (`docs/SHELLED_HANDOFF.md`) |
-| `founder-resources-library` | On-demand, stage-aware curated library of 32+ FI.co, VC Lab, PMF, legal, accounting, growth & AI founder resources + custom team/cohort bookmarks |
+| `founder-resources-library` | On-demand, stage-aware curated library of 36+ FI.co, VC Lab, Startup Grind, Founders Guild, PMF, legal, accounting, growth & AI founder resources + custom team/cohort bookmarks & Event Battle Cards |
 | `mvp-and-profit-architecture` | 7-day vertical slice MVP spec, explicit *NOT-Building-Yet* Cut-List, and `>= 75%` gross margin COGS audit |
 | `market-and-unfair-moat` | Bottom-up TAM/SAM/SOM calculation, competitive teardowns, Why-Now analysis, and Secret Sauce audit |
 | `gtm-and-cash-velocity` | Value-based pricing (10x ROI), ethical cold outbound, Show HN / Product Hunt launches, and first-100-customers loops |
@@ -415,7 +415,7 @@ Runs locally via Python 3 stdio (zero external API keys):
 15. `product_hunt_kit_build` — Lint Product Hunt character limits & buzzwords and generate `launch/product-hunt/PH_LAUNCH_KIT.md` + `launch-plan.json`
 16. `ai_connectors_manage` — Detect optional BYO-AI CLIs/env vars, sync `CLAUDE.md`/`GROK_CONTEXT.md`/`AI_CONTEXT_PACK.md`/`DIPITY_BRAND_BRAIN.md`/`SHELLED_HANDOFF.md`, and run multi-model second opinions
 17. `pmf_engine_manage` — Track Sean Ellis 40% Very Disappointed surveys, per-segment HXC PMF scores, cohort retention flattening, Superhuman 50/50 roadmaps, and `docs/PMF_SCORECARD.md`
-18. `founder_resources_hub` — Search 32+ curated FI.co, VC Lab, PMF, legal, accounting, growth & AI founder resources, pull stage-matched Action Kits, or save custom team/cohort bookmarks
+18. `founder_resources_hub` — Search 36+ curated FI.co, VC Lab, Startup Grind, Founders Guild, PMF, legal, accounting, growth & AI founder resources, pull stage-matched Action Kits, or save custom team/cohort bookmarks
 
 ### 6. Optional BYO-AI Addon Connectors (Claude, OpenAI, xAI Grok, Gemini CLI & Ollama)
 **Startup Antigravity is built for Google Antigravity first** — zero external AI keys are required. However, if a novice or technical founder already loves another AI platform, the `multi-ai-connectors` skill lets them plug it in cleanly without losing company context:
@@ -439,6 +439,8 @@ Runs locally via Python 3 stdio (zero external API keys):
 | Ecosystem / Tool | Why I Personally Recommend It | Link |
 | :--- | :--- | :--- |
 | **Founder Institute (`FI.co`)** | Nothing replaces real weekly mentor accountability, brutally honest pitch grading, and a global founder network. I **highly recommend** visiting [fi.co](https://fi.co) to find your **local chapter**—or applying directly to the flagship **Silicon Valley** or **San Francisco** chapters. | [fi.co](https://fi.co) |
+| **Startup Grind** | One of the best founder and investor communities in the world (300+ cities, 125+ countries)—I previously ran the **Startup Grind Monterey Bay Chapter**. Join your local chapter to meet real builders and investors, and apply to pitch or exhibit at the **Startup Grind Global Conference** (5,000+ builders & 800–1,000+ active VCs). | [startupgrind.com](https://www.startupgrind.com/) · [Global Conference](https://www.startupgrind.com/conference/) |
+| **Founders Guild** | A zero-gatekeeping community built for founders solving real problems—great for co-founder discovery, practical MVP building, sustainable revenue/bootstrapping, and long-term founder mental health & durability. | [foundersguild.org](https://foundersguild.org/) |
 | **Replit** | You can genuinely run your whole early startup on Replit: **Replit Design Mode** for your Design System, full-stack **Web Platforms**, **Expo Mobile Apps** with instant QR previews, built-in DB/Secrets, 1-click hosting, and **Replit Slides**—paired locally with Antigravity via GitHub so you stay on the Free tier without double token burn. | [replit.com/refer/peterbiggam](https://replit.com/refer/peterbiggam) *(referral link)* |
 | **Stripe Atlas** | When Customer PACTs or revenue prove it's time to incorporate, **Stripe Atlas** gives founders a clean, investor-standard Delaware C-Corp, EIN, founder stock issuance with guided **83(b) election** filing, and instant Stripe payments readiness—zero messy DIY legal headaches. | [stripe.com/atlas](https://stripe.com/atlas) |
 | **QuickBooks Online** | Don't wait until tax season or Seed due diligence to organize your finances. **QuickBooks Online** makes bookkeeping, expense tracking, real-time P&L / cash-flow visibility, and CPA handoffs effortless from Dollar #1. | [quickbooks.intuit.com/online](https://quickbooks.intuit.com/online/) |

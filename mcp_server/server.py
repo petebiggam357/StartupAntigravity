@@ -39,7 +39,7 @@ from build_deck import (  # noqa: E402
 from build_landing_page import build_landing_page  # noqa: E402
 
 SERVER_NAME = "startup-antigravity-os"
-SERVER_VERSION = "0.0.1-alpha"
+SERVER_VERSION = "0.0.2-alpha"
 PROTOCOL_VERSION = "2024-11-05"
 
 FI_STAGE_BENCHMARKS: dict[str, dict[str, Any]] = {

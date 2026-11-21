@@ -25,3 +25,9 @@ Founders waste weeks drowning in contradictory startup advice. Use the `founder_
    - Call `founder_resources_hub(action="save_custom", workspace_path=..., title=..., url=..., category=..., summary=..., tags=[...])` so founders, co-founders, or FI mentors can add their own custom playbooks, local chapter links, or industry registries to `.startup/custom_resources.json`.
 4. **Always Pair Knowledge With Action**:
    - Never dump a wall of links without a next step. For every resource returned, highlight its `keyTakeaway` and offer the exact Startup Antigravity skill/tool (e.g., `fi_pitch_lint`, `pmf_engine_manage`, `financial_calc`, `landing_page_build`, `replit_workspace_prepare`) to apply it right away.
+5. **Conference, Chapter & Demo Day Battle Card (Startup Grind / FI / Founders Guild)**:
+   - Whenever a founder is preparing to pitch or exhibit at **Startup Grind Global Conference**, a local **Startup Grind Chapter**, **Founder Institute Demo Day**, or a **Founders Guild** working session, assemble a crisp 1-page Event Battle Card:
+     - **30-Second Hallway Hook** (linted FI One-Sentence Pitch)
+     - **3-Minute Stage Pitch** (`pitch-deck/index.html` rehearsed with `T` timer)
+     - **3-Slide Teaser Deck** (`deck.teaser.json` ready for instant follow-up)
+     - **24-Hour PACT Follow-Up Rule:** Log every qualified buyer or investor met at the event directly into `pact_pipeline_manage` before the momentum cools.

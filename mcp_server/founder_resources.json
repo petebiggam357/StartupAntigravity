@@ -382,5 +382,53 @@
     "summary": "Instant, free global CDN hosting for deploying Startup Antigravity's landing/index.html smoke-test page and pitch-deck/index.html in under 60 seconds.",
     "keyTakeaway": "Never pay for cloud servers just to test an offer—ship landing/index.html free and close Customer PACTs first.",
     "tags": ["cloudflare", "netlify", "landing-page", "smoke-test", "hosting"]
+  },
+  {
+    "id": "RES-033",
+    "title": "Startup Grind — Global Founder Community & Local Chapters (300+ Cities)",
+    "category": "accelerators",
+    "stages": ["idea", "validation", "mvp", "pre_seed_traction", "seed_scale"],
+    "format": "accelerator",
+    "source": "Startup Grind (Creator Personal Endorsement — Former Monterey Bay Chapter Director)",
+    "url": "https://www.startupgrind.com/",
+    "summary": "One of the world's largest independent founder communities across 300+ cities and 125+ countries. Local monthly fireside chats, workshops, and networking to meet co-founders, mentors, and investors. Personally endorsed by the creator (who ran the Startup Grind Monterey Bay Chapter).",
+    "keyTakeaway": "Show up consistently at your local Startup Grind chapter—real in-person founder and investor relationships unlock warm intros cold emails never will.",
+    "tags": ["startup-grind", "community", "chapters", "investors", "networking", "monterey-bay", "endorsement"]
+  },
+  {
+    "id": "RES-034",
+    "title": "Startup Grind Global Conference — Pitch Stages, Exhibition Floor & 800+ Investors",
+    "category": "fundraising",
+    "stages": ["mvp", "pre_seed_traction", "seed_scale"],
+    "format": "playbook",
+    "source": "Startup Grind Global",
+    "url": "https://www.startupgrind.com/conference/",
+    "summary": "Annual flagship Silicon Valley event drawing 5,000+ builders, 800–1,000+ active VCs, VC AMAs, investor office hours, and startup exhibition booths to pitch your company live.",
+    "keyTakeaway": "Bring your 3-slide Teaser Deck (deck.teaser.json), 3-minute FI pitch, and log every booth/investor conversation into pact_pipeline_manage within 24 hours.",
+    "tags": ["startup-grind", "conference", "pitch", "investors", "demo-day", "exhibit", "silicon-valley"]
+  },
+  {
+    "id": "RES-035",
+    "title": "Startup Grind Startup Program, Investor Office Hours & Software Perks",
+    "category": "fundraising",
+    "stages": ["validation", "mvp", "pre_seed_traction"],
+    "format": "accelerator",
+    "source": "Startup Grind",
+    "url": "https://www.startupgrind.com/startups/",
+    "summary": "Vetted early-stage startup membership providing pitch deck reviews, virtual investor office hours, curated VC introductions, and partner cloud/SaaS software credits.",
+    "keyTakeaway": "Use Startup Grind software perks to keep cloud burn near zero while pitching vetted Pre-Seed/Seed VCs.",
+    "tags": ["startup-grind", "perks", "office-hours", "investors", "credits", "pre-seed"]
+  },
+  {
+    "id": "RES-036",
+    "title": "Founders Guild (foundersguild.org) — Anti-Gatekeeping Builder Community & Durability Hub",
+    "category": "ethics-impact",
+    "stages": ["idea", "validation", "mvp", "pre_seed_traction", "seed_scale"],
+    "format": "playbook",
+    "source": "Founders Guild (foundersguild.org)",
+    "url": "https://foundersguild.org/",
+    "summary": "Collaborative, zero-gatekeeping founder community focused on solving real problems, finding aligned co-founders/advisors, sustainable revenue & bootstrapping, practical MVP building, and founder mental health & durability.",
+    "keyTakeaway": "Building a profitable company is a marathon—surround yourself with honest, zero-ego builders who prioritize real problems and long-term founder durability.",
+    "tags": ["founders-guild", "community", "co-founders", "bootstrapping", "mental-health", "durability", "ethics", "endorsement"]
   }
 ]

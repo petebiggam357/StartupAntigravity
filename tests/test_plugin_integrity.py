@@ -125,10 +125,13 @@ class TestPluginIntegrity(unittest.TestCase):
 
     def test_founder_resources_catalog_integrity(self) -> None:
         catalog = json.loads((ROOT / "mcp_server" / "founder_resources.json").read_text(encoding="utf-8"))
-        self.assertGreaterEqual(len(catalog), 30)
+        self.assertGreaterEqual(len(catalog), 36)
         categories = {item["category"] for item in catalog}
         for req_cat in ("accelerators", "pitching", "validation", "pmf", "fundraising", "legal-equity", "finance-accounting"):
             self.assertIn(req_cat, categories)
+        all_tags = {t for item in catalog for t in item.get("tags", [])}
+        self.assertIn("startup-grind", all_tags)
+        self.assertIn("founders-guild", all_tags)
 
     def test_all_seven_subagents(self) -> None:
         expected_agents = {
