@@ -40,7 +40,7 @@ class TestMCPServer(unittest.TestCase):
         self.assertEqual(len(resps), 2)
         self.assertEqual(resps[0]["result"]["serverInfo"]["name"], "startup-antigravity-os")
         tool_names = {t["name"] for t in resps[1]["result"]["tools"]}
-        self.assertEqual(len(tool_names), 14)
+        self.assertEqual(len(tool_names), 15)
         self.assertIn("financial_calc", tool_names)
         self.assertIn("fi_pitch_lint", tool_names)
         self.assertIn("pact_pipeline_manage", tool_names)
@@ -49,6 +49,7 @@ class TestMCPServer(unittest.TestCase):
         self.assertIn("sprint_manage", tool_names)
         self.assertIn("pitch_deck_design_brief", tool_names)
         self.assertIn("replit_workspace_prepare", tool_names)
+        self.assertIn("product_hunt_kit_build", tool_names)
 
     def test_financial_calculators_deterministic(self) -> None:
         calls = [
@@ -384,6 +385,51 @@ class TestMCPServer(unittest.TestCase):
             self.assertIn("expo start", dot_replit)
             self.assertIn("Zero Double-Token Burn", replit_md)
             self.assertIn("https://replit.com/refer/peterbiggam", handoff)
+
+    def test_product_hunt_kit_build_and_linter(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            resps = self._run_rpc(
+                [
+                    {
+                        "jsonrpc": "2.0",
+                        "id": 1,
+                        "method": "tools/call",
+                        "params": {
+                            "name": "product_hunt_kit_build",
+                            "arguments": {
+                                "workspace_path": td,
+                                "product_name": "ClaimGuard",
+                                "tagline": "Recover $4K/mo in denied dental claims automatically",
+                                "topics": ["SaaS", "HealthTech", "Productivity"],
+                            },
+                        },
+                    },
+                    {
+                        "jsonrpc": "2.0",
+                        "id": 2,
+                        "method": "tools/call",
+                        "params": {
+                            "name": "product_hunt_kit_build",
+                            "arguments": {
+                                "workspace_path": td,
+                                "product_name": "ClaimGuard",
+                                "tagline": "A revolutionary disruptive world-class AI platform that exceeds sixty characters easily",
+                            },
+                        },
+                    },
+                ]
+            )
+            ok_out = json.loads(resps[0]["result"]["content"][0]["text"])
+            self.assertTrue(ok_out["lint"]["passed"])
+            kit_md = Path(ok_out["kitPath"]).read_text(encoding="utf-8")
+            self.assertIn("1270 x 760 px", kit_md)
+            self.assertIn("Zero upvote rings", kit_md)
+
+            bad_out = json.loads(resps[1]["result"]["content"][0]["text"])
+            self.assertFalse(bad_out["lint"]["passed"])
+            rules = {i["rule"] for i in bad_out["lint"]["issues"]}
+            self.assertIn("ph-tagline-60", rules)
+            self.assertIn("fi-no-buzzwords", rules)
 
 
 if __name__ == "__main__":

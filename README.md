@@ -26,9 +26,9 @@
 - [What's Inside the Plugin](#whats-inside-the-plugin)
   - [1. Visual Interactive FI Pitch Deck 2.0](#1-visual-interactive-fi-pitch-deck-20)
   - [2. Companion Design & Cloud Stack (Canva, Figma & Replit)](#2-companion-design--cloud-stack-canva-figma--replit)
-  - [3. Twelve Progressive-Disclosure Startup Skills](#3-twelve-progressive-disclosure-startup-skills)
+  - [3. Thirteen Progressive-Disclosure Startup Skills](#3-thirteen-progressive-disclosure-startup-skills)
   - [4. Five Founding Advisory Subagents](#4-five-founding-advisory-subagents)
-  - [5. Fourteen-Tool Local MCP Server (`startup-antigravity-os`)](#5-fourteen-tool-local-mcp-server-startup-antigravity-os)
+  - [5. Fifteen-Tool Local MCP Server (`startup-antigravity-os`)](#5-fifteen-tool-local-mcp-server-startup-antigravity-os)
   - [6. Always-On Guardrails & Four Lifecycle Hooks](#6-always-on-guardrails--four-lifecycle-hooks)
 - [Creator's Recommended Founder Stack (Personal Endorsements)](#creators-recommended-founder-stack-personal-endorsements)
 - [Troubleshooting (Windows, macOS & Linux)](#troubleshooting-windows-macos--linux)
@@ -248,7 +248,7 @@ git clone https://github.com/petebiggam357/StartupAntigravity.git ".agents\plugi
 
 ## Verifying Your Installation
 
-### 1. Run the Built-In Automated Self-Test (All 24 Checks)
+### 1. Run the Built-In Automated Self-Test (All 25 Checks)
 
 **macOS / Linux:**
 ```bash
@@ -262,11 +262,11 @@ cd "$env:USERPROFILE\.gemini\config\plugins\startup-antigravity"
 python3 -m unittest discover -s tests -v
 ```
 
-Expected result: **`Ran 24 tests ... OK`** (under 1 second).
+Expected result: **`Ran 25 tests ... OK`** (under 1 second).
 
 ### 2. Verify Inside Antigravity
-1. **Customizations > Plugins:** You should see **Startup Antigravity — Ethical Venture OS (`v0.0.1-alpha`)** enabled with **12 skills**, **5 agents**, **1 rule file**, **4 hooks**, and **1 MCP server**.
-2. **Additional Options (`...`) > MCP Servers:** Confirm `startup-antigravity_startup-antigravity-os` shows as connected with **14 tools**.
+1. **Customizations > Plugins:** You should see **Startup Antigravity — Ethical Venture OS (`v0.0.1-alpha`)** enabled with **13 skills**, **5 agents**, **1 rule file**, **4 hooks**, and **1 MCP server**.
+2. **Additional Options (`...`) > MCP Servers:** Confirm `startup-antigravity_startup-antigravity-os` shows as connected with **15 tools**.
 3. **Antigravity CLI (optional):**
    ```bash
    agy plugin enable startup-antigravity
@@ -363,7 +363,7 @@ Startup Antigravity works 100% offline with zero dependencies, and pairs seamles
 - **Canva (`antigravity-plugins-partners/plugin/canva`):** Run `pitch_deck_design_brief(target="canva")` to export `CANVA_DECK_BRIEF.md`, then let `design-studio-canva-figma` generate, edit, brand-check (`canva-brand-check`), resize launch visuals (`canva-resize-for-social-media`), and export investor-ready PDF/PPTX decks directly in Canva.
 - **Figma (`antigravity-plugins-partners/plugin/figma`):** Run `pitch_deck_design_brief(target="figma")` to export `FIGMA_SLIDES_BRIEF.md` + W3C `FIGMA_TOKENS.json`, build native 1920x1080 variable-bound **Figma Slides** (`figma-use-slides`), push `landing/index.html` into editable Figma frames (`figma-generate-design`), or convert Figma wireframes straight into your 7-day MVP (`figma-design-to-code`).
 
-### 3. Twelve Progressive-Disclosure Startup Skills
+### 3. Thirteen Progressive-Disclosure Startup Skills
 | Skill | Purpose |
 | :--- | :--- |
 | `startup-kickstart` | Day-0 5-question intake, FI One-Sentence Pitch linting, UN SDG iKPI selection, and full workspace scaffold |
@@ -371,6 +371,7 @@ Startup Antigravity works 100% offline with zero dependencies, and pairs seamles
 | `pitch-deck-builder` | Author, edit, re-theme, switch modes (`problem-solution` / `traction` / `teaser`), lint, and compile pitch decks |
 | `design-studio-canva-figma` | Bridge FI-linted decks, landing pages, and launch kits directly into official Canva & Figma Slides MCP workflows |
 | `replit-launchpad` | Zero-double-token Antigravity ↔ Replit Free-Tier bridge: Replit Design System, Web & Expo Mobile apps, and one-shot Replit Slides |
+| `product-hunt-launch` | End-to-end ethical Product Hunt launch kit: linted <=60-char tagline, Maker Comment, `1270x760` Canva/Figma gallery storyboard, and T-14 -> 12:01 AM PT runbook |
 | `mvp-and-profit-architecture` | 7-day vertical slice MVP spec, explicit *NOT-Building-Yet* Cut-List, and `>= 75%` gross margin COGS audit |
 | `market-and-unfair-moat` | Bottom-up TAM/SAM/SOM calculation, competitive teardowns, Why-Now analysis, and Secret Sauce audit |
 | `gtm-and-cash-velocity` | Value-based pricing (10x ROI), ethical cold outbound, Show HN / Product Hunt launches, and first-100-customers loops |
@@ -386,7 +387,7 @@ Startup Antigravity works 100% offline with zero dependencies, and pairs seamles
 - **`lean-cto-margin-architect`** — Pragmatic founding CTO who cuts engineering scope 50–70% and protects `>= 75%` gross margins.
 - **`ethical-growth-strategist`** — Value-pricing, positioning, and ethical acquisition strategist (zero dark patterns).
 
-### 5. Fourteen-Tool Local MCP Server (`startup-antigravity-os`)
+### 5. Fifteen-Tool Local MCP Server (`startup-antigravity-os`)
 Runs locally via Python 3 stdio (zero external API keys):
 1. `startup_get_state` — Live telemetry, FI stage benchmark, interviews, PACT totals, and deck score
 2. `startup_update_stage` — Persist stage, FI pitch, MRR, burn, cash, gross margin, and iKPI
@@ -402,6 +403,7 @@ Runs locally via Python 3 stdio (zero external API keys):
 12. `ikpi_catalog_search` — Offline search across all 17 UN SDGs (34 concrete FI *For-Progress* iKPIs)
 13. `sprint_manage` — Weekly FI sprint tracker (`start`, `close`, `list`) + `docs/INVESTOR_UPDATE.md` compiler
 14. `replit_workspace_prepare` — Scaffold `.replit`, `replit.md` (zero-double-token rules), `.env.example`, and `docs/REPLIT_HANDOFF.md` for `web-node`, `web-python`, or `mobile-expo`
+15. `product_hunt_kit_build` — Lint Product Hunt character limits & buzzwords and generate `launch/product-hunt/PH_LAUNCH_KIT.md` + `launch-plan.json`
 
 ### 6. Always-On Guardrails & Four Lifecycle Hooks
 - **Always-On Rules (`rules/AGENTS.md`):** Enforces Revenue-First velocity, FI buzzword-free clarity, `[VALIDATED]` vs `[HYPOTHESIS]` radical honesty, Mensarius Oath zero-dark-pattern ethics, and legal/secret hygiene.

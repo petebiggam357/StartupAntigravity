@@ -26,7 +26,13 @@ for _p in (DECK_SCRIPTS_DIR, LANDING_SCRIPTS_DIR):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
-from build_deck import build_deck, export_design_briefs, lint_deck, lint_one_sentence_pitch  # noqa: E402
+from build_deck import (  # noqa: E402
+    BANNED_BUZZWORDS,
+    build_deck,
+    export_design_briefs,
+    lint_deck,
+    lint_one_sentence_pitch,
+)
 from build_landing_page import build_landing_page  # noqa: E402
 
 SERVER_NAME = "startup-antigravity-os"
@@ -939,6 +945,182 @@ Replit lets you run your **Design System (Design Mode)**, **Web Platform or Expo
     }
 
 
+def tool_product_hunt_kit_build(args: dict[str, Any]) -> dict[str, Any]:
+    """Lint Product Hunt limits & buzzwords and generate launch/product-hunt/PH_LAUNCH_KIT.md + launch-plan.json."""
+    ws = _resolve_workspace(args.get("workspace_path"))
+    state = _read_json(ws / ".startup" / "state.json", {})
+
+    company = str(args.get("product_name") or state.get("companyName") or "Your Startup").strip()
+    offering = str(state.get("offering") or "workflow automation software").strip()
+    audience = str(state.get("audience") or "focused operators").strip()
+    problem = str(state.get("problem") or "eliminate costly manual bottlenecks").strip()
+    secret = str(state.get("secretSauce") or "purpose-built automation").strip()
+    ikpi_obj = state.get("ikpi") or {}
+    ikpi_name = str(ikpi_obj.get("name") or "Measurable customer progress tracked monthly")
+    impact_thesis = str(state.get("impactThesis") or f"Deliver transparent, ethical ROI for {audience}.")
+
+    default_tagline = f"{offering.capitalize()} for {audience}"
+    if len(default_tagline) > 60:
+        default_tagline = default_tagline[:57].rstrip() + "..."
+    tagline = str(args.get("tagline") or default_tagline).strip()
+
+    default_desc = (
+        f"{company} helps {audience} {problem} using {secret}. "
+        "Transparent value pricing, 100% customer-owned data, and measurable ROI in week one."
+    )
+    if len(default_desc) > 260:
+        default_desc = default_desc[:257].rstrip() + "..."
+    description = str(args.get("description") or default_desc).strip()
+
+    topics = args.get("topics") or ["SaaS", "Productivity", "Developer Tools"]
+    topics = [str(t).strip() for t in topics if str(t).strip()]
+    ph_offer = str(
+        args.get("ph_offer")
+        or "Founding Product Hunt Community Offer: 25% off for 6 months + 14-day risk-free paid pilot guarantee."
+    ).strip()
+    launch_date = str(args.get("launch_date") or "TBD (Target Tuesday–Thursday at 12:01 AM PT)").strip()
+
+    # Lint Product Hunt hard constraints + FI anti-buzzword discipline
+    issues: list[dict[str, str]] = []
+    if len(company) > 40:
+        issues.append({"severity": "error", "rule": "ph-name-40", "message": f"Product name is {len(company)} chars (max 40)."})
+    if len(tagline) > 60:
+        issues.append({"severity": "error", "rule": "ph-tagline-60", "message": f"Tagline is {len(tagline)} chars (max 60)."})
+    if len(description) > 260:
+        issues.append({"severity": "error", "rule": "ph-desc-260", "message": f"Description is {len(description)} chars (max 260)."})
+    if len(topics) > 3:
+        issues.append({"severity": "warning", "rule": "ph-max-3-topics", "message": f"Selected {len(topics)} topics (Product Hunt allows max 3)."})
+
+    lowered_copy = f"{tagline} {description}".lower()
+    found_buzz = [bw for bw in BANNED_BUZZWORDS if bw in lowered_copy]
+    if found_buzz:
+        issues.append(
+            {
+                "severity": "warning",
+                "rule": "fi-no-buzzwords",
+                "message": f"Remove buzzwords from PH copy: {', '.join(found_buzz)}.",
+            }
+        )
+
+    errors = sum(1 for i in issues if i["severity"] == "error")
+    lint_report = {
+        "passed": errors == 0,
+        "nameChars": len(company),
+        "taglineChars": len(tagline),
+        "descriptionChars": len(description),
+        "topicCount": len(topics),
+        "issues": issues,
+    }
+
+    maker_comment = (
+        f"Hey Product Hunt! 👋\n\n"
+        f"I'm the founder of **{company}**. We built {company} after seeing firsthand how much time and money "
+        f"{audience} lose trying to {problem}.\n\n"
+        f"**What makes {company} different (our Secret Sauce):**\n"
+        f"Instead of bloated enterprise setups or brittle spreadsheets, {company} uses {secret} so you see measurable ROI in your very first week.\n\n"
+        f"**Our Ethical & For-Progress Commitment:**\n"
+        f"- 100% customer-owned data (instant export, zero lock-in, 1-click cancel)\n"
+        f"- Primary For-Progress iKPI we track alongside revenue: *{ikpi_name}*\n\n"
+        f"**Product Hunt Community Offer:**\n"
+        f"{ph_offer}\n\n"
+        f"I'll be here all day answering every single question—would love your brutally honest feedback on what works and what we should sharpen next!"
+    )
+
+    out_dir = ws / "launch" / "product-hunt"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    kit_md = f"""# {company} — Product Hunt Launch Kit
+
+- **Target Launch Window:** `{launch_date}` (Schedule for **12:01 AM PT**)
+- **Submission Lint Status:** `{"PASSED" if lint_report["passed"] else "NEEDS FIXES"}`
+- **Mensarius Compliance:** Zero upvote rings, zero bots, zero fake urgency — focus on genuine feedback & paying conversions.
+
+---
+
+## 1. Exact Product Hunt Submission Fields
+
+- **Product Name ({len(company)}/40 chars):** `{company}`
+- **Tagline ({len(tagline)}/60 chars):** `{tagline}`
+- **Topics ({len(topics)}/3):** {", ".join(f"`{t}`" for t in topics[:3])}
+- **Description ({len(description)}/260 chars):**
+  > {description}
+- **Community Offer:** {ph_offer}
+
+---
+
+## 2. First Maker Comment (Post at 12:02 AM PT)
+
+{maker_comment}
+
+---
+
+## 3. Gallery Image Storyboard (`1270 x 760 px` — Build in Canva or Figma)
+
+> Pair with `design-studio-canva-figma` (`canva_canva` / `figma_figma`) or Replit screenshots.
+
+1. **Thumbnail (`240 x 240 px`):** High-contrast `{company}` logo mark readable at feed size.
+2. **Slide 1 — Clear Outcome Hero:** `{tagline}` + clean UI visual showing the core result.
+3. **Slide 2 — 3-Step Workflow:** Step 1 (2-min connect) -> Step 2 (`{secret}`) -> Step 3 (Verified ROI output).
+4. **Slide 3 — Live Product Screenshot:** Real annotated product screen (zero stock illustrations).
+5. **Slide 4 — Honest Comparison / ROI Proof:** `{company}` vs. legacy tools & manual spreadsheets.
+6. **Slide 5 — Transparent Pricing & For-Progress Charter:** `{impact_thesis}` + `{ph_offer}`.
+
+---
+
+## 4. Ethical Launch-Day Outreach Templates (Zero Upvote Begging)
+
+### Warm Supporter / FI Mentor / Pilot Customer Note
+> Subject: We're live on Product Hunt today — would love your honest take!
+>
+> Hey [Name], thanks again for your feedback while we built {company}. We just launched on Product Hunt today to help {audience} {problem}.
+>
+> If you have 2 minutes, I'd genuinely appreciate your honest feedback or a tough question in the comments: [Product Hunt URL]
+>
+> — [Founder Name]
+
+### LinkedIn / X Launch Post
+> Today we're launching **{company}** on Product Hunt.
+>
+> Why we built it: {audience} lose way too much time and cash trying to {problem}.
+>
+> How it works: {secret} — delivering clear ROI in week one with transparent pricing and 100% customer-owned data.
+>
+> Come tear it apart and ask us anything in the comments today: [Product Hunt URL]
+
+---
+
+## 5. Launch-Day Execution Checklist
+- [ ] Coming Soon teaser live by T-7 days
+- [ ] Live landing page (`landing/index.html`) or Replit URL + checkout verified end-to-end
+- [ ] 60–90s founder demo video uploaded (real product shown in first 5 seconds)
+- [ ] Launch scheduled for 12:01 AM PT; First Maker Comment posted at 12:02 AM PT
+- [ ] Reply to every comment inside 15 minutes; log warm buyer leads into `pact_pipeline_manage(kind="customer")`
+"""
+
+    kit_path = out_dir / "PH_LAUNCH_KIT.md"
+    plan_path = out_dir / "launch-plan.json"
+    plan_data = {
+        "productName": company,
+        "tagline": tagline,
+        "description": description,
+        "topics": topics[:3],
+        "phOffer": ph_offer,
+        "launchDate": launch_date,
+        "lint": lint_report,
+        "generatedAt": _now_iso(),
+    }
+
+    kit_path.write_text(kit_md, encoding="utf-8")
+    plan_path.write_text(json.dumps(plan_data, indent=2) + "\n", encoding="utf-8")
+
+    return {
+        "kitPath": str(kit_path),
+        "planPath": str(plan_path),
+        "lint": lint_report,
+        "nextStep": "Review PH_LAUNCH_KIT.md, generate 1270x760 gallery visuals in Canva/Figma, and schedule launch for 12:01 AM PT.",
+    }
+
+
 def tool_landing_page_build(args: dict[str, Any]) -> dict[str, Any]:
     ws = _resolve_workspace(args.get("workspace_path"))
     overrides = args.get("overrides") if isinstance(args.get("overrides"), dict) else {}
@@ -1405,6 +1587,22 @@ TOOLS: list[dict[str, Any]] = [
             "required": ["action"],
         },
     },
+    {
+        "name": "product_hunt_kit_build",
+        "description": "Lint Product Hunt character limits (name<=40, buzzword-free tagline<=60, description<=260) and generate launch/product-hunt/PH_LAUNCH_KIT.md + launch-plan.json (Maker Comment, 1270x760 gallery storyboard, ethical outreach & launch-day checklist).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "workspace_path": {"type": "string"},
+                "product_name": {"type": "string"},
+                "tagline": {"type": "string"},
+                "description": {"type": "string"},
+                "topics": {"type": "array", "items": {"type": "string"}},
+                "ph_offer": {"type": "string"},
+                "launch_date": {"type": "string"},
+            },
+        },
+    },
 ]
 
 TOOL_HANDLERS = {
@@ -1422,6 +1620,7 @@ TOOL_HANDLERS = {
     "landing_page_build": tool_landing_page_build,
     "ikpi_catalog_search": tool_ikpi_catalog_search,
     "sprint_manage": tool_sprint_manage,
+    "product_hunt_kit_build": tool_product_hunt_kit_build,
 }
 
 
