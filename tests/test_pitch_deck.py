@@ -130,17 +130,20 @@ class TestPitchDeckAndScaffolder(unittest.TestCase):
             self.assertEqual(state["companyName"], "ClaimGuard")
             self.assertEqual(state["stage"], "idea")
 
-    def test_design_brief_exports_canva_and_figma_handoffs(self) -> None:
+    def test_design_brief_exports_canva_figma_and_replit_handoffs(self) -> None:
         res_dir = ROOT / "skills" / "pitch-deck-builder" / "resources"
         with tempfile.TemporaryDirectory() as td:
             src = Path(td) / "deck.json"
             src.write_text((res_dir / "deck.traction.json").read_text(encoding="utf-8"), encoding="utf-8")
-            res = export_design_briefs(src, target="both")
+            res = export_design_briefs(src, target="all")
             canva_md = Path(res["files"]["canvaBrief"]).read_text(encoding="utf-8")
             figma_md = Path(res["files"]["figmaBrief"]).read_text(encoding="utf-8")
+            replit_md = Path(res["files"]["replitBrief"]).read_text(encoding="utf-8")
             tokens = json.loads(Path(res["files"]["figmaTokens"]).read_text(encoding="utf-8"))
             self.assertIn("Canva MCP Execution Recipe", canva_md)
             self.assertIn("Figma MCP Execution Recipe", figma_md)
+            self.assertIn("One-Shot Replit Slides Prompt", replit_md)
+            self.assertIn("https://replit.com/refer/peterbiggam", replit_md)
             self.assertEqual(tokens["meta"]["slideDimensions"]["width"], 1920)
             self.assertEqual(tokens["meta"]["slideDimensions"]["height"], 1080)
 

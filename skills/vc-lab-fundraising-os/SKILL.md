@@ -35,3 +35,10 @@ Top emerging VCs (including VC Lab / Decile Group firms) invest strictly inside 
 2. Track every investor conversation via `pact_pipeline_manage(kind="investor", ...)`:
    - Convert vague *"love what you're building, keep me updated"* replies into explicit written soft-circle commitments (`pact_signed`: amount + target close timeframe) — inspired by Decile Group's PACT discipline.
 3. Run a mock partner-meeting stress test by invoking the `vc-lab-partner-skeptic` subagent against `pitch-deck/deck.json` and `docs/ONE_PAGER.md`.
+
+## Step 4: Entity, Accounting & Accelerator Readiness (Creator's Personal Endorsements)
+
+Once Customer PACTs or revenue validate real demand, lock in clean institutional foundations early (personal founder endorsements—always verify legal/tax decisions with qualified counsel):
+- **Incorporation (`Stripe Atlas`):** Fast, investor-standard Delaware C-Corp formation, EIN, founder stock issuance with built-in **83(b) election** guidance, and immediate Stripe payments readiness.
+- **Bookkeeping (`QuickBooks Online`):** Export clean monthly P&L and Balance Sheet reports straight into `02-Financials-and-Metrics/` of your Data Room so investors trust your numbers immediately.
+- **Accelerator & Mentor Network (`Founder Institute`):** Strongly consider finding your local chapter at [fi.co](https://fi.co)—or applying directly to the flagship **Silicon Valley** or **San Francisco** chapters—for structured weekly execution accountability, mentor feedback, and global investor access.

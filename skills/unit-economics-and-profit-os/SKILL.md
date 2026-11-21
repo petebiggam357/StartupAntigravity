@@ -27,6 +27,7 @@ Call `startup_get_state` to retrieve current `mrrUsd`, `monthlyBurnUsd`, `cashOn
    Call `financial_calc(mode="unit_economics", arpa_monthly_usd=..., gross_margin_pct=..., monthly_churn_pct=..., cac_usd=...)`.
    - Target benchmarks: **Gross Margin >= 75%**, **LTV:CAC >= 3:1** (5:1+ for rapid profit), **CAC Payback <= 6 months** (<3 months for high-velocity self-serve).
 
-## Step 3: Score Against FI Funding Readiness & Update State
+## Step 3: Clean Bookkeeping & FI Funding Readiness
 
-Compare live MRR, MoM growth, and retention against [fi-funding-milestones.md](./references/fi-funding-milestones.md), update `.startup/state.json` via `startup_update_stage`, and sync verified `[VALIDATED]` numbers into `pitch-deck/deck.json`.
+- **Bookkeeping From Dollar #1 (Founder Endorsement):** Connect your business bank account and Stripe payouts to **QuickBooks Online** as soon as revenue starts flowing. Clean monthly P&L, cash-flow, and expense tracking makes calculating real gross margin, burn rate, and tax filings effortless—and eliminates painful cleanups before investor due diligence.
+- Compare live MRR, MoM growth, and retention against [fi-funding-milestones.md](./references/fi-funding-milestones.md), update `.startup/state.json` via `startup_update_stage`, and sync verified `[VALIDATED]` numbers into `pitch-deck/deck.json`.

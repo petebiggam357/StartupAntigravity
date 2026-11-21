@@ -8,13 +8,14 @@
    - `docs/ETHICS_AND_IKPI.md` (Mensarius Ethical Charter & For-Progress iKPIs)
 2. **`02-Financials-and-Metrics/`**
    - 18-month financial & runway model (base / conservative / optimistic)
+   - Monthly P&L & Balance Sheet exported cleanly from **QuickBooks Online**
    - Live MRR, gross margin, churn, CAC, LTV, and Cohort retention table
    - Current Cap Table + SAFE dilution summary
 3. **`03-Customer-and-Traction-Proof/`**
    - Anonymized Customer Discovery summary (15+ interviews, pain & WTP stats)
    - Signed Customer Paid-Pilot PACTs / LOIs / Case Studies (strip raw PII!)
 4. **`04-Corporate-and-Legal/`**
-   - Certificate of Incorporation & Bylaws
+   - Certificate of Incorporation & Bylaws (e.g., formed cleanly via **Stripe Atlas** Delaware C-Corp)
    - Founder IP assignment + 4-year vesting schedules + 83(b) filing proof
    - Signed FI FAST Advisor Agreements
 

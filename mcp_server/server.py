@@ -795,10 +795,148 @@ def tool_pitch_deck_design_brief(args: dict[str, Any]) -> dict[str, Any]:
     p = Path(deck_path).expanduser().resolve()
     if not p.exists():
         raise FileNotFoundError(f"Pitch deck JSON not found: {p}")
-    target = str(args.get("target", "both")).lower()
-    if target not in ("both", "canva", "figma"):
-        raise ValueError("'target' must be 'both', 'canva', or 'figma'.")
+    target = str(args.get("target", "all")).lower()
+    if target not in ("all", "both", "canva", "figma", "replit"):
+        raise ValueError("'target' must be 'all', 'both', 'canva', 'figma', or 'replit'.")
     return export_design_briefs(p, target=target)
+
+
+def tool_replit_workspace_prepare(args: dict[str, Any]) -> dict[str, Any]:
+    """Scaffold zero-double-token Replit handoff config (.replit, replit.md, .env.example, docs/REPLIT_HANDOFF.md)."""
+    ws = _resolve_workspace(args.get("workspace_path"))
+    ws.mkdir(parents=True, exist_ok=True)
+    app_type = str(args.get("app_type", "web-node")).lower()
+    if app_type not in ("web-node", "web-python", "mobile-expo"):
+        raise ValueError("'app_type' must be 'web-node', 'web-python', or 'mobile-expo'.")
+
+    state = _read_json(ws / ".startup" / "state.json", {})
+    company = str(args.get("company_name") or state.get("companyName") or "Your Startup")
+    pitch = str(state.get("fiOneSentencePitch") or "Define via startup-kickstart.")
+
+    replit_configs = {
+        "web-node": {
+            "label": "Full-Stack Web Platform (Node.js / Next.js / Vite)",
+            "dot_replit": (
+                'run = "npm run dev"\n'
+                'entrypoint = "package.json"\n\n'
+                "[nix]\n"
+                'channel = "stable-24_05"\n\n'
+                "[[ports]]\n"
+                "localPort = 3000\n"
+                "externalPort = 80\n"
+            ),
+            "env_example": (
+                "# Copy these keys into Replit Secrets (NEVER commit real values to Git)\n"
+                "DATABASE_URL=\n"
+                "STRIPE_SECRET_KEY=\n"
+                "STRIPE_PUBLISHABLE_KEY=\n"
+                "APP_BASE_URL=\n"
+            ),
+            "preview_note": "Click Run in Replit to open the live Webview URL and share it with pilot customers.",
+        },
+        "web-python": {
+            "label": "Full-Stack Web / API Platform (Python 3 / FastAPI / Flask)",
+            "dot_replit": (
+                'run = "python3 -m uvicorn main:app --host 0.0.0.0 --port 8000 --reload"\n'
+                'entrypoint = "main.py"\n\n'
+                "[nix]\n"
+                'channel = "stable-24_05"\n\n'
+                "[[ports]]\n"
+                "localPort = 8000\n"
+                "externalPort = 80\n"
+            ),
+            "env_example": (
+                "# Copy these keys into Replit Secrets (NEVER commit real values to Git)\n"
+                "DATABASE_URL=\n"
+                "STRIPE_SECRET_KEY=\n"
+                "SECRET_KEY=\n"
+            ),
+            "preview_note": "Click Run in Replit to boot FastAPI/Uvicorn on port 8000 with instant public preview.",
+        },
+        "mobile-expo": {
+            "label": "Cross-Platform Mobile App (React Native + Expo Go QR)",
+            "dot_replit": (
+                'run = "npx expo start --tunnel"\n'
+                'entrypoint = "App.tsx"\n\n'
+                "[nix]\n"
+                'channel = "stable-24_05"\n\n'
+                "[[ports]]\n"
+                "localPort = 8081\n"
+                "externalPort = 80\n"
+            ),
+            "env_example": (
+                "# Copy these keys into Replit Secrets (NEVER commit real values to Git)\n"
+                "EXPO_PUBLIC_API_URL=\n"
+                "EXPO_PUBLIC_STRIPE_KEY=\n"
+            ),
+            "preview_note": "Install Expo Go on iOS/Android, click Run in Replit, and scan the QR code to test live on your phone.",
+        },
+    }
+    cfg = replit_configs[app_type]
+
+    replit_md = f"""# {company} — Replit Workspace Rules (Zero Double-Token Burn)
+
+> **FI One-Sentence Pitch:** {pitch}
+> **Stack Target:** `{app_type}` ({cfg['label']})
+
+## CRITICAL: Antigravity + Replit Collaboration Contract
+This repository is authored locally in **Google Antigravity** and synced to **Replit** via GitHub to avoid burning duplicate AI tokens on Replit's Free/Starter tier.
+
+1. **Do NOT re-architect or rewrite existing features** already committed from Antigravity.
+2. **Pull updates via Replit's Git pane** whenever local changes are pushed to GitHub (0 AI tokens used).
+3. **Use Replit primarily for:**
+   - **Replit Design Mode** (living style guide & visual UI iteration)
+   - **Live Cloud Runtime, Postgres, Secrets & Hosting**
+   - **Expo Go Mobile QR Previews** (for `mobile-expo` builds)
+   - **One-Shot Replit Slides** (using `pitch-deck/design-handoff/REPLIT_SLIDES_BRIEF.md`)
+4. **Gross Margin & Ethics Guardrail:** Keep architecture simple, maintain >=75% gross margins, never commit `.env` secrets, and reject dark patterns.
+"""
+
+    handoff_md = f"""# {company} — Antigravity to Replit Free-Tier Handoff
+
+> **Get Started on Replit (Free Tier):** https://replit.com/refer/peterbiggam *(creator referral link & personal endorsement)*
+
+## Why Use Replit Here?
+Replit lets you run your **Design System (Design Mode)**, **Web Platform or Expo Mobile App**, **Managed DB & Secrets**, **1-Click Hosting**, and **Replit Slides** in one unified cloud workspace—eliminating local Docker, Xcode, or AWS setup while staying on the Free/Starter tier until paying customers fund upgrades.
+
+## Zero-Double-Token Sync Steps
+1. **Start Visually (Optional):** Prototype your core screen in **Replit Design Mode** first to establish your living Design System, then pull the tokens back locally.
+2. **Push Local Antigravity Repo to Private GitHub:**
+   ```bash
+   gh repo create --private --source=. --remote=origin --push
+   ```
+3. **Import Into Replit:** Open [Replit](https://replit.com/refer/peterbiggam) -> **Create Repl -> Import from GitHub** -> select your private repository.
+4. **Configure Replit Secrets:** Copy every variable name from `.env.example` into Replit's encrypted **Secrets** pane (never commit real keys).
+5. **Run & Preview ({cfg['label']}):**
+   - {cfg['preview_note']}
+6. **Ongoing Zero-Token Loop:** Build heavy features locally in Antigravity -> `git push` -> click **Pull** in Replit's Git pane (0 Replit AI tokens consumed).
+7. **Optional Replit Slides Deck:** Run `pitch_deck_design_brief(target="replit")` and paste `pitch-deck/design-handoff/REPLIT_SLIDES_BRIEF.md` into Replit Slides as a single one-shot prompt.
+"""
+
+    dot_replit_path = ws / ".replit"
+    replit_md_path = ws / "replit.md"
+    env_example_path = ws / ".env.example"
+    handoff_path = ws / "docs" / "REPLIT_HANDOFF.md"
+
+    dot_replit_path.write_text(cfg["dot_replit"], encoding="utf-8")
+    replit_md_path.write_text(replit_md, encoding="utf-8")
+    if not env_example_path.exists():
+        env_example_path.write_text(cfg["env_example"], encoding="utf-8")
+    handoff_path.parent.mkdir(parents=True, exist_ok=True)
+    handoff_path.write_text(handoff_md, encoding="utf-8")
+
+    return {
+        "companyName": company,
+        "appType": app_type,
+        "replitSignupUrl": "https://replit.com/refer/peterbiggam",
+        "filesCreated": [
+            str(dot_replit_path),
+            str(replit_md_path),
+            str(env_example_path),
+            str(handoff_path),
+        ],
+        "nextStep": "Push this workspace to a private GitHub repo, then Import from GitHub inside Replit (0 Replit AI tokens burned).",
+    }
 
 
 def tool_landing_page_build(args: dict[str, Any]) -> dict[str, Any]:
@@ -1193,13 +1331,25 @@ TOOLS: list[dict[str, Any]] = [
     },
     {
         "name": "pitch_deck_design_brief",
-        "description": "Export FI-linted pitch-deck/deck.json into Canva (`CANVA_DECK_BRIEF.md`) and Figma Slides (`FIGMA_SLIDES_BRIEF.md` + W3C `FIGMA_TOKENS.json`) production handoffs for companion Canva/Figma MCP plugins.",
+        "description": "Export FI-linted pitch-deck/deck.json into Canva (`CANVA_DECK_BRIEF.md`), Figma Slides (`FIGMA_SLIDES_BRIEF.md` + W3C `FIGMA_TOKENS.json`), and one-shot Replit Slides (`REPLIT_SLIDES_BRIEF.md`) production handoffs.",
         "inputSchema": {
             "type": "object",
             "properties": {
                 "workspace_path": {"type": "string"},
                 "deck_path": {"type": "string"},
-                "target": {"type": "string", "enum": ["both", "canva", "figma"]},
+                "target": {"type": "string", "enum": ["all", "both", "canva", "figma", "replit"]},
+            },
+        },
+    },
+    {
+        "name": "replit_workspace_prepare",
+        "description": "Prepare a local Antigravity startup repo for zero-double-token Git sync with Replit Free/Starter tier (creates .replit, replit.md, .env.example, and docs/REPLIT_HANDOFF.md for web-node, web-python, or mobile-expo).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "workspace_path": {"type": "string"},
+                "app_type": {"type": "string", "enum": ["web-node", "web-python", "mobile-expo"]},
+                "company_name": {"type": "string"},
             },
         },
     },
@@ -1268,6 +1418,7 @@ TOOL_HANDLERS = {
     "financial_calc": tool_financial_calc,
     "pitch_deck_build": tool_pitch_deck_build,
     "pitch_deck_design_brief": tool_pitch_deck_design_brief,
+    "replit_workspace_prepare": tool_replit_workspace_prepare,
     "landing_page_build": tool_landing_page_build,
     "ikpi_catalog_search": tool_ikpi_catalog_search,
     "sprint_manage": tool_sprint_manage,

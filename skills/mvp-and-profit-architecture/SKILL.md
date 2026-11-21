@@ -35,3 +35,4 @@ Before finalizing the architecture, calculate variable cost per customer per mon
 Delegate the drafted `docs/MVP_SPEC.md` to the `lean-cto-margin-architect` subagent to cut another 30% of unnecessary complexity before coding starts.
 
 - **Figma UI & Code Sync (Optional Companion):** If the official Figma plugin (`figma_figma`) is active, activate `design-studio-canva-figma` to push your 48-hour landing page into Figma frames (`figma-generate-design`) or turn approved Figma wireframes directly into your 7-day vertical slice (`figma-design-to-code`).
+- **Zero-Double-Token Cloud & Mobile Shipping (`replit-launchpad`):** Want to ship a Web Platform or Expo/React Native Mobile App on a free tier without DevOps overhead? Activate `replit-launchpad` and call `replit_workspace_prepare` to sync your local Antigravity Git repo straight into Replit (`https://replit.com/refer/peterbiggam`)—starting from the Replit Design System without wasting duplicate AI tokens.

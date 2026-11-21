@@ -25,11 +25,12 @@
 - [Quickstart: Your First 30 Minutes](#quickstart-your-first-30-minutes)
 - [What's Inside the Plugin](#whats-inside-the-plugin)
   - [1. Visual Interactive FI Pitch Deck 2.0](#1-visual-interactive-fi-pitch-deck-20)
-  - [2. Companion Design Studio (Canva & Figma)](#2-companion-design-studio-canva--figma)
-  - [3. Eleven Progressive-Disclosure Startup Skills](#3-eleven-progressive-disclosure-startup-skills)
+  - [2. Companion Design & Cloud Stack (Canva, Figma & Replit)](#2-companion-design--cloud-stack-canva-figma--replit)
+  - [3. Twelve Progressive-Disclosure Startup Skills](#3-twelve-progressive-disclosure-startup-skills)
   - [4. Five Founding Advisory Subagents](#4-five-founding-advisory-subagents)
-  - [5. Thirteen-Tool Local MCP Server (`startup-antigravity-os`)](#5-thirteen-tool-local-mcp-server-startup-antigravity-os)
+  - [5. Fourteen-Tool Local MCP Server (`startup-antigravity-os`)](#5-fourteen-tool-local-mcp-server-startup-antigravity-os)
   - [6. Always-On Guardrails & Four Lifecycle Hooks](#6-always-on-guardrails--four-lifecycle-hooks)
+- [Creator's Recommended Founder Stack (Personal Endorsements)](#creators-recommended-founder-stack-personal-endorsements)
 - [Troubleshooting (Windows, macOS & Linux)](#troubleshooting-windows-macos--linux)
 - [License & Legal Notice](#license--legal-notice)
 
@@ -247,7 +248,7 @@ git clone https://github.com/petebiggam357/StartupAntigravity.git ".agents\plugi
 
 ## Verifying Your Installation
 
-### 1. Run the Built-In Automated Self-Test (All 23 Checks)
+### 1. Run the Built-In Automated Self-Test (All 24 Checks)
 
 **macOS / Linux:**
 ```bash
@@ -261,11 +262,11 @@ cd "$env:USERPROFILE\.gemini\config\plugins\startup-antigravity"
 python3 -m unittest discover -s tests -v
 ```
 
-Expected result: **`Ran 23 tests ... OK`** (under 1 second).
+Expected result: **`Ran 24 tests ... OK`** (under 1 second).
 
 ### 2. Verify Inside Antigravity
-1. **Customizations > Plugins:** You should see **Startup Antigravity — Ethical Venture OS (`v0.0.1-alpha`)** enabled with **11 skills**, **5 agents**, **1 rule file**, **4 hooks**, and **1 MCP server**.
-2. **Additional Options (`...`) > MCP Servers:** Confirm `startup-antigravity_startup-antigravity-os` shows as connected with **13 tools**.
+1. **Customizations > Plugins:** You should see **Startup Antigravity — Ethical Venture OS (`v0.0.1-alpha`)** enabled with **12 skills**, **5 agents**, **1 rule file**, **4 hooks**, and **1 MCP server**.
+2. **Additional Options (`...`) > MCP Servers:** Confirm `startup-antigravity_startup-antigravity-os` shows as connected with **14 tools**.
 3. **Antigravity CLI (optional):**
    ```bash
    agy plugin enable startup-antigravity
@@ -356,26 +357,26 @@ MyStartup/
   - `B` — Toggle `[VALIDATED]` / `[HYPOTHESIS]` / `[TARGET]` badges (hide for clean investor mode)
   - **Export PDF** (`Ctrl+P` / `Cmd+P`) — Crisp 16:9 slide-per-page PDF export
 
-### 2. Companion Design Studio (Canva & Figma)
-Startup Antigravity works 100% offline with zero dependencies, and composes seamlessly with Antigravity's official **Canva** and **Figma** Marketplace plugins when installed:
-- **Install from Antigravity Marketplace:** Add **Canva** (`antigravity-plugins-partners/plugin/canva`) and/or **Figma** (`antigravity-plugins-partners/plugin/figma`) and sign in once via OAuth.
-- **Pitch Deck -> Canva Presentation:** Run `pitch_deck_design_brief(target="canva")` to export `pitch-deck/design-handoff/CANVA_DECK_BRIEF.md`, then let the `design-studio-canva-figma` skill generate, edit, brand-check (`canva-brand-check`), and export investor-ready PDF/PPTX decks directly in Canva.
-- **Pitch Deck -> Native Figma Slides:** Run `pitch_deck_design_brief(target="figma")` to export `FIGMA_SLIDES_BRIEF.md` + W3C `FIGMA_TOKENS.json`, then generate a 1920x1080 variable-bound Figma Slides deck (`figma-use-slides`).
-- **GTM Visuals & MVP Sync:** Turn launch copy into resized Canva social kits (`canva-resize-for-social-media`), push `landing/index.html` into editable Figma frames (`figma-generate-design`), or turn Figma wireframes into your 7-day vertical slice MVP (`figma-design-to-code`).
+### 2. Companion Design & Cloud Stack (Canva, Figma & Replit)
+Startup Antigravity works 100% offline with zero dependencies, and pairs seamlessly with three powerhouse companion platforms:
+- **Replit Free-Tier Launchpad (Zero Double-Token Burn — https://replit.com/refer/peterbiggam):** Start visually in **Replit Design Mode** to shape your living design system, do heavy coding locally in **Antigravity** (avoiding duplicate AI token charges), and sync via private GitHub (`replit_workspace_prepare`) to run full-stack **Web Platforms** (`web-node`, `web-python`), **Expo / React Native Mobile Apps** (instant QR testing via Expo Go), managed DB/Secrets, 1-click hosting, and one-shot **Replit Slides** (`REPLIT_SLIDES_BRIEF.md`) all in one place.
+- **Canva (`antigravity-plugins-partners/plugin/canva`):** Run `pitch_deck_design_brief(target="canva")` to export `CANVA_DECK_BRIEF.md`, then let `design-studio-canva-figma` generate, edit, brand-check (`canva-brand-check`), resize launch visuals (`canva-resize-for-social-media`), and export investor-ready PDF/PPTX decks directly in Canva.
+- **Figma (`antigravity-plugins-partners/plugin/figma`):** Run `pitch_deck_design_brief(target="figma")` to export `FIGMA_SLIDES_BRIEF.md` + W3C `FIGMA_TOKENS.json`, build native 1920x1080 variable-bound **Figma Slides** (`figma-use-slides`), push `landing/index.html` into editable Figma frames (`figma-generate-design`), or convert Figma wireframes straight into your 7-day MVP (`figma-design-to-code`).
 
-### 3. Eleven Progressive-Disclosure Startup Skills
+### 3. Twelve Progressive-Disclosure Startup Skills
 | Skill | Purpose |
 | :--- | :--- |
 | `startup-kickstart` | Day-0 5-question intake, FI One-Sentence Pitch linting, UN SDG iKPI selection, and full workspace scaffold |
 | `revenue-first-validation` | Mom Test discovery, RAT experiments, Customer Paid-Pilot PACTs, and 48-hour deploy-ready landing page generator |
 | `pitch-deck-builder` | Author, edit, re-theme, switch modes (`problem-solution` / `traction` / `teaser`), lint, and compile pitch decks |
 | `design-studio-canva-figma` | Bridge FI-linted decks, landing pages, and launch kits directly into official Canva & Figma Slides MCP workflows |
+| `replit-launchpad` | Zero-double-token Antigravity ↔ Replit Free-Tier bridge: Replit Design System, Web & Expo Mobile apps, and one-shot Replit Slides |
 | `mvp-and-profit-architecture` | 7-day vertical slice MVP spec, explicit *NOT-Building-Yet* Cut-List, and `>= 75%` gross margin COGS audit |
 | `market-and-unfair-moat` | Bottom-up TAM/SAM/SOM calculation, competitive teardowns, Why-Now analysis, and Secret Sauce audit |
 | `gtm-and-cash-velocity` | Value-based pricing (10x ROI), ethical cold outbound, Show HN / Product Hunt launches, and first-100-customers loops |
-| `unit-economics-and-profit-os` | Default-Alive runway modeling, CAC/LTV/Payback, North Star metrics, and FI Funding Readiness stage scoring |
+| `unit-economics-and-profit-os` | Default-Alive runway modeling, CAC/LTV/Payback, QuickBooks Online bookkeeping hygiene, and FI Funding Readiness scoring |
 | `advisors-equity-and-fast` | Founder Institute **FAST Agreement** advisor equity calculator, 3-month trial cliffs, and co-founder vesting hygiene |
-| `vc-lab-fundraising-os` | VC fund thesis mapping, PACT soft-circle pipeline, multi-round cap table & SAFE math, Data Room, and partner drills |
+| `vc-lab-fundraising-os` | VC fund thesis mapping, PACT soft-circle pipeline, multi-round cap table & SAFE math, Stripe Atlas + QuickBooks Data Room, and partner drills |
 | `weekly-sprint-review` | FI weekly sprint accountability (`.startup/sprints.json`, 1.0–5.0 velocity) and VC Lab `docs/INVESTOR_UPDATE.md` generator |
 
 ### 4. Five Founding Advisory Subagents
@@ -385,7 +386,7 @@ Startup Antigravity works 100% offline with zero dependencies, and composes seam
 - **`lean-cto-margin-architect`** — Pragmatic founding CTO who cuts engineering scope 50–70% and protects `>= 75%` gross margins.
 - **`ethical-growth-strategist`** — Value-pricing, positioning, and ethical acquisition strategist (zero dark patterns).
 
-### 5. Thirteen-Tool Local MCP Server (`startup-antigravity-os`)
+### 5. Fourteen-Tool Local MCP Server (`startup-antigravity-os`)
 Runs locally via Python 3 stdio (zero external API keys):
 1. `startup_get_state` — Live telemetry, FI stage benchmark, interviews, PACT totals, and deck score
 2. `startup_update_stage` — Persist stage, FI pitch, MRR, burn, cash, gross margin, and iKPI
@@ -396,10 +397,11 @@ Runs locally via Python 3 stdio (zero external API keys):
 7. `pact_pipeline_manage` — Customer Paid-Pilot & Investor Soft-Circle PACT pipeline with weighted totals
 8. `financial_calc` — Deterministic math for `runway`, `unit_economics`, `tam_bottom_up`, `safe_dilution`, `fast_advisor_equity`, and `cap_table_model`
 9. `pitch_deck_build` — Lint + compile interactive SVG `index.html` and Marp `DECK.md`
-10. `pitch_deck_design_brief` — Export Canva (`CANVA_DECK_BRIEF.md`) and Figma Slides (`FIGMA_SLIDES_BRIEF.md` + W3C `FIGMA_TOKENS.json`) production handoffs
+10. `pitch_deck_design_brief` — Export Canva (`CANVA_DECK_BRIEF.md`), Figma Slides (`FIGMA_SLIDES_BRIEF.md` + W3C `FIGMA_TOKENS.json`), and one-shot Replit Slides (`REPLIT_SLIDES_BRIEF.md`) production handoffs
 11. `landing_page_build` — Generate deploy-ready `landing/index.html` with interactive ROI calculator & PACT intake
 12. `ikpi_catalog_search` — Offline search across all 17 UN SDGs (34 concrete FI *For-Progress* iKPIs)
 13. `sprint_manage` — Weekly FI sprint tracker (`start`, `close`, `list`) + `docs/INVESTOR_UPDATE.md` compiler
+14. `replit_workspace_prepare` — Scaffold `.replit`, `replit.md` (zero-double-token rules), `.env.example`, and `docs/REPLIT_HANDOFF.md` for `web-node`, `web-python`, or `mobile-expo`
 
 ### 6. Always-On Guardrails & Four Lifecycle Hooks
 - **Always-On Rules (`rules/AGENTS.md`):** Enforces Revenue-First velocity, FI buzzword-free clarity, `[VALIDATED]` vs `[HYPOTHESIS]` radical honesty, Mensarius Oath zero-dark-pattern ethics, and legal/secret hygiene.
@@ -407,6 +409,19 @@ Runs locally via Python 3 stdio (zero external API keys):
 - **`PreToolUse` (`pre_tool_guard.py`):** Blocks accidental Git commits of `.env`/keys/PII (`deny`) and nudges before heavy cluster infra (`terraform`/`kubectl`/`helm`) during `idea`/`validation` stages (`ask`).
 - **`PostToolUse` (`post_deck_rebuild.py`):** Auto-recompiles `pitch-deck/index.html` and `pitch-deck/DECK.md` every time `pitch-deck/deck.json` is edited.
 - **`Stop` (`stop_integrity_check.py`):** Verifies `.startup/state.json` and `pitch-deck/deck.json` remain valid JSON before ending a turn.
+
+---
+
+## Creator's Recommended Founder Stack (Personal Endorsements)
+
+> *These are personal endorsements from a founder, Previous Founder Institute Director, and Current Mentor & Advisor who has used every one of these platforms across real companies for years. None of these recommendations are sponsored placements—and in the spirit of Mensarius Oath transparency, the Replit link below is my personal referral link.*
+
+| Ecosystem / Tool | Why I Personally Recommend It | Link |
+| :--- | :--- | :--- |
+| **Founder Institute (`FI.co`)** | Nothing replaces real weekly mentor accountability, brutally honest pitch grading, and a global founder network. I **highly recommend** visiting [fi.co](https://fi.co) to find your **local chapter**—or applying directly to the flagship **Silicon Valley** or **San Francisco** chapters. | [fi.co](https://fi.co) |
+| **Replit** | You can genuinely run your whole early startup on Replit: **Replit Design Mode** for your Design System, full-stack **Web Platforms**, **Expo Mobile Apps** with instant QR previews, built-in DB/Secrets, 1-click hosting, and **Replit Slides**—paired locally with Antigravity via GitHub so you stay on the Free tier without double token burn. | [replit.com/refer/peterbiggam](https://replit.com/refer/peterbiggam) *(referral link)* |
+| **Stripe Atlas** | When Customer PACTs or revenue prove it's time to incorporate, **Stripe Atlas** gives founders a clean, investor-standard Delaware C-Corp, EIN, founder stock issuance with guided **83(b) election** filing, and instant Stripe payments readiness—zero messy DIY legal headaches. | [stripe.com/atlas](https://stripe.com/atlas) |
+| **QuickBooks Online** | Don't wait until tax season or Seed due diligence to organize your finances. **QuickBooks Online** makes bookkeeping, expense tracking, real-time P&L / cash-flow visibility, and CPA handoffs effortless from Dollar #1. | [quickbooks.intuit.com/online](https://quickbooks.intuit.com/online/) |
 
 ---
 

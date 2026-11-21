@@ -40,7 +40,7 @@ class TestMCPServer(unittest.TestCase):
         self.assertEqual(len(resps), 2)
         self.assertEqual(resps[0]["result"]["serverInfo"]["name"], "startup-antigravity-os")
         tool_names = {t["name"] for t in resps[1]["result"]["tools"]}
-        self.assertEqual(len(tool_names), 13)
+        self.assertEqual(len(tool_names), 14)
         self.assertIn("financial_calc", tool_names)
         self.assertIn("fi_pitch_lint", tool_names)
         self.assertIn("pact_pipeline_manage", tool_names)
@@ -48,6 +48,7 @@ class TestMCPServer(unittest.TestCase):
         self.assertIn("ikpi_catalog_search", tool_names)
         self.assertIn("sprint_manage", tool_names)
         self.assertIn("pitch_deck_design_brief", tool_names)
+        self.assertIn("replit_workspace_prepare", tool_names)
 
     def test_financial_calculators_deterministic(self) -> None:
         calls = [
@@ -352,6 +353,37 @@ class TestMCPServer(unittest.TestCase):
             upd_md = Path(upd["updatePath"]).read_text(encoding="utf-8")
             self.assertIn("Signed 3 clinics on paid pilot PACTs", upd_md)
             self.assertIn("Intro to multi-clinic dental groups", upd_md)
+
+    def test_replit_workspace_prepare_web_and_mobile(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            resps = self._run_rpc(
+                [
+                    {
+                        "jsonrpc": "2.0",
+                        "id": 1,
+                        "method": "tools/call",
+                        "params": {
+                            "name": "replit_workspace_prepare",
+                            "arguments": {
+                                "workspace_path": td,
+                                "app_type": "mobile-expo",
+                                "company_name": "ClaimGuard Mobile",
+                            },
+                        },
+                    }
+                ]
+            )
+            out = json.loads(resps[0]["result"]["content"][0]["text"])
+            self.assertEqual(out["appType"], "mobile-expo")
+            self.assertEqual(out["replitSignupUrl"], "https://replit.com/refer/peterbiggam")
+            for fp in out["filesCreated"]:
+                self.assertTrue(Path(fp).exists(), f"Missing Replit file: {fp}")
+            dot_replit = (Path(td) / ".replit").read_text(encoding="utf-8")
+            replit_md = (Path(td) / "replit.md").read_text(encoding="utf-8")
+            handoff = (Path(td) / "docs" / "REPLIT_HANDOFF.md").read_text(encoding="utf-8")
+            self.assertIn("expo start", dot_replit)
+            self.assertIn("Zero Double-Token Burn", replit_md)
+            self.assertIn("https://replit.com/refer/peterbiggam", handoff)
 
 
 if __name__ == "__main__":

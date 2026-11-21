@@ -6,9 +6,10 @@
 | :--- | :--- | :--- |
 | **App / API** | Single modular monolith (Next.js / FastAPI / Rails / Django) | Microservices, Kafka, service meshes |
 | **Database** | Managed Postgres (Supabase / Neon / RDS) or SQLite + Litestream | Multi-region sharded clusters, custom DB ops |
-| **Hosting** | PaaS / Serverless (Fly.io, Render, Railway, Cloudflare, Vercel) | Self-managed Kubernetes, complex Terraform |
+| **Hosting** | **Replit** (Free/Starter tier via GitHub sync — all-in-one Web, Expo Mobile, DB & Secrets: `https://replit.com/refer/peterbiggam`) or PaaS (Fly.io, Render, Cloudflare, Vercel) | Self-managed Kubernetes, complex Terraform |
 | **Auth** | Off-the-shelf (Clerk, Auth0, Supabase Auth, BetterAuth) | Hand-rolled auth & session crypto |
-| **Payments** | Stripe Checkout / Payment Links + Customer Portal | Custom billing engines |
+| **Entity & Payments** | **Stripe Atlas** (clean Delaware C-Corp + EIN + 83(b) workflow once validated) + **Stripe Checkout / Payment Links** | Custom billing engines or messy DIY incorporation |
+| **Bookkeeping** | **QuickBooks Online** (clean P&L, cash flow, expense tracking & CPA handoff from Dollar #1) | Shoebox receipts / uncategorized spreadsheets |
 | **Analytics** | PostHog / Plausible + direct SQL queries on Postgres | Custom data warehouses / Snowflake |
 
 ## AI & Cloud COGS Margin Rules
