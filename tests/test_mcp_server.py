@@ -40,7 +40,7 @@ class TestMCPServer(unittest.TestCase):
         self.assertEqual(len(resps), 2)
         self.assertEqual(resps[0]["result"]["serverInfo"]["name"], "startup-antigravity-os")
         tool_names = {t["name"] for t in resps[1]["result"]["tools"]}
-        self.assertEqual(len(tool_names), 15)
+        self.assertEqual(len(tool_names), 16)
         self.assertIn("financial_calc", tool_names)
         self.assertIn("fi_pitch_lint", tool_names)
         self.assertIn("pact_pipeline_manage", tool_names)
@@ -50,6 +50,7 @@ class TestMCPServer(unittest.TestCase):
         self.assertIn("pitch_deck_design_brief", tool_names)
         self.assertIn("replit_workspace_prepare", tool_names)
         self.assertIn("product_hunt_kit_build", tool_names)
+        self.assertIn("ai_connectors_manage", tool_names)
 
     def test_financial_calculators_deterministic(self) -> None:
         calls = [
@@ -430,6 +431,74 @@ class TestMCPServer(unittest.TestCase):
             rules = {i["rule"] for i in bad_out["lint"]["issues"]}
             self.assertIn("ph-tagline-60", rules)
             self.assertIn("fi-no-buzzwords", rules)
+
+    def test_ai_connectors_detect_sync_and_dry_run(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            resps = self._run_rpc(
+                [
+                    {
+                        "jsonrpc": "2.0",
+                        "id": 1,
+                        "method": "tools/call",
+                        "params": {
+                            "name": "startup_update_stage",
+                            "arguments": {
+                                "workspace_path": td,
+                                "companyName": "ClaimGuard",
+                                "stage": "validation",
+                                "fiOneSentencePitch": (
+                                    "My company, ClaimGuard, is developing billing software to help "
+                                    "independent dental clinics recover $4K/mo with payer-rule checks."
+                                ),
+                            },
+                        },
+                    },
+                    {
+                        "jsonrpc": "2.0",
+                        "id": 2,
+                        "method": "tools/call",
+                        "params": {"name": "ai_connectors_manage", "arguments": {"action": "detect"}},
+                    },
+                    {
+                        "jsonrpc": "2.0",
+                        "id": 3,
+                        "method": "tools/call",
+                        "params": {
+                            "name": "ai_connectors_manage",
+                            "arguments": {"action": "sync_context", "workspace_path": td, "targets": ["all"]},
+                        },
+                    },
+                    {
+                        "jsonrpc": "2.0",
+                        "id": 4,
+                        "method": "tools/call",
+                        "params": {
+                            "name": "ai_connectors_manage",
+                            "arguments": {
+                                "action": "second_opinion",
+                                "workspace_path": td,
+                                "provider": "xai",
+                                "prompt": "Tear apart our positioning and give 3 blunt improvements.",
+                                "dry_run": True,
+                            },
+                        },
+                    },
+                ]
+            )
+            det = json.loads(resps[1]["result"]["content"][0]["text"])
+            self.assertIn("xai", det["apis"])
+            self.assertIn("claude-cli", det["clis"])
+            self.assertIn("ollama", det["clis"])
+
+            synced = json.loads(resps[2]["result"]["content"][0]["text"])
+            self.assertEqual(len(synced["filesWritten"]), 3)
+            self.assertIn("ClaimGuard", (Path(td) / "CLAUDE.md").read_text(encoding="utf-8"))
+            self.assertIn("xAI / Grok", (Path(td) / "docs" / "GROK_CONTEXT.md").read_text(encoding="utf-8"))
+            self.assertIn("Universal Multi-AI", (Path(td) / "docs" / "AI_CONTEXT_PACK.md").read_text(encoding="utf-8"))
+
+            dry = json.loads(resps[3]["result"]["content"][0]["text"])
+            self.assertEqual(dry["mode"], "dry_run")
+            self.assertIn("ClaimGuard", dry["readyPrompt"])
 
 
 if __name__ == "__main__":

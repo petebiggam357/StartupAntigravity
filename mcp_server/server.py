@@ -20,12 +20,14 @@ from typing import Any
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 DECK_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "pitch-deck-builder" / "scripts"
 LANDING_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "revenue-first-validation" / "scripts"
+CONNECTOR_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "multi-ai-connectors" / "scripts"
 IKPI_CATALOG_PATH = Path(__file__).resolve().parent / "ikpi_catalog.json"
 
-for _p in (DECK_SCRIPTS_DIR, LANDING_SCRIPTS_DIR):
+for _p in (DECK_SCRIPTS_DIR, LANDING_SCRIPTS_DIR, CONNECTOR_SCRIPTS_DIR):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
+from ai_connector import detect_connectors, run_second_opinion, sync_ai_context  # noqa: E402
 from build_deck import (  # noqa: E402
     BANNED_BUZZWORDS,
     build_deck,
@@ -1121,6 +1123,30 @@ def tool_product_hunt_kit_build(args: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def tool_ai_connectors_manage(args: dict[str, Any]) -> dict[str, Any]:
+    action = str(args.get("action", "detect")).lower()
+    if action == "detect":
+        return detect_connectors()
+    if action == "sync_context":
+        ws = _resolve_workspace(args.get("workspace_path"))
+        targets = args.get("targets") if isinstance(args.get("targets"), list) else ["all"]
+        return sync_ai_context(ws, targets)
+    if action == "second_opinion":
+        provider = str(args.get("provider", "")).strip()
+        prompt = str(args.get("prompt", "")).strip()
+        if not provider or not prompt:
+            raise ValueError("'provider' and 'prompt' are required when action='second_opinion'.")
+        ws = _resolve_workspace(args.get("workspace_path")) if args.get("workspace_path") else None
+        return run_second_opinion(
+            provider=provider,
+            prompt=prompt,
+            workspace_path=ws,
+            model=args.get("model"),
+            dry_run=bool(args.get("dry_run", False)),
+        )
+    raise ValueError("Invalid action. Use 'detect', 'sync_context', or 'second_opinion'.")
+
+
 def tool_landing_page_build(args: dict[str, Any]) -> dict[str, Any]:
     ws = _resolve_workspace(args.get("workspace_path"))
     overrides = args.get("overrides") if isinstance(args.get("overrides"), dict) else {}
@@ -1603,6 +1629,23 @@ TOOLS: list[dict[str, Any]] = [
             },
         },
     },
+    {
+        "name": "ai_connectors_manage",
+        "description": "Optional BYO-AI connector hub for Antigravity-first founders: detect installed CLIs (claude, codex, gemini, ollama, aider) & API env vars (XAI_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY, GEMINI_API_KEY), sync workspace context files (CLAUDE.md, docs/GROK_CONTEXT.md, docs/AI_CONTEXT_PACK.md), or run optional multi-model second opinions.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "action": {"type": "string", "enum": ["detect", "sync_context", "second_opinion"]},
+                "workspace_path": {"type": "string"},
+                "targets": {"type": "array", "items": {"type": "string"}},
+                "provider": {"type": "string", "enum": ["xai", "grok", "openai", "anthropic", "ollama", "claude-cli", "codex-cli", "gemini-cli"]},
+                "prompt": {"type": "string"},
+                "model": {"type": "string"},
+                "dry_run": {"type": "boolean"},
+            },
+            "required": ["action"],
+        },
+    },
 ]
 
 TOOL_HANDLERS = {
@@ -1621,6 +1664,7 @@ TOOL_HANDLERS = {
     "ikpi_catalog_search": tool_ikpi_catalog_search,
     "sprint_manage": tool_sprint_manage,
     "product_hunt_kit_build": tool_product_hunt_kit_build,
+    "ai_connectors_manage": tool_ai_connectors_manage,
 }
 
 

@@ -26,10 +26,11 @@
 - [What's Inside the Plugin](#whats-inside-the-plugin)
   - [1. Visual Interactive FI Pitch Deck 2.0](#1-visual-interactive-fi-pitch-deck-20)
   - [2. Companion Design & Cloud Stack (Canva, Figma & Replit)](#2-companion-design--cloud-stack-canva-figma--replit)
-  - [3. Thirteen Progressive-Disclosure Startup Skills](#3-thirteen-progressive-disclosure-startup-skills)
+  - [3. Fourteen Progressive-Disclosure Startup Skills](#3-fourteen-progressive-disclosure-startup-skills)
   - [4. Five Founding Advisory Subagents](#4-five-founding-advisory-subagents)
-  - [5. Fifteen-Tool Local MCP Server (`startup-antigravity-os`)](#5-fifteen-tool-local-mcp-server-startup-antigravity-os)
-  - [6. Always-On Guardrails & Four Lifecycle Hooks](#6-always-on-guardrails--four-lifecycle-hooks)
+  - [5. Sixteen-Tool Local MCP Server (`startup-antigravity-os`)](#5-sixteen-tool-local-mcp-server-startup-antigravity-os)
+  - [6. Optional BYO-AI Addon Connectors (Claude, OpenAI, xAI Grok, Gemini CLI & Ollama)](#6-optional-byo-ai-addon-connectors-claude-openai-xai-grok-gemini-cli--ollama)
+  - [7. Always-On Guardrails & Four Lifecycle Hooks](#7-always-on-guardrails--four-lifecycle-hooks)
 - [Creator's Recommended Founder Stack (Personal Endorsements)](#creators-recommended-founder-stack-personal-endorsements)
 - [Troubleshooting (Windows, macOS & Linux)](#troubleshooting-windows-macos--linux)
 - [License & Legal Notice](#license--legal-notice)
@@ -248,7 +249,7 @@ git clone https://github.com/petebiggam357/StartupAntigravity.git ".agents\plugi
 
 ## Verifying Your Installation
 
-### 1. Run the Built-In Automated Self-Test (All 25 Checks)
+### 1. Run the Built-In Automated Self-Test (All 26 Checks)
 
 **macOS / Linux:**
 ```bash
@@ -262,11 +263,11 @@ cd "$env:USERPROFILE\.gemini\config\plugins\startup-antigravity"
 python3 -m unittest discover -s tests -v
 ```
 
-Expected result: **`Ran 25 tests ... OK`** (under 1 second).
+Expected result: **`Ran 26 tests ... OK`** (under 1 second).
 
 ### 2. Verify Inside Antigravity
-1. **Customizations > Plugins:** You should see **Startup Antigravity — Ethical Venture OS (`v0.0.1-alpha`)** enabled with **13 skills**, **5 agents**, **1 rule file**, **4 hooks**, and **1 MCP server**.
-2. **Additional Options (`...`) > MCP Servers:** Confirm `startup-antigravity_startup-antigravity-os` shows as connected with **15 tools**.
+1. **Customizations > Plugins:** You should see **Startup Antigravity — Ethical Venture OS (`v0.0.1-alpha`)** enabled with **14 skills**, **5 agents**, **1 rule file**, **4 hooks**, and **1 MCP server**.
+2. **Additional Options (`...`) > MCP Servers:** Confirm `startup-antigravity_startup-antigravity-os` shows as connected with **16 tools**.
 3. **Antigravity CLI (optional):**
    ```bash
    agy plugin enable startup-antigravity
@@ -363,7 +364,7 @@ Startup Antigravity works 100% offline with zero dependencies, and pairs seamles
 - **Canva (`antigravity-plugins-partners/plugin/canva`):** Run `pitch_deck_design_brief(target="canva")` to export `CANVA_DECK_BRIEF.md`, then let `design-studio-canva-figma` generate, edit, brand-check (`canva-brand-check`), resize launch visuals (`canva-resize-for-social-media`), and export investor-ready PDF/PPTX decks directly in Canva.
 - **Figma (`antigravity-plugins-partners/plugin/figma`):** Run `pitch_deck_design_brief(target="figma")` to export `FIGMA_SLIDES_BRIEF.md` + W3C `FIGMA_TOKENS.json`, build native 1920x1080 variable-bound **Figma Slides** (`figma-use-slides`), push `landing/index.html` into editable Figma frames (`figma-generate-design`), or convert Figma wireframes straight into your 7-day MVP (`figma-design-to-code`).
 
-### 3. Thirteen Progressive-Disclosure Startup Skills
+### 3. Fourteen Progressive-Disclosure Startup Skills
 | Skill | Purpose |
 | :--- | :--- |
 | `startup-kickstart` | Day-0 5-question intake, FI One-Sentence Pitch linting, UN SDG iKPI selection, and full workspace scaffold |
@@ -372,6 +373,7 @@ Startup Antigravity works 100% offline with zero dependencies, and pairs seamles
 | `design-studio-canva-figma` | Bridge FI-linted decks, landing pages, and launch kits directly into official Canva & Figma Slides MCP workflows |
 | `replit-launchpad` | Zero-double-token Antigravity ↔ Replit Free-Tier bridge: Replit Design System, Web & Expo Mobile apps, and one-shot Replit Slides |
 | `product-hunt-launch` | End-to-end ethical Product Hunt launch kit: linted <=60-char tagline, Maker Comment, `1270x760` Canva/Figma gallery storyboard, and T-14 -> 12:01 AM PT runbook |
+| `multi-ai-connectors` | Optional BYO-AI addon hub: detect CLIs/env vars (`claude`, `codex`, `xai/grok`, `gemini`, `ollama`), sync `CLAUDE.md`/`GROK_CONTEXT.md`/`AI_CONTEXT_PACK.md`, and run second-opinion critiques |
 | `mvp-and-profit-architecture` | 7-day vertical slice MVP spec, explicit *NOT-Building-Yet* Cut-List, and `>= 75%` gross margin COGS audit |
 | `market-and-unfair-moat` | Bottom-up TAM/SAM/SOM calculation, competitive teardowns, Why-Now analysis, and Secret Sauce audit |
 | `gtm-and-cash-velocity` | Value-based pricing (10x ROI), ethical cold outbound, Show HN / Product Hunt launches, and first-100-customers loops |
@@ -387,7 +389,7 @@ Startup Antigravity works 100% offline with zero dependencies, and pairs seamles
 - **`lean-cto-margin-architect`** — Pragmatic founding CTO who cuts engineering scope 50–70% and protects `>= 75%` gross margins.
 - **`ethical-growth-strategist`** — Value-pricing, positioning, and ethical acquisition strategist (zero dark patterns).
 
-### 5. Fifteen-Tool Local MCP Server (`startup-antigravity-os`)
+### 5. Sixteen-Tool Local MCP Server (`startup-antigravity-os`)
 Runs locally via Python 3 stdio (zero external API keys):
 1. `startup_get_state` — Live telemetry, FI stage benchmark, interviews, PACT totals, and deck score
 2. `startup_update_stage` — Persist stage, FI pitch, MRR, burn, cash, gross margin, and iKPI
@@ -404,8 +406,15 @@ Runs locally via Python 3 stdio (zero external API keys):
 13. `sprint_manage` — Weekly FI sprint tracker (`start`, `close`, `list`) + `docs/INVESTOR_UPDATE.md` compiler
 14. `replit_workspace_prepare` — Scaffold `.replit`, `replit.md` (zero-double-token rules), `.env.example`, and `docs/REPLIT_HANDOFF.md` for `web-node`, `web-python`, or `mobile-expo`
 15. `product_hunt_kit_build` — Lint Product Hunt character limits & buzzwords and generate `launch/product-hunt/PH_LAUNCH_KIT.md` + `launch-plan.json`
+16. `ai_connectors_manage` — Detect optional BYO-AI CLIs/env vars, sync `CLAUDE.md`/`GROK_CONTEXT.md`/`AI_CONTEXT_PACK.md`, and run multi-model second opinions
 
-### 6. Always-On Guardrails & Four Lifecycle Hooks
+### 6. Optional BYO-AI Addon Connectors (Claude, OpenAI, xAI Grok, Gemini CLI & Ollama)
+**Startup Antigravity is built for Google Antigravity first** — zero external AI keys are required. However, if a novice or technical founder already loves another AI platform, the `multi-ai-connectors` skill lets them plug it in cleanly without losing company context:
+- **Auto-Detect (`ai_connectors_manage(action="detect")`):** Detects installed CLIs (`claude`, `codex`, `gemini`, `ollama`, `aider`) and API env vars (`XAI_API_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`) — **never prints or saves key values**.
+- **Universal Context Sync (`action="sync_context"`):** Exports your live `.startup/` state, FI pitch, 7-day Cut-List, and Mensarius rules into `CLAUDE.md`, `docs/GROK_CONTEXT.md`, and `docs/AI_CONTEXT_PACK.md` so secondary tools stay 100% aligned.
+- **Multi-Model Second Opinion (`action="second_opinion"`):** Ask **xAI / Grok**, **Claude**, **OpenAI / Codex**, or **\$0 local Ollama** for a red-team pitch critique, market gut-check, or code review (falls back cleanly to a copy-pasteable prompt if no key/CLI is set!).
+
+### 7. Always-On Guardrails & Four Lifecycle Hooks
 - **Always-On Rules (`rules/AGENTS.md`):** Enforces Revenue-First velocity, FI buzzword-free clarity, `[VALIDATED]` vs `[HYPOTHESIS]` radical honesty, Mensarius Oath zero-dark-pattern ethics, and legal/secret hygiene.
 - **`SessionStart` (`session_bootstrap.py`):** Cues `startup-kickstart` in empty folders or injects a concise 5-line Founder Pulse (Stage, MRR, PACTs, Active Sprint, Top Risk, iKPI).
 - **`PreToolUse` (`pre_tool_guard.py`):** Blocks accidental Git commits of `.env`/keys/PII (`deny`) and nudges before heavy cluster infra (`terraform`/`kubectl`/`helm`) during `idea`/`validation` stages (`ask`).
