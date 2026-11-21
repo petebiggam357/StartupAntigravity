@@ -4,6 +4,17 @@ All notable changes to **Startup Antigravity — Ethical Venture OS** are docume
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.0.4-alpha] - 2026-11-21
+
+AI-Forward & Programmable Finance expansion for **Startup Antigravity — Ethical Venture OS** (**19 skills, 8 founding advisory subagents, 22 zero-dependency local MCP tools, 48 curated founder resources, 4 lifecycle hooks**), equipping founders of every level for AI-native execution, `x402` agent micropayments, stablecoin rails, and compliant tokenization under Mensarius Oath ethics.
+
+### Added in 0.0.4-alpha
+- **19th Skill — `ai-native-and-x402-finance`**: All-level AI-forward playbook (Level 1 Non-Technical context engineering -> Level 2 Builder MCP/A2A, eval-driven shipping & `>=75%` AI gross-margin routing -> Level 3 Growth GEO/AEO search optimization) paired with `x402` HTTP 402 USDC micropayments, stablecoin treasury rails, and a ruthless "Do You Even Need a Token?" compliance gate.
+- **8th Advisory Subagent — `ai-x402-finance-architect`**: Specialist architect for auditing LLM token COGS, designing MCP/A2A & `x402` pay-per-call endpoints, and stress-testing blockchain/RWA tokenization ideas against real utility and regulatory reality.
+- **22nd MCP Tool — `ai_x402_calc`**: Deterministic engine supporting `ai_cogs_margin` (token routing + prompt caching vs 75% margin floor), `x402_micropayment_model` (legacy card `2.9% + $0.30` vs x402 USDC settlement + auto-generating `docs/X402_AGENT_MONETIZATION_SPEC.md`), and `tokenization_readiness` (ethical & Howey-awareness scorecard).
+- **12 New Curated Founder Resources (`36 -> 48` in `mcp_server/founder_resources.json`)**: Added **`ai-native`** (6 all-level AI resources) and **`blockchain-x402`** (6 x402, USDC, Base, ERC-3643 RWA, and Mensarius token-ethics resources).
+- **1-Click Starter Prompt Palette in Desktop Launcher (`launcher/app.py`)**: Pick any of 6 battle-tested Antigravity starter prompts (Day-0 Kickstart, AI Margin & x402 Audit, PMF Audit, Call Transcript Extractor, Pitch Deck Roast, Investor Data Room) and copy to clipboard in 1 click (or `--prompts` via CLI).
+
 ## [0.0.3-alpha] - 2026-11-21
 
 Native desktop & compiled app package release for **Startup Antigravity — Ethical Venture OS**, making installation and launching your Founder Command Center & Pitch Deck a double-click experience on Linux, macOS, and Windows.

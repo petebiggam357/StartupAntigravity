@@ -193,6 +193,17 @@ class TestNativeAppPackages(unittest.TestCase):
             self.assertTrue(Path(res["dataRoomHtml"]).exists())
             self.assertEqual(res["dataRoomReadinessPct"], 100)
 
+        # Verify --prompts CLI returns all 6 starter prompts
+        prompts_proc = subprocess.run(
+            [sys.executable, str(ROOT / "launcher" / "app.py"), "--prompts"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        prompts = json.loads(prompts_proc.stdout)
+        self.assertGreaterEqual(len(prompts), 6)
+        self.assertTrue(any("x402" in p["prompt"] for p in prompts))
+
 
 if __name__ == "__main__":
     unittest.main()

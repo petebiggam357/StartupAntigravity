@@ -24,14 +24,23 @@ LANDING_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "revenue-first-validation" / "scr
 CONNECTOR_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "multi-ai-connectors" / "scripts"
 DASHBOARD_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "unit-economics-and-profit-os" / "scripts"
 DATAROOM_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "vc-lab-fundraising-os" / "scripts"
+AI_X402_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "ai-native-and-x402-finance" / "scripts"
 IKPI_CATALOG_PATH = Path(__file__).resolve().parent / "ikpi_catalog.json"
 FOUNDER_RESOURCES_PATH = Path(__file__).resolve().parent / "founder_resources.json"
 
-for _p in (DECK_SCRIPTS_DIR, LANDING_SCRIPTS_DIR, CONNECTOR_SCRIPTS_DIR, DASHBOARD_SCRIPTS_DIR, DATAROOM_SCRIPTS_DIR):
+for _p in (
+    DECK_SCRIPTS_DIR,
+    LANDING_SCRIPTS_DIR,
+    CONNECTOR_SCRIPTS_DIR,
+    DASHBOARD_SCRIPTS_DIR,
+    DATAROOM_SCRIPTS_DIR,
+    AI_X402_SCRIPTS_DIR,
+):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
 from ai_connector import detect_connectors, run_second_opinion, sync_ai_context  # noqa: E402
+from ai_x402_calc import run_ai_x402_calc  # noqa: E402
 from build_dashboard import build_dashboard  # noqa: E402
 from build_data_room import build_data_room  # noqa: E402
 from build_deck import (  # noqa: E402
@@ -44,7 +53,7 @@ from build_deck import (  # noqa: E402
 from build_landing_page import build_landing_page  # noqa: E402
 
 SERVER_NAME = "startup-antigravity-os"
-SERVER_VERSION = "0.0.3-alpha"
+SERVER_VERSION = "0.0.4-alpha"
 PROTOCOL_VERSION = "2024-11-05"
 
 FI_STAGE_BENCHMARKS: dict[str, dict[str, Any]] = {
@@ -1494,6 +1503,11 @@ def tool_data_room_build(args: dict[str, Any]) -> dict[str, Any]:
     return build_data_room(ws)
 
 
+def tool_ai_x402_calc(args: dict[str, Any]) -> dict[str, Any]:
+    ws = _resolve_workspace(args.get("workspace_path")) if args.get("workspace_path") or args.get("write_spec") else None
+    return run_ai_x402_calc(args, workspace=ws)
+
+
 def tool_transcript_ingest(args: dict[str, Any]) -> dict[str, Any]:
     """Extract structured Mom Test discovery signals from raw call transcripts and optionally log into .startup/interviews.json."""
     text = str(args.get("transcript_text") or "").strip()
@@ -2187,6 +2201,38 @@ TOOLS: list[dict[str, Any]] = [
             },
         },
     },
+    {
+        "name": "ai_x402_calc",
+        "description": "Deterministic AI-native economics & programmable-finance engine: (1) 'ai_cogs_margin' models LLM token COGS, model routing & caching against the 75% gross margin floor; (2) 'x402_micropayment_model' compares legacy card rails vs x402 HTTP 402 USDC settlement for AI agent pay-per-call APIs and optionally exports docs/X402_AGENT_MONETIZATION_SPEC.md; (3) 'tokenization_readiness' runs an ethical 'Do You Even Need a Token?' scorecard.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": ["ai_cogs_margin", "x402_micropayment_model", "tokenization_readiness"],
+                },
+                "workspace_path": {"type": "string"},
+                "monthly_arpu_usd": {"type": "number"},
+                "monthly_requests_per_user": {"type": "number"},
+                "avg_input_tokens": {"type": "number"},
+                "avg_output_tokens": {"type": "number"},
+                "cache_hit_pct": {"type": "number"},
+                "fast_model_share_pct": {"type": "number"},
+                "price_per_call_usd": {"type": "number"},
+                "monthly_paid_calls": {"type": "integer"},
+                "endpoint_path": {"type": "string"},
+                "network": {"type": "string"},
+                "write_spec": {"type": "boolean"},
+                "use_case": {"type": "string"},
+                "needs_agent_micropayments": {"type": "boolean"},
+                "needs_cross_border_settlement": {"type": "boolean"},
+                "represents_regulated_rwa": {"type": "boolean"},
+                "has_paying_fiat_customers": {"type": "boolean"},
+                "plans_public_speculative_token": {"type": "boolean"},
+            },
+            "required": ["action"],
+        },
+    },
 ]
 
 TOOL_HANDLERS = {
@@ -2211,6 +2257,7 @@ TOOL_HANDLERS = {
     "founder_dashboard_build": tool_founder_dashboard_build,
     "transcript_ingest": tool_transcript_ingest,
     "data_room_build": tool_data_room_build,
+    "ai_x402_calc": tool_ai_x402_calc,
 }
 
 

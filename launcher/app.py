@@ -25,7 +25,34 @@ from typing import Any
 
 APP_NAME = "Startup Antigravity"
 PLUGIN_NAME = "startup-antigravity"
-APP_VERSION = "0.0.3-alpha"
+APP_VERSION = "0.0.4-alpha"
+
+STARTER_PROMPTS: list[tuple[str, str]] = [
+    (
+        "Day-0 Startup Kickstart (FI Pitch + Deck)",
+        "Kickstart my startup idea with an FI One-Sentence Pitch, 14-day first-dollar validation plan, For-Progress iKPI, and interactive pitch deck.",
+    ),
+    (
+        "AI Margin & x402 Monetization Audit",
+        "Audit our AI token gross margins (target >=75%) and model an x402 HTTP 402 USDC pay-per-call endpoint for AI agents.",
+    ),
+    (
+        "PMF Truth Audit (Sean Ellis 40% Rule)",
+        "Run a brutally honest PMF reality check on our customer interviews and retention cohorts to find our High-Expectation Customer segment.",
+    ),
+    (
+        "Extract Mom Test Insights from Call Notes",
+        "Ingest this raw customer discovery transcript with transcript_ingest, flag any leading questions, and log verified pain & WTP signals.",
+    ),
+    (
+        "Pitch Deck Roast (FI Mentor + VC Lab Partner)",
+        "Critique our pitch-deck/deck.json like a Founder Institute Mentor and VC Lab Partner, then rebuild the interactive slides.",
+    ),
+    (
+        "Build Investor Data Room & Diligence Pack",
+        "Compile our investor-ready Data Room (data-room/index.html) and run the VC Lab / FI diligence readiness checklist.",
+    ),
+]
 
 
 def default_plugin_dir() -> Path:
@@ -615,6 +642,48 @@ def launch_gui() -> int:
         cursor="hand2",
     ).pack(side="right")
 
+    # 1-Click Starter Prompt Palette
+    prompt_frame = tk.Frame(root, bg=BG, padx=24)
+    prompt_frame.pack(fill="x", pady=(0, 10))
+    tk.Label(
+        prompt_frame,
+        text="Quickstart Antigravity Prompt (pick & copy into Antigravity chat):",
+        font=("Sans", 9, "bold"),
+        fg=MUTED,
+        bg=BG,
+    ).pack(anchor="w")
+    prompt_row = tk.Frame(prompt_frame, bg=BG)
+    prompt_row.pack(fill="x", pady=(4, 0))
+    prompt_labels = [p[0] for p in STARTER_PROMPTS]
+    prompt_map = dict(STARTER_PROMPTS)
+    selected_prompt = tk.StringVar(value=prompt_labels[0])
+    menu = tk.OptionMenu(prompt_row, selected_prompt, *prompt_labels)
+    menu.configure(bg=CARD, fg=TEXT, activebackground=BORDER, activeforeground=TEXT, highlightthickness=0, relief="flat")
+    menu["menu"].configure(bg=CARD, fg=TEXT)
+    menu.pack(side="left", expand=True, fill="x", padx=(0, 8))
+
+    def on_copy_prompt() -> None:
+        text = prompt_map[selected_prompt.get()]
+        root.clipboard_clear()
+        root.clipboard_append(text)
+        root.update()
+        log(f"[COPIED] {selected_prompt.get()} -> paste into Antigravity chat!")
+
+    tk.Button(
+        prompt_row,
+        text="Copy Prompt",
+        command=on_copy_prompt,
+        bg=SLATE_BTN,
+        fg=EMERALD,
+        activebackground=BORDER,
+        activeforeground=TEXT,
+        font=("Sans", 9, "bold"),
+        relief="flat",
+        padx=12,
+        pady=5,
+        cursor="hand2",
+    ).pack(side="right")
+
     log_box.pack(fill="both", expand=True, padx=24, pady=(0, 16))
     refresh_status()
     log(f"Ready — {APP_NAME} Launcher v{APP_VERSION}. Click 'Install / Update' to deploy offline.")
@@ -630,6 +699,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--install", action="store_true", help="Install or update the plugin offline")
     parser.add_argument("--uninstall", action="store_true", help="Remove the installed plugin")
     parser.add_argument("--status", action="store_true", help="Print installation & runtime status")
+    parser.add_argument("--prompts", action="store_true", help="Print quickstart Antigravity prompts as JSON")
     parser.add_argument("--dashboard", metavar="WORKSPACE", help="Open Founder Command Center for WORKSPACE")
     parser.add_argument("--deck", metavar="WORKSPACE", help="Open interactive Pitch Deck for WORKSPACE")
     parser.add_argument("--data-room", metavar="WORKSPACE", help="Build & open Investor Data Room for WORKSPACE")
@@ -652,6 +722,10 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.version:
         print(f"{PLUGIN_NAME} {APP_VERSION}")
+        return 0
+
+    if args.prompts:
+        print(json.dumps([{"label": k, "prompt": v} for k, v in STARTER_PROMPTS], indent=2))
         return 0
 
     if args.status:

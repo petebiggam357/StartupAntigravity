@@ -40,8 +40,9 @@ class TestMCPServer(unittest.TestCase):
         self.assertEqual(len(resps), 2)
         self.assertEqual(resps[0]["result"]["serverInfo"]["name"], "startup-antigravity-os")
         tool_names = {t["name"] for t in resps[1]["result"]["tools"]}
-        self.assertEqual(len(tool_names), 21)
+        self.assertEqual(len(tool_names), 22)
         self.assertIn("data_room_build", tool_names)
+        self.assertIn("ai_x402_calc", tool_names)
         self.assertIn("financial_calc", tool_names)
         self.assertIn("fi_pitch_lint", tool_names)
         self.assertIn("pact_pipeline_manage", tool_names)
@@ -764,6 +765,85 @@ class TestMCPServer(unittest.TestCase):
         self.assertTrue((ROOT / "install.sh").exists())
         self.assertTrue((ROOT / "install.ps1").exists())
         self.assertTrue((ROOT / ".github" / "workflows" / "ci.yml").exists())
+
+    def test_ai_x402_calc_all_three_actions(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            calls = [
+                {
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "ai_x402_calc",
+                        "arguments": {
+                            "action": "ai_cogs_margin",
+                            "monthly_arpu_usd": 99,
+                            "monthly_requests_per_user": 800,
+                            "fast_model_share_pct": 85,
+                            "cache_hit_pct": 40,
+                        },
+                    },
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 2,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "ai_x402_calc",
+                        "arguments": {
+                            "action": "x402_micropayment_model",
+                            "price_per_call_usd": 0.05,
+                            "monthly_paid_calls": 20000,
+                            "write_spec": True,
+                            "workspace_path": td,
+                        },
+                    },
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 3,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "ai_x402_calc",
+                        "arguments": {
+                            "action": "tokenization_readiness",
+                            "use_case": "Pay-per-call AI agent enrichment API",
+                            "needs_agent_micropayments": True,
+                        },
+                    },
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 4,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "ai_x402_calc",
+                        "arguments": {
+                            "action": "tokenization_readiness",
+                            "use_case": "Public coin to fund MVP",
+                            "plans_public_speculative_token": True,
+                        },
+                    },
+                },
+            ]
+            resps = self._run_rpc(calls)
+            cogs = json.loads(resps[0]["result"]["content"][0]["text"])
+            self.assertTrue(cogs["meets75PctMarginFloor"])
+            self.assertGreater(cogs["grossMarginPct"], 75.0)
+
+            x402 = json.loads(resps[1]["result"]["content"][0]["text"])
+            self.assertFalse(x402["legacyCard"]["viableForMicropayments"])
+            self.assertGreater(x402["x402Usdc"]["founderKeepPct"], 95.0)
+            spec = Path(x402["specPath"])
+            self.assertTrue(spec.exists())
+            self.assertIn("HTTP/1.1 402 Payment Required", spec.read_text(encoding="utf-8"))
+
+            tok_ok = json.loads(resps[2]["result"]["content"][0]["text"])
+            self.assertEqual(tok_ok["verdict"], "USE_STABLECOIN_AND_X402_RAILS")
+
+            tok_no = json.loads(resps[3]["result"]["content"][0]["text"])
+            self.assertEqual(tok_no["verdict"], "DO_NOT_LAUNCH_SPECULATIVE_TOKEN")
+            self.assertTrue(tok_no["warnings"])
 
 
 if __name__ == "__main__":

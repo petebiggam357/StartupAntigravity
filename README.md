@@ -58,17 +58,18 @@ Starting in **`v0.0.3-alpha`**, every GitHub Release includes **native compiled 
 
 | Platform | Package File | How to Run |
 | :--- | :--- | :--- |
-| **Linux (Portable)** | `StartupAntigravity-v0.0.3-alpha-x86_64.AppImage` | `chmod +x StartupAntigravity-*.AppImage && ./StartupAntigravity-*.AppImage` (or double-click in Files) |
-| **Ubuntu / Pop!_OS / Debian** | `startup-antigravity_0.0.3-alpha_all.deb` | `sudo apt install ./startup-antigravity_0.0.3-alpha_all.deb` — adds **Startup Antigravity** to your COSMIC / GNOME app launcher + `startup-antigravity` CLI |
-| **macOS (Apple Silicon / Intel)** | `StartupAntigravity-v0.0.3-alpha-macos-arm64.dmg` | Open `.dmg`, drag **Startup Antigravity.app** to **Applications**, and launch |
-| **Windows 10 & 11** | `StartupAntigravity-v0.0.3-alpha-win64.exe` | Double-click `.exe` (installs plugin offline & creates `python3.exe` shim if missing) |
-| **Universal Plugin Archive** | `startup-antigravity-v0.0.3-alpha.zip` | Unzip directly into your Antigravity plugins folder |
+| **Linux (Portable)** | `StartupAntigravity-v0.0.4-alpha-x86_64.AppImage` | `chmod +x StartupAntigravity-*.AppImage && ./StartupAntigravity-*.AppImage` (or double-click in Files) |
+| **Ubuntu / Pop!_OS / Debian** | `startup-antigravity_0.0.4-alpha_all.deb` | `sudo apt install ./startup-antigravity_0.0.4-alpha_all.deb` — adds **Startup Antigravity** to your COSMIC / GNOME app launcher + `startup-antigravity` CLI |
+| **macOS (Apple Silicon / Intel)** | `StartupAntigravity-v0.0.4-alpha-macos-arm64.dmg` | Open `.dmg`, drag **Startup Antigravity.app** to **Applications**, and launch |
+| **Windows 10 & 11** | `StartupAntigravity-v0.0.4-alpha-win64.exe` | Double-click `.exe` (installs plugin offline & creates `python3.exe` shim if missing) |
+| **Universal Plugin Archive** | `startup-antigravity-v0.0.4-alpha.zip` | Unzip directly into your Antigravity plugins folder |
 | **Integrity Checksums** | `SHA256SUMS.txt` | Verify with `sha256sum -c SHA256SUMS.txt` |
 
 **CLI mode** is also built into every native package:
 ```bash
 startup-antigravity --install          # Install or update plugin offline
 startup-antigravity --demo             # Generate & open the SolarLedger sample startup
+startup-antigravity --prompts          # List 1-click starter prompts for Antigravity
 startup-antigravity --status           # Show installed version, runtime & paths
 startup-antigravity --dashboard .      # Refresh & open Founder Command Center
 startup-antigravity --deck .           # Open interactive Pitch Deck
