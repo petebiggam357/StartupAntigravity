@@ -1,0 +1,194 @@
+{
+  "meta": {
+    "companyName": "Your Company Name",
+    "website": "https://yourcompany.com",
+    "contactName": "Founder Name, CEO",
+    "contactEmail": "founder@yourcompany.com",
+    "deckMode": "traction",
+    "fiOneSentencePitch": "My company, Your Company Name, is developing [defined offering] to help [defined target audience] [solve specific problem] with [secret sauce].",
+    "stage": "pre_seed_traction",
+    "impactThesis": "Deliver measurable customer & societal progress while compounding high-margin recurring profit.",
+    "targetPitchMinutes": 3
+  },
+  "theme": {
+    "preset": "obsidian-gold",
+    "bg": "#090D16",
+    "surface": "#131B2E",
+    "text": "#F8FAFC",
+    "muted": "#94A3B8",
+    "accent": "#F59E0B",
+    "accent2": "#10B981",
+    "border": "#1F2A44"
+  },
+  "slides": [
+    {
+      "id": "cover",
+      "type": "cover",
+      "kicker": "FOUNDER INSTITUTE TRACTION & INVESTOR DECK",
+      "headline": "Replace With Your 10-Word Traction Hook",
+      "subheadline": "My company, Your Company Name, is developing [defined offering] to help [defined target audience] [solve specific problem] with [secret sauce].",
+      "footer": "Founder Name, CEO • founder@yourcompany.com • yourcompany.com",
+      "notes": "15 seconds. Open with crisp clarity: who you are, what you built, and the headline traction signal."
+    },
+    {
+      "id": "traction",
+      "type": "metrics",
+      "kicker": "01 / TRACTION & VELOCITY",
+      "headline": "Growing 20% Month-Over-Month With 82% Gross Margin",
+      "metrics": [
+        { "value": "$12,500", "label": "Monthly Recurring Revenue (MRR) [HYPOTHESIS]" },
+        { "value": "+22%", "label": "Avg MoM Revenue Growth [HYPOTHESIS]" },
+        { "value": "82%", "label": "Gross Profit Margin [HYPOTHESIS]" },
+        { "value": "96%", "label": "Monthly Logo Retention [HYPOTHESIS]" }
+      ],
+      "callout": "Replace with verified metrics from .startup/state.json before sharing with investors.",
+      "notes": "25 seconds. In a Traction Deck, lead immediately with proof so investors lean in for the rest of the story."
+    },
+    {
+      "id": "problem",
+      "type": "bullets",
+      "kicker": "02 / THE PROBLEM",
+      "headline": "Buyers Waste $50K Annually On Fragmented Manual Ops",
+      "bullets": [
+        { "label": "Acute Cost", "text": "Quantified recurring dollar loss per buyer [HYPOTHESIS]" },
+        { "label": "Slow Execution", "text": "Hours lost every week on error-prone workflows [HYPOTHESIS]" },
+        { "label": "Legacy Lock-In", "text": "Incumbents charge enterprise fees for poor usability [HYPOTHESIS]" }
+      ],
+      "notes": "15 seconds. Keep it tight—your traction already proves the problem is urgent."
+    },
+    {
+      "id": "solution",
+      "type": "bullets",
+      "kicker": "03 / THE SOLUTION",
+      "headline": "Automated Platform Delivering 10x ROI In Week One",
+      "bullets": [
+        { "label": "Direct Savings", "text": "Cuts customer operating cost by X% immediately [HYPOTHESIS]" },
+        { "label": "Instant Speed", "text": "Automates core workflow from hours to seconds [HYPOTHESIS]" },
+        { "label": "Zero Lock-In", "text": "Transparent self-serve pricing & customer-owned data [HYPOTHESIS]" }
+      ],
+      "callout": "Secret Sauce: Clearly articulate what makes replication hard for incumbents.",
+      "notes": "15 seconds. Match the 3 problem bullets directly."
+    },
+    {
+      "id": "product",
+      "type": "two-column",
+      "kicker": "04 / PRODUCT",
+      "headline": "Live In Production With Self-Serve Customer Onboarding",
+      "leftTitle": "Core Product Loop",
+      "leftItems": [
+        "1. Self-serve integration in under 5 minutes",
+        "2. Proprietary engine automates high-value job",
+        "3. Automated ROI dashboard drives expansion"
+      ],
+      "rightTitle": "Validated Customer Outcomes",
+      "rightItems": [
+        "Add real customer quote & measured time/dollar savings [HYPOTHESIS]",
+        "Add real expansion / net dollar retention signal [HYPOTHESIS]",
+        "Add product velocity / weekly release cadence [HYPOTHESIS]"
+      ],
+      "notes": "20 seconds. Embed screenshots or show the 3-step live customer outcome."
+    },
+    {
+      "id": "unit-economics",
+      "type": "metrics",
+      "kicker": "05 / UNIT ECONOMICS & PROFIT",
+      "headline": "Capital-Efficient Engine With 2.4-Month CAC Payback",
+      "metrics": [
+        { "value": "$500", "label": "Average Revenue Per Account (ARPA) [HYPOTHESIS]" },
+        { "value": "$980", "label": "Blended Customer Acquisition Cost [HYPOTHESIS]" },
+        { "value": "$10,250", "label": "Customer Lifetime Value (LTV) [HYPOTHESIS]" },
+        { "value": "10.5:1", "label": "LTV : CAC Ratio [HYPOTHESIS]" }
+      ],
+      "callout": "All economics verified deterministically via financial_calc(mode='unit_economics').",
+      "notes": "20 seconds. VC Lab partners scrutinize CAC payback and burn multiple—show default-alive discipline."
+    },
+    {
+      "id": "market",
+      "type": "metrics",
+      "kicker": "06 / BOTTOM-UP MARKET",
+      "headline": "$2.4B Bottom-Up Market Expanding 24% Yearly",
+      "metrics": [
+        { "value": "200,000", "label": "Target ICP Accounts Globally [HYPOTHESIS]" },
+        { "value": "$12,000", "label": "Proven Annual Contract Value [HYPOTHESIS]" },
+        { "value": "$480M", "label": "Serviceable Market (SAM: 20%) [HYPOTHESIS]" },
+        { "value": "$48M", "label": "5-Year Target (SOM: 4,000 accounts) [TARGET]" }
+      ],
+      "notes": "15 seconds. Pure bottom-up arithmetic—no lazy top-down percentages."
+    },
+    {
+      "id": "gtm",
+      "type": "bullets",
+      "kicker": "07 / REPEATABLE GO-TO-MARKET",
+      "headline": "Two Proven Channels Scaling Without Paid-Ad Dependency",
+      "bullets": [
+        { "label": "Outbound Engine", "text": "Verified reply-to-close conversion funnel [HYPOTHESIS]" },
+        { "label": "Product-Led Loop", "text": "Organic referrals & shareable output artifacts [HYPOTHESIS]" },
+        { "label": "Partner Channel", "text": "High-margin co-distribution with ecosystem tools [TARGET]" }
+      ],
+      "notes": "15 seconds. Explain what already works today and how capital pours fuel on a lit fire."
+    },
+    {
+      "id": "competition",
+      "type": "comparison",
+      "kicker": "08 / COMPETITION & MOAT",
+      "headline": "Defensible Advantage Incumbents Cannot Copy Without Pain",
+      "headers": ["Dimension", "Your Company", "Legacy Leader", "Point Tool"],
+      "rows": [
+        ["Core Moat / Secret Sauce", "Proprietary [HYPOTHESIS]", "None", "Shallow"],
+        ["Payback Speed", "< 30 days", "9+ months", "Unclear"],
+        ["Gross Margin Structure", "80%+ Software", "Services-heavy", "Low switching cost"],
+        ["Mensarius Ethical Standard", "Transparent & Fair", "Opaque lock-in", "Ad/data monetized"]
+      ],
+      "notes": "15 seconds. Show why your moat widens with every customer added."
+    },
+    {
+      "id": "team",
+      "type": "two-column",
+      "kicker": "09 / TEAM",
+      "headline": "Execution-Obsessed Team Built For Category Leadership",
+      "leftTitle": "Founders",
+      "leftItems": [
+        "Founder 1 (CEO) — Proven sales/domain track record",
+        "Founder 2 (CTO) — Proven architecture & shipping velocity"
+      ],
+      "rightTitle": "Advisors & Supporters",
+      "rightItems": [
+        "FI FAST Advisors with direct ICP access",
+        "Early angels & pilot design partners"
+      ],
+      "notes": "15 seconds. Emphasize execution speed per dollar spent."
+    },
+    {
+      "id": "impact",
+      "type": "bullets",
+      "kicker": "10 / FOR-PROGRESS IMPACT & ETHICS",
+      "headline": "Compounding Profit Aligned With Measurable Global Progress",
+      "bullets": [
+        { "label": "Impact Thesis", "text": "Every dollar of revenue directly drives measurable customer/societal gain" },
+        { "label": "Primary iKPI", "text": "Quantified UN SDG-aligned metric tracked monthly [HYPOTHESIS]" },
+        { "label": "Mensarius Code", "text": "Zero dark patterns, fair pricing, transparent stakeholder governance" }
+      ],
+      "notes": "10 seconds. Show VC Lab & For-Progress investors that ethics strengthens retention and brand moat."
+    },
+    {
+      "id": "ask",
+      "type": "ask",
+      "kicker": "11 / THE ASK & SEED MILESTONES",
+      "headline": "Raising $1.5M Seed To Reach $100K MRR In 18 Months",
+      "askAmount": "$1.5M",
+      "instrument": "Post-Money SAFE / Priced Seed • $X Soft-Circled via PACTs",
+      "allocations": [
+        { "label": "GTM & Sales Velocity", "percent": "45%" },
+        { "label": "Product & AI/Automation Moat", "percent": "40%" },
+        { "label": "Security, Ops & Runway Buffer", "percent": "15%" }
+      ],
+      "milestones": [
+        "Month 6: $35K MRR with <3-month CAC payback [TARGET]",
+        "Month 12: $65K MRR & Default-Alive option unlocked [TARGET]",
+        "Month 18: $100K+ MRR ($1.2M ARR) — Series A ready [TARGET]"
+      ],
+      "impactMetric": "For-Progress Target: [Quantified 18-month iKPI milestone]",
+      "notes": "20 seconds. Mention any signed Investor PACT soft-circles and invite clear next steps."
+    }
+  ]
+}

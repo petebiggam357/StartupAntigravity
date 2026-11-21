@@ -1,0 +1,232 @@
+{
+  "meta": {
+    "companyName": "Your Company Name",
+    "website": "https://yourcompany.com",
+    "contactName": "Founder Name, CEO",
+    "contactEmail": "founder@yourcompany.com",
+    "deckMode": "problem-solution",
+    "fiOneSentencePitch": "My company, Your Company Name, is developing [defined offering] to help [defined target audience] [solve specific problem] with [secret sauce].",
+    "stage": "validation",
+    "impactThesis": "Measurably improve [target outcome] for [specific beneficiary] while generating high-margin recurring profit.",
+    "targetPitchMinutes": 3
+  },
+  "theme": {
+    "preset": "midnight-emerald",
+    "bg": "#0B1120",
+    "surface": "#111C33",
+    "text": "#F8FAFC",
+    "muted": "#94A3B8",
+    "accent": "#10B981",
+    "accent2": "#F59E0B",
+    "border": "#1E293B"
+  },
+  "slides": [
+    {
+      "id": "cover",
+      "type": "cover",
+      "kicker": "FOUNDER INSTITUTE PROBLEM-SOLUTION DECK",
+      "headline": "Replace This With Your Sharp 10-Word Hook",
+      "subheadline": "My company, Your Company Name, is developing [defined offering] to help [defined target audience] [solve specific problem] with [secret sauce].",
+      "footer": "Founder Name, CEO • founder@yourcompany.com • yourcompany.com",
+      "notes": "15 seconds. Deliver your FI One-Sentence Pitch verbatim with confidence. Zero buzzwords. State clearly who pays you and why."
+    },
+    {
+      "id": "problem",
+      "type": "bullets",
+      "kicker": "01 / THE PROBLEM",
+      "headline": "Target Buyers Lose $X Every Month To Broken Workflow",
+      "bullets": [
+        {
+          "label": "Manual Bottleneck",
+          "text": "Quantify hours wasted per week by your exact ICP [HYPOTHESIS]"
+        },
+        {
+          "label": "Costly Errors",
+          "text": "Quantify direct dollar loss or churn caused today [HYPOTHESIS]"
+        },
+        {
+          "label": "Broken Alternatives",
+          "text": "Show why spreadsheets or legacy tools fail buyers [HYPOTHESIS]"
+        }
+      ],
+      "callout": "Proof target: Cite 15+ Customer Discovery interviews with exact dollar pain.",
+      "notes": "20 seconds. Make the audience feel the financial pain immediately. Keep each bullet matched 1-to-1 with Slide 3 (Solution)."
+    },
+    {
+      "id": "solution",
+      "type": "bullets",
+      "kicker": "02 / THE SOLUTION",
+      "headline": "We Cut Workflow Time By 80% In One Click",
+      "bullets": [
+        {
+          "label": "Automated Pipeline",
+          "text": "Eliminates the manual bottleneck from Slide 2 [HYPOTHESIS]"
+        },
+        {
+          "label": "Verified Accuracy",
+          "text": "Removes the costly error source with built-in checks [HYPOTHESIS]"
+        },
+        {
+          "label": "Instant Adoption",
+          "text": "Deploys in minutes without replacing existing tools [HYPOTHESIS]"
+        }
+      ],
+      "callout": "Secret Sauce: State the proprietary workflow, data moat, or technical edge.",
+      "notes": "20 seconds. Mirror the 3 problem bullets in the exact same order. Highlight your Secret Sauce clearly."
+    },
+    {
+      "id": "product",
+      "type": "two-column",
+      "kicker": "03 / PRODUCT",
+      "headline": "Three Simple Steps From Input To Measurable ROI",
+      "leftTitle": "How It Works",
+      "leftItems": [
+        "1. Connect existing data source in under 2 minutes",
+        "2. Automated engine executes core value workflow",
+        "3. Customer exports verified result & tracks ROI"
+      ],
+      "rightTitle": "Why Customers Switch",
+      "rightItems": [
+        "10x faster than manual spreadsheets or agencies",
+        "Zero IT setup — self-serve onboarding on day one",
+        "Clear ROI visible inside the first paid week"
+      ],
+      "notes": "25 seconds. Replace this with a real product screenshot or 3-step live demo walkthrough once MVP is live."
+    },
+    {
+      "id": "why-now",
+      "type": "bullets",
+      "kicker": "04 / WHY NOW",
+      "headline": "Three Market Shifts Unlock This Category Right Now",
+      "bullets": [
+        {
+          "label": "Tech Inflection",
+          "text": "Specific capability that became 10x cheaper in past 24 months [HYPOTHESIS]"
+        },
+        {
+          "label": "Buyer Urgency",
+          "text": "Budget, regulatory, or competitive pressure forcing adoption [HYPOTHESIS]"
+        },
+        {
+          "label": "Incumbent Blindspot",
+          "text": "Why legacy vendors cannot adapt without cannibalizing revenue [HYPOTHESIS]"
+        }
+      ],
+      "notes": "15 seconds. Explain why this company could not have succeeded 3 years ago and why waiting 2 years is too late."
+    },
+    {
+      "id": "traction",
+      "type": "metrics",
+      "kicker": "05 / VALIDATION & TRACTION",
+      "headline": "Early Customer Evidence Proves Real Willingness To Pay",
+      "metrics": [
+        { "value": "0", "label": "Customer Interviews Completed [HYPOTHESIS]" },
+        { "value": "$0", "label": "Signed Pilot PACTs / MRR [HYPOTHESIS]" },
+        { "value": "0%", "label": "Weekly Activation / Retention [HYPOTHESIS]" },
+        { "value": "14d", "label": "Target Time To First Dollar [TARGET]" }
+      ],
+      "callout": "Replace placeholder zeros with verified interview, PACT, and MRR metrics from .startup/state.json.",
+      "notes": "20 seconds. Lead with paying customers, signed Customer PACTs, or concrete discovery numbers. Never inflate metrics."
+    },
+    {
+      "id": "market",
+      "type": "metrics",
+      "kicker": "06 / BOTTOM-UP MARKET",
+      "headline": "$1.2B Bottom-Up Market With Clear $24M Wedge",
+      "metrics": [
+        { "value": "100,000", "label": "Total Addressable Buyers (TAM) [HYPOTHESIS]" },
+        { "value": "$12,000", "label": "Annual Contract Value (ACV) [HYPOTHESIS]" },
+        { "value": "$240M", "label": "Serviceable Market (SAM: 20%) [HYPOTHESIS]" },
+        { "value": "$24M", "label": "3-Year Obtainable (SOM: 2,000 buyers) [TARGET]" }
+      ],
+      "callout": "Formula: TAM = Buyers × ACV. Always compute via financial_calc(mode='tam_bottom_up').",
+      "notes": "15 seconds. Walk through the exact bottom-up equation: exact buyer count times realistic annual price."
+    },
+    {
+      "id": "business-model",
+      "type": "metrics",
+      "kicker": "07 / BUSINESS MODEL & PROFIT",
+      "headline": "High-Margin Subscription Built For Rapid Cash Velocity",
+      "metrics": [
+        { "value": "$499/mo", "label": "Core Value-Based Tier [HYPOTHESIS]" },
+        { "value": "82%", "label": "Target Gross Margin [TARGET]" },
+        { "value": "<3 mo", "label": "Target CAC Payback Period [TARGET]" },
+        { "value": "6:1", "label": "Target LTV : CAC Ratio [TARGET]" }
+      ],
+      "callout": "Profit Discipline: Annual upfront discounts & paid pilots accelerate Default-Alive cash flow.",
+      "notes": "15 seconds. Emphasize high gross margin, value-based pricing (10x customer ROI), and fast payback."
+    },
+    {
+      "id": "gtm",
+      "type": "bullets",
+      "kicker": "08 / GO-TO-MARKET",
+      "headline": "Direct Ethical Distribution To First 100 Paying Customers",
+      "bullets": [
+        {
+          "label": "Channel 1: Direct",
+          "text": "Targeted founder-led outreach to 50 qualified ICP buyers/week [TARGET]"
+        },
+        {
+          "label": "Channel 2: Proof",
+          "text": "Public ROI case studies & live interactive diagnostic tool [TARGET]"
+        },
+        {
+          "label": "Channel 3: Loop",
+          "text": "Built-in customer referral & ecosystem partner co-selling [TARGET]"
+        }
+      ],
+      "notes": "15 seconds. Show a concrete, low-CAC path to the first 100 paying accounts — not 'we will run Facebook ads'."
+    },
+    {
+      "id": "competition",
+      "type": "comparison",
+      "kicker": "09 / COMPETITION & MOAT",
+      "headline": "Only Solution Combining Speed, Accuracy, And Ethical Transparency",
+      "headers": ["Capability", "Your Company", "Legacy Incumbent", "Manual / DIY"],
+      "rows": [
+        ["Time to First Value", "Under 10 mins", "3–6 months", "Weeks"],
+        ["Core Secret Sauce", "Built-in [HYPOTHESIS]", "No", "No"],
+        ["Gross-Margin Friendly Pricing", "Transparent", "Enterprise lock-in", "Hidden labor cost"],
+        ["Ethical Data Ownership", "100% Customer-Owned", "Data resale / lock-in", "Fragmented"]
+      ],
+      "notes": "15 seconds. Never say 'we have no competitors.' Show the status quo and explain your unfair structural advantage."
+    },
+    {
+      "id": "team",
+      "type": "two-column",
+      "kicker": "10 / TEAM & ADVISORS",
+      "headline": "Founders With Domain Edge And Proven Execution Speed",
+      "leftTitle": "Founding Team",
+      "leftItems": [
+        "Founder 1 (CEO) — Domain expertise, past wins, unfair buyer access",
+        "Founder 2 (CTO) — Relevant technical track record & shipping velocity"
+      ],
+      "rightTitle": "Advisors (FI FAST Aligned)",
+      "rightItems": [
+        "Domain Advisor — Specific buyer network & GTM guidance",
+        "Technical / Scale Advisor — Architecture & security credibility"
+      ],
+      "notes": "15 seconds. Highlight why THIS team has founder-market fit and the grit to execute faster than anyone else."
+    },
+    {
+      "id": "ask",
+      "type": "ask",
+      "kicker": "11 / FOR-PROGRESS IMPACT & THE ASK",
+      "headline": "Raising $500K Pre-Seed To Hit $25K MRR In 12 Months",
+      "askAmount": "$500K",
+      "instrument": "Post-Money SAFE (or Customer-Funded Profit Path)",
+      "allocations": [
+        { "label": "Product & Core Engineering", "percent": "50%" },
+        { "label": "Go-To-Market & Customer Acquisition", "percent": "35%" },
+        { "label": "Operations, Legal & Buffer", "percent": "15%" }
+      ],
+      "milestones": [
+        "Milestone 1 (Month 3): 15 paying customers & $5K MRR [TARGET]",
+        "Milestone 2 (Month 9): $15K MRR, <4% monthly churn, >78% gross margin [TARGET]",
+        "Milestone 3 (Month 12): $25K+ MRR & verified For-Progress iKPI milestone [TARGET]"
+      ],
+      "impactMetric": "For-Progress iKPI: [Define measurable UN SDG-aligned outcome per customer]",
+      "notes": "20 seconds. Close strong. Tie every dollar raised to concrete FI Pre-Seed/Seed revenue milestones and your For-Progress iKPI."
+    }
+  ]
+}

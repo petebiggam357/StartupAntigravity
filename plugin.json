@@ -1,0 +1,21 @@
+{
+  "name": "startup-antigravity",
+  "displayName": "Startup Antigravity — Ethical Venture OS",
+  "version": "1.0.0",
+  "description": "Founder Operating System combining Founder Institute (FI.co) execution, VC Lab / Decile Group fundraising & Mensarius Oath ethics, and rapid high-margin profit velocity. Includes an interactive FI pitch deck engine, 9 startup skills, 5 advisory subagents, a zero-dependency local MCP server, and 4 lifecycle hooks.",
+  "logo": "assets/logo.svg",
+  "author": {
+    "name": "petebiggam357",
+    "url": "https://github.com/petebiggam357"
+  },
+  "homepage": "https://github.com/petebiggam357/StartupAntigravity",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/petebiggam357/StartupAntigravity"
+  },
+  "suggestedPrompts": [
+    "Kickstart my new startup idea with an FI One-Sentence Pitch, 14-day first-dollar plan, and pitch deck",
+    "Critique my pitch deck like a Founder Institute Mentor and VC Lab Partner and rebuild the slides",
+    "Model our unit economics, runway, FAST advisor equity, and bottom-up TAM"
+  ]
+}

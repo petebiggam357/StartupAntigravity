@@ -1,0 +1,48 @@
+{
+  "startup-session-bootstrap": {
+    "SessionStart": [
+      {
+        "type": "command",
+        "command": "python3 ./hooks/session_bootstrap.py",
+        "timeout": 10
+      }
+    ]
+  },
+  "startup-ethics-and-scope-guard": {
+    "PreToolUse": [
+      {
+        "matcher": "run_command|write_file|edit_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ./hooks/pre_tool_guard.py",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
+  "pitch-deck-auto-rebuild": {
+    "PostToolUse": [
+      {
+        "matcher": "write_file|edit_file",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ./hooks/post_deck_rebuild.py",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  },
+  "startup-json-integrity": {
+    "Stop": [
+      {
+        "type": "command",
+        "command": "python3 ./hooks/stop_integrity_check.py",
+        "timeout": 10
+      }
+    ]
+  }
+}
