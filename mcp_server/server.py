@@ -22,6 +22,7 @@ DECK_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "pitch-deck-builder" / "scripts"
 LANDING_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "revenue-first-validation" / "scripts"
 CONNECTOR_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "multi-ai-connectors" / "scripts"
 IKPI_CATALOG_PATH = Path(__file__).resolve().parent / "ikpi_catalog.json"
+FOUNDER_RESOURCES_PATH = Path(__file__).resolve().parent / "founder_resources.json"
 
 for _p in (DECK_SCRIPTS_DIR, LANDING_SCRIPTS_DIR, CONNECTOR_SCRIPTS_DIR):
     if str(_p) not in sys.path:
@@ -1356,6 +1357,128 @@ def tool_pmf_engine_manage(args: dict[str, Any]) -> dict[str, Any]:
     return scorecard
 
 
+STAGE_RECOMMENDED_SKILLS: dict[str, list[str]] = {
+    "idea": ["startup-kickstart", "revenue-first-validation", "pitch-deck-builder"],
+    "validation": ["revenue-first-validation", "market-and-unfair-moat", "replit-launchpad"],
+    "mvp": ["mvp-and-profit-architecture", "product-market-fit-engine", "product-hunt-launch", "weekly-sprint-review"],
+    "pre_seed_traction": ["product-market-fit-engine", "gtm-and-cash-velocity", "unit-economics-and-profit-os", "vc-lab-fundraising-os"],
+    "seed_scale": ["vc-lab-fundraising-os", "quickbooks-cfo-and-zapier", "fi-alumni-scale-stack", "weekly-sprint-review"],
+}
+
+
+def tool_founder_resources_hub(args: dict[str, Any]) -> dict[str, Any]:
+    action = str(args.get("action", "search")).lower()
+    builtin: list[dict[str, Any]] = _read_json(FOUNDER_RESOURCES_PATH, [])
+    ws_raw = args.get("workspace_path")
+    custom: list[dict[str, Any]] = []
+    if ws_raw:
+        custom_path = _resolve_workspace(ws_raw) / ".startup" / "custom_resources.json"
+        custom = _read_json(custom_path, [])
+
+    combined = builtin + custom
+
+    if action == "save_custom":
+        sdir = _startup_dir(ws_raw)
+        cpath = sdir / "custom_resources.json"
+        existing: list[dict[str, Any]] = _read_json(cpath, [])
+        title = str(args.get("title", "")).strip()
+        url = str(args.get("url", "")).strip()
+        if not title:
+            raise ValueError("'title' is required when action='save_custom'.")
+        entry = {
+            "id": f"CUST-{len(existing) + 1:03d}",
+            "title": title,
+            "category": str(args.get("category") or "custom").strip().lower(),
+            "stages": args.get("stages") or ["idea", "validation", "mvp", "pre_seed_traction", "seed_scale"],
+            "format": str(args.get("format") or "playbook").strip().lower(),
+            "source": str(args.get("source") or "Founder Custom Bookmark").strip(),
+            "url": url,
+            "summary": str(args.get("summary") or "").strip(),
+            "keyTakeaway": str(args.get("key_takeaway") or "").strip(),
+            "tags": [str(t).strip().lower() for t in (args.get("tags") or []) if str(t).strip()],
+            "savedAt": _now_iso(),
+        }
+        existing.append(entry)
+        _write_json(cpath, existing)
+        return {"saved": entry, "totalCustomResources": len(existing)}
+
+    if action == "categories":
+        counts: dict[str, int] = {}
+        for item in combined:
+            cat = str(item.get("category", "uncategorized"))
+            counts[cat] = counts.get(cat, 0) + 1
+        return {
+            "totalResources": len(combined),
+            "builtinCount": len(builtin),
+            "customCount": len(custom),
+            "categories": [
+                {"category": k, "count": v}
+                for k, v in sorted(counts.items(), key=lambda x: (-x[1], x[0]))
+            ],
+        }
+
+    if action == "stage_kit":
+        stage = str(args.get("stage") or "").strip().lower()
+        if not stage and ws_raw:
+            state = _read_json(_resolve_workspace(ws_raw) / ".startup" / "state.json", {})
+            stage = str(state.get("stage") or "idea").lower()
+        if stage not in FI_STAGE_BENCHMARKS:
+            stage = "idea"
+        limit = max(1, min(20, int(args.get("limit", 8))))
+        matched = [r for r in combined if stage in (r.get("stages") or [])][:limit]
+        return {
+            "stage": stage,
+            "fiBenchmark": FI_STAGE_BENCHMARKS[stage],
+            "recommendedSkills": STAGE_RECOMMENDED_SKILLS.get(stage, []),
+            "matchCount": len(matched),
+            "resources": matched,
+        }
+
+    # search
+    query = str(args.get("query", "")).strip().lower()
+    cat_filter = str(args.get("category", "")).strip().lower()
+    stage_filter = str(args.get("stage", "")).strip().lower()
+    fmt_filter = str(args.get("format", "")).strip().lower()
+    limit = max(1, min(32, int(args.get("limit", 6))))
+    tokens = [t for t in query.split() if t]
+
+    scored: list[tuple[int, dict[str, Any]]] = []
+    for item in combined:
+        if cat_filter and str(item.get("category", "")).lower() != cat_filter:
+            continue
+        if stage_filter and stage_filter not in [s.lower() for s in (item.get("stages") or [])]:
+            continue
+        if fmt_filter and str(item.get("format", "")).lower() != fmt_filter:
+            continue
+        if not tokens:
+            scored.append((1, item))
+        else:
+            tags = [str(t).lower() for t in (item.get("tags") or [])]
+            blob = " ".join(
+                [
+                    str(item.get("title", "")),
+                    str(item.get("summary", "")),
+                    str(item.get("keyTakeaway", "")),
+                    str(item.get("source", "")),
+                    str(item.get("category", "")),
+                    " ".join(tags),
+                ]
+            ).lower()
+            score = sum(3 if t in tags else (1 if t in blob else 0) for t in tokens)
+            if score > 0:
+                scored.append((score, item))
+
+    scored.sort(key=lambda x: (-x[0], x[1].get("id", "")))
+    matches = [item for _, item in scored[:limit]]
+    return {
+        "query": query,
+        "filters": {"category": cat_filter or None, "stage": stage_filter or None, "format": fmt_filter or None},
+        "totalCatalogSize": len(combined),
+        "matchCount": len(matches),
+        "resources": matches,
+    }
+
+
 def tool_landing_page_build(args: dict[str, Any]) -> dict[str, Any]:
     ws = _resolve_workspace(args.get("workspace_path"))
     overrides = args.get("overrides") if isinstance(args.get("overrides"), dict) else {}
@@ -1879,6 +2002,30 @@ TOOLS: list[dict[str, Any]] = [
             "required": ["action"],
         },
     },
+    {
+        "name": "founder_resources_hub",
+        "description": "Search the curated offline Founder Resources Library (32+ FI.co, VC Lab, PMF, Mom Test, legal/equity, accounting, Replit, Canva, Figma, Zapier, Dipity & Shelled AI resources), get a stage-matched Action Kit from .startup/state.json, browse categories, or save custom team/cohort bookmarks to .startup/custom_resources.json.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "action": {"type": "string", "enum": ["search", "stage_kit", "categories", "save_custom"]},
+                "workspace_path": {"type": "string"},
+                "query": {"type": "string"},
+                "category": {"type": "string"},
+                "stage": {"type": "string", "enum": ["idea", "validation", "mvp", "pre_seed_traction", "seed_scale"]},
+                "format": {"type": "string"},
+                "limit": {"type": "integer", "minimum": 1, "maximum": 32},
+                "title": {"type": "string"},
+                "url": {"type": "string"},
+                "source": {"type": "string"},
+                "summary": {"type": "string"},
+                "key_takeaway": {"type": "string"},
+                "tags": {"type": "array", "items": {"type": "string"}},
+                "stages": {"type": "array", "items": {"type": "string"}},
+            },
+            "required": ["action"],
+        },
+    },
 ]
 
 TOOL_HANDLERS = {
@@ -1899,6 +2046,7 @@ TOOL_HANDLERS = {
     "product_hunt_kit_build": tool_product_hunt_kit_build,
     "ai_connectors_manage": tool_ai_connectors_manage,
     "pmf_engine_manage": tool_pmf_engine_manage,
+    "founder_resources_hub": tool_founder_resources_hub,
 }
 
 

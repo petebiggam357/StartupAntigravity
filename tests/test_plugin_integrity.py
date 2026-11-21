@@ -85,7 +85,7 @@ class TestPluginIntegrity(unittest.TestCase):
         self.assertIn("matcher", post[0])
         self.assertIn("hooks", post[0])
 
-    def test_all_seventeen_skills(self) -> None:
+    def test_all_eighteen_skills(self) -> None:
         expected_skills = {
             "startup-kickstart",
             "pitch-deck-builder",
@@ -95,6 +95,7 @@ class TestPluginIntegrity(unittest.TestCase):
             "multi-ai-connectors",
             "quickbooks-cfo-and-zapier",
             "fi-alumni-scale-stack",
+            "founder-resources-library",
             "product-market-fit-engine",
             "revenue-first-validation",
             "mvp-and-profit-architecture",
@@ -121,6 +122,13 @@ class TestPluginIntegrity(unittest.TestCase):
         sdgs = {item["sdgNumber"] for item in catalog}
         self.assertEqual(sdgs, set(range(1, 18)))
         self.assertGreaterEqual(len(catalog), 34)
+
+    def test_founder_resources_catalog_integrity(self) -> None:
+        catalog = json.loads((ROOT / "mcp_server" / "founder_resources.json").read_text(encoding="utf-8"))
+        self.assertGreaterEqual(len(catalog), 30)
+        categories = {item["category"] for item in catalog}
+        for req_cat in ("accelerators", "pitching", "validation", "pmf", "fundraising", "legal-equity", "finance-accounting"):
+            self.assertIn(req_cat, categories)
 
     def test_all_seven_subagents(self) -> None:
         expected_agents = {

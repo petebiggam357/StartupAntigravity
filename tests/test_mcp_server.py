@@ -40,7 +40,7 @@ class TestMCPServer(unittest.TestCase):
         self.assertEqual(len(resps), 2)
         self.assertEqual(resps[0]["result"]["serverInfo"]["name"], "startup-antigravity-os")
         tool_names = {t["name"] for t in resps[1]["result"]["tools"]}
-        self.assertEqual(len(tool_names), 17)
+        self.assertEqual(len(tool_names), 18)
         self.assertIn("financial_calc", tool_names)
         self.assertIn("fi_pitch_lint", tool_names)
         self.assertIn("pact_pipeline_manage", tool_names)
@@ -52,6 +52,7 @@ class TestMCPServer(unittest.TestCase):
         self.assertIn("product_hunt_kit_build", tool_names)
         self.assertIn("ai_connectors_manage", tool_names)
         self.assertIn("pmf_engine_manage", tool_names)
+        self.assertIn("founder_resources_hub", tool_names)
 
     def test_financial_calculators_deterministic(self) -> None:
         calls = [
@@ -613,6 +614,66 @@ class TestMCPServer(unittest.TestCase):
             md = Path(rep["reportPath"]).read_text(encoding="utf-8")
             self.assertIn("Superhuman 50/50 PMF Roadmap", md)
             self.assertIn("Faster CSV import", md)
+
+    def test_founder_resources_hub_search_stage_kit_and_custom(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            calls = [
+                {
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "startup_update_stage",
+                        "arguments": {"workspace_path": td, "companyName": "ClaimGuard", "stage": "validation"},
+                    },
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 2,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "founder_resources_hub",
+                        "arguments": {"action": "stage_kit", "workspace_path": td},
+                    },
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 3,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "founder_resources_hub",
+                        "arguments": {"action": "save_custom", "workspace_path": td, "title": "Local FI Mentor Office Hours", "url": "https://fi.co/mentors", "category": "accelerators", "tags": ["mentors", "local"]},
+                    },
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 4,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "founder_resources_hub",
+                        "arguments": {"action": "search", "workspace_path": td, "query": "mentors"},
+                    },
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 5,
+                    "method": "tools/call",
+                    "params": {"name": "founder_resources_hub", "arguments": {"action": "categories", "workspace_path": td}},
+                },
+            ]
+            resps = self._run_rpc(calls)
+            kit = json.loads(resps[1]["result"]["content"][0]["text"])
+            self.assertEqual(kit["stage"], "validation")
+            self.assertGreater(kit["matchCount"], 0)
+            self.assertIn("revenue-first-validation", kit["recommendedSkills"])
+
+            srch = json.loads(resps[3]["result"]["content"][0]["text"])
+            titles = [r["title"] for r in srch["resources"]]
+            self.assertIn("Local FI Mentor Office Hours", titles)
+
+            cats = json.loads(resps[4]["result"]["content"][0]["text"])
+            self.assertEqual(cats["customCount"], 1)
+            self.assertGreaterEqual(cats["builtinCount"], 32)
 
 
 if __name__ == "__main__":
