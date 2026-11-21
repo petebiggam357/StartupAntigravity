@@ -20,7 +20,7 @@ Ask the founder these 5 sharp questions (keep it conversational, or extract answ
 2. **Hyper-Specific Buyer (ICP)**: Who is the *exact* person with budget who suffers this pain today? (Reject "everyone", "consumers", or "small businesses".)
 3. **Quantified Problem & Secret Sauce**: What costly problem do they face today, and what is your unfair **Secret Sauce** (proprietary workflow, data, domain edge, or speed)?
 4. **14-Day First-Dollar Path**: What is the fastest ethical offer (paid pilot, pre-order PACT, concierge service, or deposit) someone could pay for within 14 days?
-5. **For-Progress Impact Thesis & iKPI**: As this company generates massive profit, what measurable positive outcome (iKPI / UN SDG alignment) compounds alongside revenue?
+5. **For-Progress Impact Thesis & iKPI**: As this company generates massive profit, what measurable positive outcome (iKPI / UN SDG alignment) compounds alongside revenue? (Call `ikpi_catalog_search` with their industry/keywords to offer 3 concrete UN SDG-aligned iKPIs in 10 seconds!)
 
 ## Step 2: Craft & Lint the FI One-Sentence Pitch
 

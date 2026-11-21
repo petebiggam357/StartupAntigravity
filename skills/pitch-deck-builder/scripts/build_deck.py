@@ -258,7 +258,18 @@ def lint_deck(deck_data: dict[str, Any]) -> dict[str, Any]:
             ],
         }
 
-    if len(slides) < 8 or len(slides) > 15:
+    deck_mode = str(meta.get("deckMode", "problem-solution")).lower()
+    if deck_mode == "teaser":
+        if len(slides) < 3 or len(slides) > 5:
+            issues.append(
+                {
+                    "slide": "deck",
+                    "severity": "warning",
+                    "rule": "fi-slide-count",
+                    "message": f"Teaser deck has {len(slides)} slides; VC Lab recommends 3–5 tight slides.",
+                }
+            )
+    elif len(slides) < 8 or len(slides) > 15:
         issues.append(
             {
                 "slide": "deck",
@@ -372,6 +383,158 @@ def lint_deck(deck_data: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _format_num(val: float, prefix: str = "", suffix: str = "") -> str:
+    if abs(val) >= 1_000_000:
+        num = f"{val / 1_000_000:.1f}M"
+    elif abs(val) >= 1_000:
+        num = f"{val / 1_000:.1f}K" if val % 1000 != 0 else f"{int(val // 1000)}K"
+    else:
+        num = f"{int(val)}" if float(val).is_integer() else f"{val:.1f}"
+    return f"{prefix}{num}{suffix}"
+
+
+def _render_svg_chart(slide: dict[str, Any], kind: str) -> str:
+    """Render a zero-dependency responsive inline SVG line or bar chart."""
+    series = slide.get("series") or []
+    prefix = str(slide.get("unitPrefix", ""))
+    suffix = str(slide.get("unitSuffix", ""))
+    title = _format_badges_html(str(slide.get("chartTitle", "")))
+    if not series:
+        return '<div class="visual-card"><p>No chart series data provided.</p></div>'
+
+    w, h = 860, 320
+    pad_l, pad_r, pad_t, pad_b = 64, 36, 36, 48
+    plot_w = w - pad_l - pad_r
+    plot_h = h - pad_t - pad_b
+    vals = [float(p.get("value", 0)) for p in series]
+    max_v = max(max(vals), 1.0) * 1.15
+    n = len(series)
+
+    # Horizontal gridlines (4 steps)
+    grid_parts: list[str] = []
+    for step in range(5):
+        y = pad_t + plot_h - (plot_h * step / 4.0)
+        gv = max_v * step / 4.0
+        grid_parts.append(
+            f'<line x1="{pad_l}" y1="{y:.1f}" x2="{w - pad_r}" y2="{y:.1f}" '
+            f'stroke="var(--border)" stroke-width="1" stroke-dasharray="4 4"/>'
+            f'<text x="{pad_l - 10}" y="{y + 4:.1f}" text-anchor="end" fill="var(--muted)" '
+            f'font-size="12" font-family="var(--font-mono)">{html.escape(_format_num(gv, prefix, suffix))}</text>'
+        )
+
+    chart_parts: list[str] = []
+    if kind == "chart-bar":
+        slot_w = plot_w / max(n, 1)
+        bar_w = min(64.0, slot_w * 0.56)
+        for i, p in enumerate(series):
+            v = float(p.get("value", 0))
+            lbl = html.escape(str(p.get("label", "")))
+            cx = pad_l + slot_w * (i + 0.5)
+            bh = (v / max_v) * plot_h
+            bx = cx - bar_w / 2.0
+            by = pad_t + plot_h - bh
+            v_str = html.escape(_format_num(v, prefix, suffix))
+            chart_parts.append(
+                f'<rect x="{bx:.1f}" y="{by:.1f}" width="{bar_w:.1f}" height="{max(bh, 2):.1f}" '
+                f'rx="6" fill="var(--accent)" opacity="0.9"/>'
+                f'<text x="{cx:.1f}" y="{by - 8:.1f}" text-anchor="middle" fill="var(--text)" '
+                f'font-size="13" font-weight="700">{v_str}</text>'
+                f'<text x="{cx:.1f}" y="{h - 14}" text-anchor="middle" fill="var(--muted)" '
+                f'font-size="13">{lbl}</text>'
+            )
+    else:
+        coords: list[tuple[float, float, str, float]] = []
+        for i, p in enumerate(series):
+            v = float(p.get("value", 0))
+            lbl = str(p.get("label", ""))
+            x = pad_l + (plot_w * i / max(n - 1, 1)) if n > 1 else pad_l + plot_w / 2.0
+            y = pad_t + plot_h - (v / max_v) * plot_h
+            coords.append((x, y, lbl, v))
+
+        poly_pts = " ".join(f"{x:.1f},{y:.1f}" for x, y, _, _ in coords)
+        area_pts = (
+            f"{coords[0][0]:.1f},{pad_t + plot_h:.1f} "
+            + poly_pts
+            + f" {coords[-1][0]:.1f},{pad_t + plot_h:.1f}"
+        )
+        chart_parts.append(
+            '<defs><linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">'
+            '<stop offset="0%" stop-color="var(--accent)" stop-opacity="0.32"/>'
+            '<stop offset="100%" stop-color="var(--accent)" stop-opacity="0.02"/>'
+            "</linearGradient></defs>"
+            f'<polygon points="{area_pts}" fill="url(#areaGrad)"/>'
+            f'<polyline points="{poly_pts}" fill="none" stroke="var(--accent)" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>'
+        )
+        for x, y, lbl, v in coords:
+            v_str = html.escape(_format_num(v, prefix, suffix))
+            chart_parts.append(
+                f'<circle cx="{x:.1f}" cy="{y:.1f}" r="6" fill="var(--bg)" stroke="var(--accent)" stroke-width="3.5"/>'
+                f'<text x="{x:.1f}" y="{y - 12:.1f}" text-anchor="middle" fill="var(--text)" '
+                f'font-size="13" font-weight="700">{v_str}</text>'
+                f'<text x="{x:.1f}" y="{h - 14}" text-anchor="middle" fill="var(--muted)" '
+                f'font-size="13">{html.escape(lbl)}</text>'
+            )
+
+    title_html = (
+        f'<div style="font-size:14px;font-weight:700;color:var(--muted);">{title}</div>'
+        if title
+        else ""
+    )
+    return (
+        f'<div class="visual-card">{title_html}'
+        f'<svg class="visual-svg" viewBox="0 0 {w} {h}" role="img" aria-label="Chart">'
+        f'{"".join(grid_parts)}{"".join(chart_parts)}</svg></div>'
+    )
+
+
+def _render_svg_quadrant(slide: dict[str, Any]) -> str:
+    """Render a classic VC 2x2 competitive positioning SVG quadrant."""
+    w, h = 860, 340
+    pad_x, pad_y = 140, 40
+    box_w, box_h = w - 2 * pad_x, h - 2 * pad_y
+    mid_x, mid_y = pad_x + box_w / 2.0, pad_y + box_h / 2.0
+
+    x_left = html.escape(str(slide.get("xAxisLeft", "Low Speed / Legacy")))
+    x_right = html.escape(str(slide.get("xAxisRight", "High Speed / Automated")))
+    y_bottom = html.escape(str(slide.get("yAxisBottom", "Low Margin / Generic")))
+    y_top = html.escape(str(slide.get("yAxisTop", "High ROI & Ethical Moat")))
+
+    parts = [
+        f'<rect x="{pad_x}" y="{pad_y}" width="{box_w}" height="{box_h}" rx="10" fill="rgba(255,255,255,0.02)" stroke="var(--border)" stroke-width="1.5"/>',
+        f'<rect x="{mid_x}" y="{pad_y}" width="{box_w / 2.0}" height="{box_h / 2.0}" fill="var(--accent)" opacity="0.08"/>',
+        f'<line x1="{mid_x}" y1="{pad_y}" x2="{mid_x}" y2="{pad_y + box_h}" stroke="var(--border)" stroke-width="2" stroke-dasharray="6 5"/>',
+        f'<line x1="{pad_x}" y1="{mid_y}" x2="{pad_x + box_w}" y2="{mid_y}" stroke="var(--border)" stroke-width="2" stroke-dasharray="6 5"/>',
+        f'<text x="{mid_x}" y="{pad_y - 12}" text-anchor="middle" fill="var(--accent)" font-size="13" font-weight="700">{y_top}</text>',
+        f'<text x="{mid_x}" y="{pad_y + box_h + 24}" text-anchor="middle" fill="var(--muted)" font-size="12">{y_bottom}</text>',
+        f'<text x="{pad_x - 14}" y="{mid_y + 4}" text-anchor="end" fill="var(--muted)" font-size="12">{x_left}</text>',
+        f'<text x="{pad_x + box_w + 14}" y="{mid_y + 4}" text-anchor="start" fill="var(--accent)" font-size="13" font-weight="700">{x_right}</text>',
+    ]
+
+    for pt in slide.get("points", []):
+        px = max(5.0, min(95.0, float(pt.get("x", 50))))
+        py = max(5.0, min(95.0, float(pt.get("y", 50))))
+        cx = pad_x + (px / 100.0) * box_w
+        cy = pad_y + box_h - (py / 100.0) * box_h
+        name = html.escape(str(pt.get("name", "")))
+        hi = bool(pt.get("highlight", False))
+        if hi:
+            parts.append(
+                f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="18" fill="var(--accent)" opacity="0.22"/>'
+                f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="9" fill="var(--accent)" stroke="var(--text)" stroke-width="2.5"/>'
+                f'<text x="{cx:.1f}" y="{cy - 18:.1f}" text-anchor="middle" fill="var(--text)" font-size="14" font-weight="800">{name}</text>'
+            )
+        else:
+            parts.append(
+                f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="7" fill="var(--muted)" opacity="0.8"/>'
+                f'<text x="{cx:.1f}" y="{cy + 20:.1f}" text-anchor="middle" fill="var(--muted)" font-size="12">{name}</text>'
+            )
+
+    return (
+        f'<div class="visual-card"><svg class="visual-svg" viewBox="0 0 {w} {h}" '
+        f'role="img" aria-label="Competitive 2x2 Quadrant">{"".join(parts)}</svg></div>'
+    )
+
+
 def _render_slide_html(slide: dict[str, Any], index: int, total: int, company: str) -> str:
     stype = slide.get("type", "bullets")
     kicker = html.escape(slide.get("kicker", ""))
@@ -450,6 +613,42 @@ def _render_slide_html(slide: dict[str, Any], index: int, total: int, company: s
         body_parts.append(
             f'<table class="comp"><thead><tr>{headers}</tr></thead>'
             f'<tbody>{"".join(rows_html)}</tbody></table>'
+        )
+
+    elif stype in ("chart-line", "chart-bar"):
+        body_parts.append(_render_svg_chart(slide, stype))
+
+    elif stype == "quadrant-2x2":
+        body_parts.append(_render_svg_quadrant(slide))
+
+    elif stype == "product-frame":
+        url_label = html.escape(str(slide.get("appUrl", "app.yourcompany.com")))
+        img_path = str(slide.get("imagePath", "")).strip()
+        if img_path:
+            frame_inner = f'<img src="{html.escape(img_path, quote=True)}" alt="{html.escape(str(slide.get("caption", "Product screenshot")), quote=True)}"/>'
+        else:
+            steps = slide.get("mockupSteps") or [
+                "1. Connect data source in 2 minutes",
+                "2. Secret Sauce engine automates core job",
+                "3. Instant verified ROI output",
+            ]
+            frame_inner = "".join(
+                f'<div class="wireframe-step">{_format_badges_html(str(st))}</div>'
+                for st in steps
+            )
+        highlights = "".join(
+            f"<li>{_format_badges_html(str(h))}</li>" for h in slide.get("highlights", [])
+        )
+        hl_title = html.escape(str(slide.get("highlightsTitle", "Why Customers Switch")))
+        body_parts.append(
+            f'<div class="product-grid">'
+            f'  <div class="browser-frame">'
+            f'    <div class="browser-bar"><span class="browser-dot r"></span><span class="browser-dot y"></span>'
+            f'      <span class="browser-dot g"></span><span class="browser-url">{url_label}</span></div>'
+            f'    <div class="browser-body">{frame_inner}</div>'
+            f'  </div>'
+            f'  <div class="col-card"><h3>{hl_title}</h3><ul>{highlights}</ul></div>'
+            f'</div>'
         )
 
     elif stype == "ask":
@@ -589,6 +788,39 @@ def render_markdown(deck_data: dict[str, Any]) -> str:
                 lines.append("| " + " | ".join(":---" for _ in headers) + " |")
                 for row in slide.get("rows", []):
                     lines.append("| " + " | ".join(str(c) for c in row) + " |")
+        elif stype in ("chart-line", "chart-bar"):
+            prefix = str(slide.get("unitPrefix", ""))
+            suffix = str(slide.get("unitSuffix", ""))
+            if slide.get("chartTitle"):
+                lines.append(f"### {slide['chartTitle']}")
+            lines.append("| Period | Value |")
+            lines.append("| :--- | ---: |")
+            for pt in slide.get("series", []):
+                lines.append(
+                    f"| {pt.get('label', '')} | {_format_num(float(pt.get('value', 0)), prefix, suffix)} |"
+                )
+        elif stype == "quadrant-2x2":
+            lines.append(
+                f"**Axes:** X = `{slide.get('xAxisLeft', '')}` -> `{slide.get('xAxisRight', '')}` | "
+                f"Y = `{slide.get('yAxisBottom', '')}` -> `{slide.get('yAxisTop', '')}`"
+            )
+            lines.append("")
+            lines.append("| Player | X (0-100) | Y (0-100) |")
+            lines.append("| :--- | ---: | ---: |")
+            for pt in slide.get("points", []):
+                mark = " ★" if pt.get("highlight") else ""
+                lines.append(f"| **{pt.get('name', '')}{mark}** | {pt.get('x', 50)} | {pt.get('y', 50)} |")
+        elif stype == "product-frame":
+            if slide.get("imagePath"):
+                lines.append(f"![{slide.get('caption', 'Product')}]({slide['imagePath']})")
+                lines.append("")
+            for st in slide.get("mockupSteps", []):
+                lines.append(f"- {st}")
+            if slide.get("highlights"):
+                lines.append("")
+                lines.append(f"### {slide.get('highlightsTitle', 'Highlights')}")
+                for hl in slide.get("highlights", []):
+                    lines.append(f"- {hl}")
         elif stype == "ask":
             lines.append(f"**Raise:** {slide.get('askAmount', '')} — {slide.get('instrument', '')}")
             lines.append("")
@@ -660,6 +892,21 @@ def _export_optional_pptx(deck_data: dict[str, Any], out_path: Path) -> str | No
                 body_lines.append(" | ".join(str(h) for h in headers))
             for row in slide_data.get("rows", []):
                 body_lines.append(" | ".join(str(c) for c in row))
+        elif stype in ("chart-line", "chart-bar"):
+            prefix = str(slide_data.get("unitPrefix", ""))
+            suffix = str(slide_data.get("unitSuffix", ""))
+            for pt in slide_data.get("series", []):
+                body_lines.append(
+                    f"• {pt.get('label', '')}: {_format_num(float(pt.get('value', 0)), prefix, suffix)}"
+                )
+        elif stype == "quadrant-2x2":
+            for pt in slide_data.get("points", []):
+                body_lines.append(
+                    f"• {pt.get('name', '')}: X={pt.get('x', 50)}, Y={pt.get('y', 50)}"
+                )
+        elif stype == "product-frame":
+            body_lines.extend(f"• {st}" for st in slide_data.get("mockupSteps", []))
+            body_lines.extend(f"- {hl}" for hl in slide_data.get("highlights", []))
         elif stype == "ask":
             body_lines.append(
                 f"Ask: {slide_data.get('askAmount', '')} ({slide_data.get('instrument', '')})"

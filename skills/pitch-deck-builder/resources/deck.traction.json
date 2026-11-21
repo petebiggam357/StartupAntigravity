@@ -71,22 +71,24 @@
     },
     {
       "id": "product",
-      "type": "two-column",
+      "type": "product-frame",
       "kicker": "04 / PRODUCT",
       "headline": "Live In Production With Self-Serve Customer Onboarding",
-      "leftTitle": "Core Product Loop",
-      "leftItems": [
+      "appUrl": "app.yourcompany.com/dashboard",
+      "imagePath": "",
+      "caption": "Replace imagePath with assets/screenshot.png for live UI screenshot",
+      "mockupSteps": [
         "1. Self-serve integration in under 5 minutes",
         "2. Proprietary engine automates high-value job",
         "3. Automated ROI dashboard drives expansion"
       ],
-      "rightTitle": "Validated Customer Outcomes",
-      "rightItems": [
+      "highlightsTitle": "Validated Customer Outcomes",
+      "highlights": [
         "Add real customer quote & measured time/dollar savings [HYPOTHESIS]",
         "Add real expansion / net dollar retention signal [HYPOTHESIS]",
         "Add product velocity / weekly release cadence [HYPOTHESIS]"
       ],
-      "notes": "20 seconds. Embed screenshots or show the 3-step live customer outcome."
+      "notes": "20 seconds. Drop a real screenshot in pitch-deck/assets/ and set imagePath to show live product proof."
     },
     {
       "id": "unit-economics",
@@ -129,17 +131,21 @@
     },
     {
       "id": "competition",
-      "type": "comparison",
+      "type": "quadrant-2x2",
       "kicker": "08 / COMPETITION & MOAT",
-      "headline": "Defensible Advantage Incumbents Cannot Copy Without Pain",
-      "headers": ["Dimension", "Your Company", "Legacy Leader", "Point Tool"],
-      "rows": [
-        ["Core Moat / Secret Sauce", "Proprietary [HYPOTHESIS]", "None", "Shallow"],
-        ["Payback Speed", "< 30 days", "9+ months", "Unclear"],
-        ["Gross Margin Structure", "80%+ Software", "Services-heavy", "Low switching cost"],
-        ["Mensarius Ethical Standard", "Transparent & Fair", "Opaque lock-in", "Ad/data monetized"]
+      "headline": "Only High-Margin Platform Built For Instant Ethical ROI",
+      "xAxisLeft": "Slow / Manual Setup",
+      "xAxisRight": "Instant Automated ROI",
+      "yAxisBottom": "Opaque / Legacy Lock-In",
+      "yAxisTop": "High Margin & Ethical Transparency",
+      "points": [
+        { "name": "Your Company", "x": 86, "y": 88, "highlight": true },
+        { "name": "Legacy Enterprise", "x": 28, "y": 30, "highlight": false },
+        { "name": "Point Tool", "x": 65, "y": 42, "highlight": false },
+        { "name": "Spreadsheets / DIY", "x": 18, "y": 62, "highlight": false }
       ],
-      "notes": "15 seconds. Show why your moat widens with every customer added."
+      "callout": "Moat widens with every customer workflow added [HYPOTHESIS]",
+      "notes": "15 seconds. Show clearly why incumbents cannot move into your top-right quadrant without cannibalizing services."
     },
     {
       "id": "team",

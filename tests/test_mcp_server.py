@@ -40,10 +40,13 @@ class TestMCPServer(unittest.TestCase):
         self.assertEqual(len(resps), 2)
         self.assertEqual(resps[0]["result"]["serverInfo"]["name"], "startup-antigravity-os")
         tool_names = {t["name"] for t in resps[1]["result"]["tools"]}
-        self.assertEqual(len(tool_names), 9)
+        self.assertEqual(len(tool_names), 12)
         self.assertIn("financial_calc", tool_names)
         self.assertIn("fi_pitch_lint", tool_names)
         self.assertIn("pact_pipeline_manage", tool_names)
+        self.assertIn("landing_page_build", tool_names)
+        self.assertIn("ikpi_catalog_search", tool_names)
+        self.assertIn("sprint_manage", tool_names)
 
     def test_financial_calculators_deterministic(self) -> None:
         calls = [
@@ -221,6 +224,133 @@ class TestMCPServer(unittest.TestCase):
             self.assertEqual(state_resp["telemetry"]["interviewsCount"], 1)
             self.assertEqual(state_resp["telemetry"]["customerPactsCommittedUsd"], 1500.0)
             self.assertEqual(state_resp["telemetry"]["topRiskyAssumption"]["riskScore"], 20)
+
+    def test_v11_cap_table_ikpi_landing_page_and_sprints(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            calls = [
+                {
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "startup_update_stage",
+                        "arguments": {
+                            "workspace_path": td,
+                            "companyName": "ClaimGuard",
+                            "stage": "mvp",
+                            "mrrUsd": 4500,
+                            "monthlyBurnUsd": 6000,
+                            "cashOnHandUsd": 60000,
+                            "fiOneSentencePitch": (
+                                "My company, ClaimGuard, is developing claim reconciliation software "
+                                "to help independent dental clinics recover $4,000/month with payer-rule checks."
+                            ),
+                        },
+                    },
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 2,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "ikpi_catalog_search",
+                        "arguments": {"query": "healthcare dental", "limit": 3},
+                    },
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 3,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "financial_calc",
+                        "arguments": {
+                            "mode": "cap_table_model",
+                            "founders": [{"name": "Alice", "pct": 50}, {"name": "Bob", "pct": 50}],
+                            "advisors": [{"name": "FI Mentor", "pct": 1.0}],
+                            "safe_raise_usd": 500000,
+                            "safe_cap_usd": 5000000,
+                            "seed_raise_usd": 2000000,
+                            "seed_pre_money_usd": 8000000,
+                            "seed_option_pool_pct": 10,
+                        },
+                    },
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 4,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "landing_page_build",
+                        "arguments": {"workspace_path": td, "contact_email": "ceo@claimguard.io"},
+                    },
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 5,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "sprint_manage",
+                        "arguments": {
+                            "action": "start",
+                            "workspace_path": td,
+                            "primary_goal": "Close 3 dental pilot PACTs worth $1,500 MRR",
+                            "target_interviews": 10,
+                            "target_pacts": 3,
+                        },
+                    },
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 6,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "sprint_manage",
+                        "arguments": {
+                            "action": "close",
+                            "workspace_path": td,
+                            "interviews_completed": 11,
+                            "pacts_sent": 5,
+                            "pacts_signed": 3,
+                            "mrr_delta_usd": 1500,
+                            "fi_velocity_score": 4.5,
+                            "highlights": ["Signed 3 clinics on paid pilot PACTs"],
+                            "lowlights": ["Onboarding took 25 mins instead of 10 mins"],
+                        },
+                    },
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 7,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "sprint_manage",
+                        "arguments": {
+                            "action": "investor_update",
+                            "workspace_path": td,
+                            "asks": ["Intro to multi-clinic dental groups"],
+                        },
+                    },
+                },
+            ]
+            resps = self._run_rpc(calls)
+            ikpi = json.loads(resps[1]["result"]["content"][0]["text"])
+            self.assertGreater(ikpi["matchCount"], 0)
+            self.assertEqual(ikpi["matches"][0]["sdgNumber"], 3)
+
+            cap = json.loads(resps[2]["result"]["content"][0]["text"])
+            self.assertEqual(cap["seedPostMoneyValuationUsd"], 10_000_000.0)
+            self.assertGreater(cap["foundersFinalCombinedPct"], 60.0)
+
+            lp = json.loads(resps[3]["result"]["content"][0]["text"])
+            lp_html = Path(lp["htmlPath"]).read_text(encoding="utf-8")
+            self.assertIn("ClaimGuard", lp_html)
+            self.assertIn("Calculate Your Monthly ROI", lp_html)
+            self.assertIn("ceo@claimguard.io", lp_html)
+
+            upd = json.loads(resps[6]["result"]["content"][0]["text"])
+            upd_md = Path(upd["updatePath"]).read_text(encoding="utf-8")
+            self.assertIn("Signed 3 clinics on paid pilot PACTs", upd_md)
+            self.assertIn("Intro to multi-clinic dental groups", upd_md)
 
 
 if __name__ == "__main__":

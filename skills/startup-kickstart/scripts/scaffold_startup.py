@@ -243,11 +243,12 @@ Delivering **{offering}** using **{secret_sauce}** creates immediate ROI for **{
     )
 
     # 5. Pitch Deck from template
-    tpl_file = (
-        DECK_RESOURCES / "deck.traction.json"
-        if deck_mode == "traction"
-        else DECK_RESOURCES / "deck.problem-solution.json"
-    )
+    tpl_map = {
+        "problem-solution": DECK_RESOURCES / "deck.problem-solution.json",
+        "traction": DECK_RESOURCES / "deck.traction.json",
+        "teaser": DECK_RESOURCES / "deck.teaser.json",
+    }
+    tpl_file = tpl_map.get(deck_mode, DECK_RESOURCES / "deck.problem-solution.json")
     deck = json.loads(tpl_file.read_text(encoding="utf-8"))
     deck["meta"]["companyName"] = company
     deck["meta"]["website"] = website
@@ -300,7 +301,7 @@ def main() -> int:
     parser.add_argument("--impact-thesis", required=True)
     parser.add_argument("--ikpi", required=True)
     parser.add_argument("--archetype", default="b2b-saas")
-    parser.add_argument("--deck-mode", default="problem-solution", choices=["problem-solution", "traction"])
+    parser.add_argument("--deck-mode", default="problem-solution", choices=["problem-solution", "traction", "teaser"])
     parser.add_argument("--founder-name", default="Founder, CEO")
     parser.add_argument("--founder-email", default="founder@company.com")
     parser.add_argument("--website", default="https://company.com")

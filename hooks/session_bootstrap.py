@@ -51,10 +51,18 @@ def main() -> int:
     assumptions = _read_json(ws / ".startup" / "assumptions.json", [])
     interviews = _read_json(ws / ".startup" / "interviews.json", [])
     pacts = _read_json(ws / ".startup" / "pacts.json", [])
+    sprints = _read_json(ws / ".startup" / "sprints.json", [])
 
     untested = [a for a in assumptions if a.get("status") not in ("validated", "invalidated")]
     untested.sort(key=lambda x: x.get("riskScore", 0), reverse=True)
     top_risk = untested[0]["statement"] if untested else "None logged — add top risk via assumption_manage."
+
+    active_sprint = next((s for s in reversed(sprints) if s.get("status") == "active"), None)
+    sprint_line = (
+        f"{active_sprint.get('weekLabel', 'Active')}: {active_sprint.get('primaryGoal', '')}"
+        if active_sprint
+        else (state.get("activeSprintGoal") or "No active weekly sprint — run weekly-sprint-review.")
+    )
 
     cust_pacts = sum(
         float(p.get("amountUsd", 0))
@@ -69,6 +77,7 @@ def main() -> int:
         f"[Startup Antigravity Pulse — {state.get('companyName', 'Startup')}]\n"
         f"- FI Stage: {state.get('stage', 'idea')} | MRR: ${state.get('mrrUsd', 0):,.0f} | "
         f"Customer PACTs: ${cust_pacts:,.0f} | Interviews: {len(interviews)}/15\n"
+        f"- Active Sprint: {sprint_line}\n"
         f"- Top Untested Risk: {top_risk}\n"
         f"- For-Progress iKPI: {ikpi_str}"
     )

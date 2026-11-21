@@ -37,7 +37,9 @@ Before writing production software, create a pre-committed experiment via `exper
 Pick the fastest ethical validation vehicle:
 1. **Paid Concierge Pilot**: Deliver the outcome manually or semi-automatically for the first 3–5 customers at full or founding-partner price.
 2. **1-Page Customer PACT (Pre-Order LOI)**: Written, transparent agreement stating exact deliverable, timeline, price, and 100% refund/cancel guarantee if milestones aren't met. Track every prospect via `pact_pipeline_manage(action="add", kind="customer", ...)`.
-3. **Value-Prop Landing Page**: Single-page site with transparent pricing and a real deposit or pilot booking CTA (zero fake scarcity or deceptive countdowns).
+3. **48-Hour Ethical Offer Landing Page (`landing_page_build`)**:
+   - Call the `landing_page_build` MCP tool (or run `python3 ./scripts/build_landing_page.py --workspace "/path/to/workspace"`) to generate a deploy-ready, zero-dependency `landing/index.html` + editable `landing/landing.json`.
+   - Includes your linted FI One-Sentence Pitch, an interactive ROI calculator, transparent 3-tier value pricing, For-Progress iKPI charter, and a 1-page Paid-Pilot PACT intake form (zero fake scarcity or deceptive countdowns). Deploy immediately to Cloudflare Pages or Netlify.
 
 ## Step 4: Kill, Pivot, or Advance to MVP
 

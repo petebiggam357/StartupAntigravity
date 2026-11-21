@@ -85,7 +85,7 @@ class TestPluginIntegrity(unittest.TestCase):
         self.assertIn("matcher", post[0])
         self.assertIn("hooks", post[0])
 
-    def test_all_nine_skills(self) -> None:
+    def test_all_ten_skills(self) -> None:
         expected_skills = {
             "startup-kickstart",
             "pitch-deck-builder",
@@ -96,6 +96,7 @@ class TestPluginIntegrity(unittest.TestCase):
             "unit-economics-and-profit-os",
             "advisors-equity-and-fast",
             "vc-lab-fundraising-os",
+            "weekly-sprint-review",
         }
         skills_dir = ROOT / "skills"
         found = {p.name for p in skills_dir.iterdir() if p.is_dir()}
@@ -107,6 +108,12 @@ class TestPluginIntegrity(unittest.TestCase):
             fm = _parse_frontmatter(skill_md.read_text(encoding="utf-8"))
             self.assertEqual(fm.get("name"), name)
             self.assertTrue(fm.get("description"), f"Missing description in {skill_md}")
+
+    def test_ikpi_catalog_covers_all_17_sdgs(self) -> None:
+        catalog = json.loads((ROOT / "mcp_server" / "ikpi_catalog.json").read_text(encoding="utf-8"))
+        sdgs = {item["sdgNumber"] for item in catalog}
+        self.assertEqual(sdgs, set(range(1, 18)))
+        self.assertGreaterEqual(len(catalog), 34)
 
     def test_all_five_subagents(self) -> None:
         expected_agents = {

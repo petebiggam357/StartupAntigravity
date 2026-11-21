@@ -1,0 +1,73 @@
+{
+  "meta": {
+    "companyName": "Your Company Name",
+    "website": "https://yourcompany.com",
+    "contactName": "Founder Name, CEO",
+    "contactEmail": "founder@yourcompany.com",
+    "deckMode": "teaser",
+    "fiOneSentencePitch": "My company, Your Company Name, is developing [defined offering] to help [defined target audience] [solve specific problem] with [secret sauce].",
+    "stage": "pre_seed_traction",
+    "impactThesis": "Deliver measurable customer & societal progress while compounding high-margin recurring profit.",
+    "targetPitchMinutes": 2
+  },
+  "theme": {
+    "preset": "cobalt-velocity",
+    "bg": "#090E1A",
+    "surface": "#121B31",
+    "text": "#F8FAFC",
+    "muted": "#94A3B8",
+    "accent": "#38BDF8",
+    "accent2": "#10B981",
+    "border": "#1E293B"
+  },
+  "slides": [
+    {
+      "id": "cover",
+      "type": "cover",
+      "kicker": "VC LAB / FI 3-SLIDE INVESTOR TEASER",
+      "headline": "Replace With Your Sharp 10-Word Traction Hook",
+      "subheadline": "My company, Your Company Name, is developing [defined offering] to help [defined target audience] [solve specific problem] with [secret sauce].",
+      "footer": "Founder Name, CEO • founder@yourcompany.com • yourcompany.com",
+      "notes": "Send this 3-slide teaser before the first meeting to earn a high-conviction 20-minute partner call."
+    },
+    {
+      "id": "traction-chart",
+      "type": "chart-line",
+      "kicker": "01 / VELOCITY & PROOF",
+      "headline": "Compounding High-Margin Revenue With 82% Gross Margin",
+      "chartTitle": "Monthly Recurring Revenue (USD) [HYPOTHESIS]",
+      "unitPrefix": "$",
+      "unitSuffix": "",
+      "series": [
+        { "label": "M1", "value": 1500 },
+        { "label": "M2", "value": 3200 },
+        { "label": "M3", "value": 5800 },
+        { "label": "M4", "value": 9400 },
+        { "label": "M5", "value": 14200 },
+        { "label": "M6", "value": 21000 }
+      ],
+      "callout": "82% Gross Margin • 2.5-Month CAC Payback • $1.8B Bottom-Up TAM [HYPOTHESIS]",
+      "notes": "Lead with real compounding numbers. Replace placeholders with verified metrics from .startup/state.json."
+    },
+    {
+      "id": "ask",
+      "type": "ask",
+      "kicker": "02 / WHY NOW & THE ASK",
+      "headline": "Raising $750K Pre-Seed To Reach $40K MRR In 12 Months",
+      "askAmount": "$750K",
+      "instrument": "Post-Money SAFE • Soft-Circles Open via VC Lab PACTs",
+      "allocations": [
+        { "label": "Product & Core Secret Sauce", "percent": "50%" },
+        { "label": "Repeatable GTM & Outbound", "percent": "35%" },
+        { "label": "Runway Buffer & Security", "percent": "15%" }
+      ],
+      "milestones": [
+        "Why Now: Specific macro/tech inflection creating immediate buyer urgency [HYPOTHESIS]",
+        "Month 6: $25K MRR & <3% monthly churn [TARGET]",
+        "Month 12: $40K+ MRR with Default-Alive profitability option [TARGET]"
+      ],
+      "impactMetric": "For-Progress iKPI: [Measurable UN SDG-aligned outcome per customer]",
+      "notes": "Keep the ask concrete and invite a 15-minute intro call to walk through the full 12-slide deck & live demo."
+    }
+  ]
+}

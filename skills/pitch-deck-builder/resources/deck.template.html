@@ -327,6 +327,88 @@
     }
     .alloc-pct { font-weight: 700; color: var(--accent2); }
 
+    /* Visual Deck 2.0: Inline SVG Charts, 2x2 Quadrant & Product Mockup */
+    .visual-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+      min-height: 0;
+    }
+    .visual-svg {
+      width: 100%;
+      height: 100%;
+      max-height: 360px;
+      display: block;
+    }
+    .product-grid {
+      display: grid;
+      grid-template-columns: 1.45fr 1fr;
+      gap: 20px;
+      align-items: stretch;
+    }
+    .browser-frame {
+      background: #090D16;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .browser-bar {
+      height: 30px;
+      background: rgba(255, 255, 255, 0.04);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 0 12px;
+    }
+    .browser-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--border);
+    }
+    .browser-dot.r { background: #EF4444; }
+    .browser-dot.y { background: #F59E0B; }
+    .browser-dot.g { background: #10B981; }
+    .browser-url {
+      margin-left: 10px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--muted);
+    }
+    .browser-body {
+      flex: 1;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+    }
+    .browser-body img {
+      max-width: 100%;
+      max-height: 290px;
+      border-radius: 8px;
+      object-fit: contain;
+    }
+    .wireframe-step {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: clamp(12px, 1.15vw, 15px);
+      color: var(--text);
+    }
+
     .callout {
       background: color-mix(in srgb, var(--accent2) 10%, var(--surface));
       border: 1px solid color-mix(in srgb, var(--accent2) 35%, var(--border));

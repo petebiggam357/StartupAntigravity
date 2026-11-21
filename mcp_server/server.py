@@ -19,13 +19,18 @@ from typing import Any
 
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 DECK_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "pitch-deck-builder" / "scripts"
-if str(DECK_SCRIPTS_DIR) not in sys.path:
-    sys.path.insert(0, str(DECK_SCRIPTS_DIR))
+LANDING_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "revenue-first-validation" / "scripts"
+IKPI_CATALOG_PATH = Path(__file__).resolve().parent / "ikpi_catalog.json"
+
+for _p in (DECK_SCRIPTS_DIR, LANDING_SCRIPTS_DIR):
+    if str(_p) not in sys.path:
+        sys.path.insert(0, str(_p))
 
 from build_deck import build_deck, lint_deck, lint_one_sentence_pitch  # noqa: E402
+from build_landing_page import build_landing_page  # noqa: E402
 
 SERVER_NAME = "startup-antigravity-os"
-SERVER_VERSION = "1.0.0"
+SERVER_VERSION = "1.1.0"
 PROTOCOL_VERSION = "2024-11-05"
 
 FI_STAGE_BENCHMARKS: dict[str, dict[str, Any]] = {
@@ -684,8 +689,90 @@ def tool_financial_calc(args: dict[str, Any]) -> dict[str, Any]:
             "disclaimer": "Based on FI FAST benchmarks. Review formal advisor agreements & 83(b) timelines with counsel.",
         }
 
+    if mode == "cap_table_model":
+        raw_founders = args.get("founders") or [{"name": "Founder 1", "pct": 100.0}]
+        raw_advisors = args.get("advisors") or []
+        safe_raise = float(args.get("safe_raise_usd", 0))
+        safe_cap = float(args.get("safe_cap_usd", 0))
+        safe_type = str(args.get("safe_type", "post_money"))
+        seed_raise = float(args.get("seed_raise_usd", 0))
+        seed_pre = float(args.get("seed_pre_money_usd", 0))
+        seed_pool_pct = float(args.get("seed_option_pool_pct", 10.0))
+
+        # Stage 1: Initial Founders + FI FAST Advisors (advisors dilute founders proportionally)
+        advisor_total = sum(max(0.0, float(a.get("pct", 0))) for a in raw_advisors)
+        founder_raw_sum = sum(max(0.0, float(f.get("pct", 0))) for f in raw_founders) or 100.0
+        founder_pool_pre = max(0.0, 100.0 - advisor_total)
+
+        pre_safe: list[dict[str, Any]] = []
+        for f in raw_founders:
+            pct = (float(f.get("pct", 0)) / founder_raw_sum) * founder_pool_pre
+            pre_safe.append({"name": str(f.get("name", "Founder")), "role": "founder", "pct": round(pct, 2)})
+        for a in raw_advisors:
+            pre_safe.append({"name": str(a.get("name", "Advisor")), "role": "advisor_fast", "pct": round(float(a.get("pct", 0)), 2)})
+
+        # Stage 2: Pre-Seed SAFE conversion
+        safe_pct = 0.0
+        if safe_raise > 0 and safe_cap > 0:
+            if safe_type == "post_money":
+                safe_pct = (safe_raise / safe_cap) * 100.0
+            else:
+                safe_pct = (safe_raise / (safe_cap + safe_raise)) * 100.0
+        safe_scale = max(0.0, 100.0 - safe_pct) / 100.0
+
+        post_safe: list[dict[str, Any]] = [
+            {**row, "pct": round(row["pct"] * safe_scale, 2)} for row in pre_safe
+        ]
+        if safe_pct > 0:
+            post_safe.append({"name": "Pre-Seed SAFE Investors", "role": "safe_investor", "pct": round(safe_pct, 2)})
+
+        # Stage 3: Seed Priced Round + Option Pool Refresh
+        seed_post_money = seed_pre + seed_raise if (seed_raise > 0 and seed_pre > 0) else 0.0
+        seed_inv_pct = (seed_raise / seed_post_money * 100.0) if seed_post_money > 0 else 0.0
+        pool_pct_applied = seed_pool_pct if seed_post_money > 0 else 0.0
+        seed_scale = max(0.0, 100.0 - seed_inv_pct - pool_pct_applied) / 100.0
+
+        post_seed: list[dict[str, Any]] = []
+        for row in post_safe:
+            new_pct = round(row["pct"] * seed_scale, 2)
+            entry = {**row, "pct": new_pct}
+            if seed_post_money > 0:
+                entry["impliedValueUsd"] = round(seed_post_money * (new_pct / 100.0), 2)
+            post_seed.append(entry)
+        if pool_pct_applied > 0:
+            post_seed.append(
+                {
+                    "name": "Employee Option Pool",
+                    "role": "option_pool",
+                    "pct": round(pool_pct_applied, 2),
+                    "impliedValueUsd": round(seed_post_money * (pool_pct_applied / 100.0), 2),
+                }
+            )
+        if seed_inv_pct > 0:
+            post_seed.append(
+                {
+                    "name": "Seed Lead & Syndicate",
+                    "role": "seed_investor",
+                    "pct": round(seed_inv_pct, 2),
+                    "impliedValueUsd": round(seed_raise, 2),
+                }
+            )
+
+        founders_final_pct = round(sum(r["pct"] for r in post_seed if r["role"] == "founder"), 2)
+        return {
+            "mode": "cap_table_model",
+            "seedPostMoneyValuationUsd": round(seed_post_money, 2),
+            "foundersFinalCombinedPct": founders_final_pct,
+            "stages": {
+                "preSafe": pre_safe,
+                "postSafe": post_safe,
+                "postSeed": post_seed,
+            },
+            "disclaimer": "Educational multi-round cap table model — verify exact share math & pro-rata rights with startup counsel.",
+        }
+
     raise ValueError(
-        "Invalid mode. Use one of: runway, unit_economics, tam_bottom_up, safe_dilution, fast_advisor_equity."
+        "Invalid mode. Use one of: runway, unit_economics, tam_bottom_up, safe_dilution, fast_advisor_equity, cap_table_model."
     )
 
 
@@ -698,6 +785,201 @@ def tool_pitch_deck_build(args: dict[str, Any]) -> dict[str, Any]:
     if not p.exists():
         raise FileNotFoundError(f"Pitch deck JSON not found: {p}")
     return build_deck(p, export_pptx=bool(args.get("export_pptx", False)))
+
+
+def tool_landing_page_build(args: dict[str, Any]) -> dict[str, Any]:
+    ws = _resolve_workspace(args.get("workspace_path"))
+    overrides = args.get("overrides") if isinstance(args.get("overrides"), dict) else {}
+    if args.get("contact_email"):
+        overrides["contactEmail"] = str(args["contact_email"])
+    return build_landing_page(ws, overrides or None)
+
+
+def tool_ikpi_catalog_search(args: dict[str, Any]) -> dict[str, Any]:
+    catalog: list[dict[str, Any]] = _read_json(IKPI_CATALOG_PATH, [])
+    query = str(args.get("query", "")).strip().lower()
+    sdg_num = args.get("sdg_number")
+    limit = max(1, min(20, int(args.get("limit", 5))))
+
+    results: list[tuple[int, dict[str, Any]]] = []
+    tokens = [t for t in query.split() if t]
+    for item in catalog:
+        if sdg_num is not None and int(item.get("sdgNumber", 0)) != int(sdg_num):
+            continue
+        blob = " ".join(
+            [
+                str(item.get("sdgName", "")),
+                str(item.get("metricName", "")),
+                str(item.get("measurementFormula", "")),
+                " ".join(item.get("sectorTags", [])),
+            ]
+        ).lower()
+        if not tokens:
+            results.append((1, item))
+        else:
+            score = sum(2 if t in item.get("sectorTags", []) else (1 if t in blob else 0) for t in tokens)
+            if score > 0:
+                results.append((score, item))
+
+    results.sort(key=lambda x: (-x[0], x[1]["sdgNumber"], x[1]["id"]))
+    matches = [item for _, item in results[:limit]]
+    return {
+        "query": query,
+        "sdgFilter": sdg_num,
+        "totalCatalogEntries": len(catalog),
+        "matchCount": len(matches),
+        "matches": matches,
+    }
+
+
+def tool_sprint_manage(args: dict[str, Any]) -> dict[str, Any]:
+    action = args.get("action", "list")
+    ws = _resolve_workspace(args.get("workspace_path"))
+    sdir = _startup_dir(args.get("workspace_path"))
+    sprints_path = sdir / "sprints.json"
+    sprints: list[dict[str, Any]] = _read_json(sprints_path, [])
+
+    if action == "start":
+        goal = str(args.get("primary_goal", "")).strip()
+        if not goal:
+            raise ValueError("'primary_goal' is required when action='start'.")
+        week_num = len(sprints) + 1
+        entry = {
+            "id": f"SPRINT-{week_num:03d}",
+            "weekLabel": args.get("week_label") or f"Week {week_num}",
+            "primaryGoal": goal,
+            "targets": {
+                "interviews": int(args.get("target_interviews", 5)),
+                "pacts": int(args.get("target_pacts", 2)),
+                "mrrDeltaUsd": float(args.get("target_mrr_delta_usd", 0)),
+            },
+            "actuals": {},
+            "status": "active",
+            "startedAt": _now_iso(),
+        }
+        sprints.append(entry)
+        _write_json(sprints_path, sprints)
+
+        state_file = sdir / "state.json"
+        if state_file.exists():
+            state = _read_json(state_file, {})
+            state["activeSprintGoal"] = goal
+            state["updatedAt"] = _now_iso()
+            _write_json(state_file, state)
+        return {"started": entry, "totalSprints": len(sprints)}
+
+    if action == "close":
+        sid = args.get("id")
+        target = (
+            next((x for x in sprints if x.get("id") == sid), None)
+            if sid
+            else next((x for x in reversed(sprints) if x.get("status") == "active"), None)
+        )
+        if not target:
+            raise ValueError("No active sprint found to close.")
+        score = max(1.0, min(5.0, float(args.get("fi_velocity_score", 3.5))))
+        target["status"] = "closed"
+        target["actuals"] = {
+            "interviewsCompleted": int(args.get("interviews_completed", 0)),
+            "pactsSent": int(args.get("pacts_sent", 0)),
+            "pactsSigned": int(args.get("pacts_signed", 0)),
+            "mrrDeltaUsd": float(args.get("mrr_delta_usd", 0)),
+            "ikpiDelta": float(args.get("ikpi_delta", 0)),
+            "fiVelocityScore": round(score, 1),
+        }
+        target["highlights"] = args.get("highlights") or []
+        target["lowlights"] = args.get("lowlights") or []
+        target["blockers"] = args.get("blockers") or []
+        target["closedAt"] = _now_iso()
+        _write_json(sprints_path, sprints)
+        return {"closed": target}
+
+    if action == "investor_update":
+        state = _read_json(sdir / "state.json", {})
+        interviews = _read_json(sdir / "interviews.json", [])
+        pacts = _read_json(sdir / "pacts.json", [])
+        closed_sprints = [s for s in sprints if s.get("status") == "closed"]
+        latest = closed_sprints[-1] if closed_sprints else (sprints[-1] if sprints else {})
+
+        company = state.get("companyName", "Startup")
+        mrr = float(state.get("mrrUsd", 0))
+        burn = float(state.get("monthlyBurnUsd", 0))
+        cash = float(state.get("cashOnHandUsd", 0))
+        gm = float(state.get("grossMarginPct", 80))
+        net_burn = max(0.0, burn - mrr * (gm / 100.0))
+        runway_str = "Default-Alive" if net_burn == 0 else f"{round(cash / net_burn, 1)} months"
+        cust_pacts = sum(
+            float(p.get("amountUsd", 0))
+            for p in pacts
+            if p.get("kind") == "customer" and p.get("status") in ("pact_signed", "closed_cash")
+        )
+        inv_pacts = sum(
+            float(p.get("amountUsd", 0))
+            for p in pacts
+            if p.get("kind") == "investor" and p.get("status") in ("pact_signed", "closed_cash")
+        )
+        ikpi = state.get("ikpi") or {}
+        ikpi_line = f"{ikpi.get('name', 'Unset')} ({ikpi.get('current', 0)} / {ikpi.get('target', 0)})"
+
+        highlights = args.get("highlights") or latest.get("highlights") or ["Log verified sprint highlights before sending."]
+        lowlights = args.get("lowlights") or latest.get("lowlights") or ["Document top risk or missed target honestly."]
+        asks = args.get("asks") or ["Warm intro to 3 ICP decision-makers", "Feedback on current pricing tier"]
+
+        month_str = datetime.now(timezone.utc).strftime("%B %Y")
+        md = "\n".join(
+            [
+                f"# {company} — Investor & Mentor Update ({month_str})",
+                "",
+                f"**Subject:** `{company} Update — {month_str} | ${mrr:,.0f} MRR | FI Stage: {state.get('stage', 'idea')}`",
+                "",
+                "## TL;DR",
+                f"> {state.get('fiOneSentencePitch') or 'Update .startup/state.json with your linted FI One-Sentence Pitch.'}",
+                "",
+                "## Verified Key Metrics",
+                "| Metric | Value |",
+                "| :--- | :--- |",
+                f"| **FI Stage** | `{state.get('stage', 'idea')}` |",
+                f"| **MRR** | `${mrr:,.0f}` |",
+                f"| **Gross Margin** | `{gm:.0f}%` |",
+                f"| **Monthly Burn / Cash** | `${burn:,.0f}` / `${cash:,.0f}` |",
+                f"| **Estimated Runway** | `{runway_str}` |",
+                f"| **Customer Discovery Interviews** | `{len(interviews)} / 15 FI target` |",
+                f"| **Customer PACTs Committed** | `${cust_pacts:,.0f}` |",
+                f"| **Investor PACTs Soft-Circled** | `${inv_pacts:,.0f}` |",
+                f"| **For-Progress iKPI** | {ikpi_line} |",
+                "",
+                "## Top Highlights",
+                *[f"- {h}" for h in highlights],
+                "",
+                "## Lowlights & Risks (Mensarius Honesty)",
+                *[f"- {lo}" for lo in lowlights],
+                "",
+                "## Specific Asks",
+                *[f"- {a}" for a in asks],
+                "",
+            ]
+        )
+        out_path = ws / "docs" / "INVESTOR_UPDATE.md"
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(md, encoding="utf-8")
+        return {"updatePath": str(out_path), "markdown": md}
+
+    active = [s for s in sprints if s.get("status") == "active"]
+    closed = [s for s in sprints if s.get("status") == "closed"]
+    avg_score = (
+        round(
+            sum(float(s.get("actuals", {}).get("fiVelocityScore", 0)) for s in closed) / len(closed),
+            2,
+        )
+        if closed
+        else None
+    )
+    return {
+        "totalSprints": len(sprints),
+        "activeSprint": active[-1] if active else None,
+        "avgFiVelocityScore": avg_score,
+        "sprints": sprints,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -838,13 +1120,20 @@ TOOLS: list[dict[str, Any]] = [
     },
     {
         "name": "financial_calc",
-        "description": "Deterministic startup math engine: runway (Default-Alive), unit_economics (CAC/LTV/Payback), tam_bottom_up, safe_dilution, and FI fast_advisor_equity.",
+        "description": "Deterministic startup math engine: runway (Default-Alive), unit_economics (CAC/LTV/Payback), tam_bottom_up, safe_dilution, FI fast_advisor_equity, and multi-round cap_table_model.",
         "inputSchema": {
             "type": "object",
             "properties": {
                 "mode": {
                     "type": "string",
-                    "enum": ["runway", "unit_economics", "tam_bottom_up", "safe_dilution", "fast_advisor_equity"],
+                    "enum": [
+                        "runway",
+                        "unit_economics",
+                        "tam_bottom_up",
+                        "safe_dilution",
+                        "fast_advisor_equity",
+                        "cap_table_model",
+                    ],
                 },
                 "cash_usd": {"type": "number"},
                 "monthly_burn_usd": {"type": "number"},
@@ -865,6 +1154,13 @@ TOOLS: list[dict[str, Any]] = [
                 "founder_count": {"type": "integer"},
                 "stage": {"type": "string", "enum": ["idea", "startup", "growth"]},
                 "tier": {"type": "string", "enum": ["standard", "strategic", "expert"]},
+                "founders": {"type": "array", "items": {"type": "object"}},
+                "advisors": {"type": "array", "items": {"type": "object"}},
+                "safe_raise_usd": {"type": "number"},
+                "safe_cap_usd": {"type": "number"},
+                "seed_raise_usd": {"type": "number"},
+                "seed_pre_money_usd": {"type": "number"},
+                "seed_option_pool_pct": {"type": "number"},
             },
             "required": ["mode"],
         },
@@ -881,6 +1177,58 @@ TOOLS: list[dict[str, Any]] = [
             },
         },
     },
+    {
+        "name": "landing_page_build",
+        "description": "Generate a deploy-ready, zero-dependency 48-hour ethical smoke-test landing page (landing/index.html + landing/landing.json) with interactive ROI calculator, transparent 3-tier pricing, and Paid-Pilot PACT intake.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "workspace_path": {"type": "string"},
+                "contact_email": {"type": "string"},
+                "overrides": {"type": "object"},
+            },
+        },
+    },
+    {
+        "name": "ikpi_catalog_search",
+        "description": "Search the bundled Founder Institute For-Progress UN SDG 1-17 iKPI catalog by keyword, sector, or SDG number to pick an audit-grade impact metric.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "description": "Industry, sector, or impact keyword (e.g. 'healthcare', 'climate', 'saas', 'education')."},
+                "sdg_number": {"type": "integer", "minimum": 1, "maximum": 17},
+                "limit": {"type": "integer", "minimum": 1, "maximum": 20},
+            },
+        },
+    },
+    {
+        "name": "sprint_manage",
+        "description": "Manage FI weekly execution sprints in .startup/sprints.json (start, close, list) and compile a VC Lab / FI monthly update at docs/INVESTOR_UPDATE.md.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "action": {"type": "string", "enum": ["start", "close", "list", "investor_update"]},
+                "workspace_path": {"type": "string"},
+                "id": {"type": "string"},
+                "week_label": {"type": "string"},
+                "primary_goal": {"type": "string"},
+                "target_interviews": {"type": "integer"},
+                "target_pacts": {"type": "integer"},
+                "target_mrr_delta_usd": {"type": "number"},
+                "interviews_completed": {"type": "integer"},
+                "pacts_sent": {"type": "integer"},
+                "pacts_signed": {"type": "integer"},
+                "mrr_delta_usd": {"type": "number"},
+                "ikpi_delta": {"type": "number"},
+                "fi_velocity_score": {"type": "number"},
+                "highlights": {"type": "array", "items": {"type": "string"}},
+                "lowlights": {"type": "array", "items": {"type": "string"}},
+                "blockers": {"type": "array", "items": {"type": "string"}},
+                "asks": {"type": "array", "items": {"type": "string"}},
+            },
+            "required": ["action"],
+        },
+    },
 ]
 
 TOOL_HANDLERS = {
@@ -893,6 +1241,9 @@ TOOL_HANDLERS = {
     "pact_pipeline_manage": tool_pact_pipeline_manage,
     "financial_calc": tool_financial_calc,
     "pitch_deck_build": tool_pitch_deck_build,
+    "landing_page_build": tool_landing_page_build,
+    "ikpi_catalog_search": tool_ikpi_catalog_search,
+    "sprint_manage": tool_sprint_manage,
 }
 
 

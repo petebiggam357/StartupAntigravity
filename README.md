@@ -12,26 +12,28 @@
 
 ## What's Inside the Bundle
 
-### 1. Modifiable Interactive FI Pitch Deck (`pitch-deck/`)
+### 1. Visual Interactive FI Pitch Deck 2.0 (`pitch-deck/`)
 - Single source of truth in `pitch-deck/deck.json` (editable directly or via natural language).
+- Supports zero-dependency **inline SVG charts** (`chart-line`, `chart-bar`), **2x2 competitive positioning quadrants** (`quadrant-2x2`), and **browser product mockups** (`product-frame`) alongside `cover`, `bullets`, `metrics`, `two-column`, `comparison`, and `ask`.
 - Automatically compiles on every edit into:
   - **`pitch-deck/index.html`** — Zero-dependency 16:9 interactive web presentation with keyboard controls, Speaker Notes (`S`), Slide Grid (`G`), **3-Minute FI Pitch Countdown Timer (`T`)**, Evidence Badge Toggle (`B`), and **1-click Print-to-PDF**.
   - **`pitch-deck/DECK.md`** — Marp / Notion compatible Markdown export.
   - Optional `DECK.pptx` export when `python-pptx` is installed.
-- Ships with **two FI templates**: `deck.problem-solution.json` and `deck.traction.json`.
+- Ships with **three FI & VC Lab templates**: `deck.problem-solution.json`, `deck.traction.json`, and 3-slide `deck.teaser.json`.
 
-### 2. Nine Progressive-Disclosure Startup Skills (`skills/`)
+### 2. Ten Progressive-Disclosure Startup Skills (`skills/`)
 | Skill | What It Does |
 | :--- | :--- |
-| `startup-kickstart` | 5-question Day-0 intake that drafts & lints your FI One-Sentence Pitch and scaffolds `.startup/`, `docs/`, and `pitch-deck/` |
-| `revenue-first-validation` | Mom Test discovery scripts, Riskiest Assumption Tests (RATs), 48-hour smoke tests, and 1-page Customer Paid-Pilot PACTs |
-| `pitch-deck-builder` | Create, edit, re-theme, switch modes, lint against FI 10-word headline & 3-bullet rules, and compile your deck |
+| `startup-kickstart` | 5-question Day-0 intake that drafts & lints your FI One-Sentence Pitch, picks an UN SDG iKPI, and scaffolds `.startup/`, `docs/`, and `pitch-deck/` |
+| `revenue-first-validation` | Mom Test discovery scripts, RAT experiments, 1-page Customer Paid-Pilot PACTs, and a **48-hour deploy-ready smoke-test landing page generator** (`landing/index.html`) |
+| `pitch-deck-builder` | Create, edit, re-theme, switch modes (`problem-solution` / `traction` / `teaser`), add SVG charts & 2x2 quadrants, lint against FI rules, and compile |
 | `mvp-and-profit-architecture` | 7-day vertical slice MVP spec, explicit *NOT-Building-Yet* Cut-List, and `>= 75%` gross margin architecture |
 | `market-and-unfair-moat` | Deterministic bottom-up TAM/SAM/SOM sizing, competitive teardowns, Why-Now analysis, and Secret Sauce audit |
 | `gtm-and-cash-velocity` | Value-based pricing (10x ROI), ethical cold outreach, Show HN / Product Hunt launches, and first-100-customers loops |
 | `unit-economics-and-profit-os` | Default-Alive runway modeling, CAC/LTV/Payback, North Star metrics, and FI Funding Readiness stage scoring |
 | `advisors-equity-and-fast` | Founder Institute **FAST Agreement** advisor equity calculator, trial cliffs, and co-founder vesting hygiene |
-| `vc-lab-fundraising-os` | VC fund thesis mapping, PACT soft-circle pipeline, SAFE dilution modeling, Data Room checklist, and partner Q&A |
+| `vc-lab-fundraising-os` | VC fund thesis mapping, PACT soft-circle pipeline, multi-round cap table & SAFE dilution modeling, Data Room checklist, and partner Q&A |
+| `weekly-sprint-review` | FI weekly sprint accountability (`.startup/sprints.json`, 1.0–5.0 velocity scoring) and 1-click **VC Lab Monthly Investor Update** generator (`docs/INVESTOR_UPDATE.md`) |
 
 ### 3. Five Specialist Advisory Subagents (`agents/`)
 - **`fi-mentor-pitch-critic`** — Tough FI Mentor who shreds buzzwords, grades slides 1.0–5.0, and sets 7-day sprints.
@@ -40,7 +42,7 @@
 - **`lean-cto-margin-architect`** — Pragmatic founding CTO who cuts scope 50–70% and protects `>= 75%` gross margins.
 - **`ethical-growth-strategist`** — Value-pricing and ethical acquisition strategist (zero dark patterns).
 
-### 4. Zero-Dependency Local MCP Server (`startup-antigravity-os`)
+### 4. Zero-Dependency Local MCP Server (`startup-antigravity-os` — 12 Tools)
 Pure Python 3 standard library (no `npm install`, no `pip install`, no external API keys required):
 - `startup_get_state` / `startup_update_stage`
 - `fi_pitch_lint` (Madlibs + Secret Sauce + FI slide linter)
@@ -48,8 +50,11 @@ Pure Python 3 standard library (no `npm install`, no `pip install`, no external 
 - `experiment_manage` (Pre-committed pass/fail experiments)
 - `interview_manage` (Structured discovery proof & WTP stats)
 - `pact_pipeline_manage` (Customer Pilot & Investor Soft-Circle PACTs)
-- `financial_calc` (`runway`, `unit_economics`, `tam_bottom_up`, `safe_dilution`, `fast_advisor_equity`)
-- `pitch_deck_build` (Lint + compile HTML & Markdown deck)
+- `financial_calc` (`runway`, `unit_economics`, `tam_bottom_up`, `safe_dilution`, `fast_advisor_equity`, **`cap_table_model`**)
+- `pitch_deck_build` (Lint + compile interactive SVG HTML & Markdown deck)
+- `landing_page_build` (Compile 48-hour ethical smoke-test landing page with interactive ROI calculator & PACT intake)
+- `ikpi_catalog_search` (Offline FI *For-Progress* UN SDG 1–17 iKPI catalog with 34 concrete metrics)
+- `sprint_manage` (FI weekly sprint accountability + VC Lab `docs/INVESTOR_UPDATE.md` generator)
 
 ### 5. Always-On Guardrails (`rules/AGENTS.md`) & 4 Lifecycle Hooks (`hooks.json`)
 - **`SessionStart`**: Detects uninitialized folders (offers `startup-kickstart`) or injects a 4-line live Founder Pulse (FI stage, MRR, PACTs, top untested risk, For-Progress iKPI).

@@ -12,10 +12,18 @@ description: >-
 
 This skill manages the startup's single-source-of-truth pitch deck in `pitch-deck/deck.json` and compiles it into a zero-dependency interactive 16:9 web presentation (`pitch-deck/index.html`) and Markdown export (`pitch-deck/DECK.md`).
 
-## Two Built-In FI Deck Modes
+## Three Built-In FI & VC Lab Deck Modes
 
 1. **Problem-Solution Deck** (`./resources/deck.problem-solution.json`) — Default for `idea`, `validation`, and early `mvp` stages. Follows FI's strict Problem -> Solution 1-to-1 mirror structure.
-2. **Traction / Investor Deck** (`./resources/deck.traction.json`) — Switch to this once you have paying customers / recurring revenue (`pre_seed_traction` or `seed_scale`). Leads immediately with Traction & Revenue Velocity on Slide 2.
+2. **Traction / Investor Deck** (`./resources/deck.traction.json`) — Switch to this once you have paying customers / recurring revenue (`pre_seed_traction` or `seed_scale`). Leads immediately with Traction & Revenue Velocity, includes a browser mockup `product-frame`, and plots a `quadrant-2x2` moat map.
+3. **3-Slide Investor Teaser Deck** (`./resources/deck.teaser.json`) — Crisp Cover -> Inline SVG Traction Chart (`chart-line`) -> Why Now & Ask teaser recommended by VC Lab to send *before* the first investor call.
+
+## Supported Visual Slide Types (`slide.type`)
+
+- `cover`, `bullets`, `metrics`, `two-column`, `comparison`, `ask`
+- `chart-line` / `chart-bar`: Zero-dependency inline SVG MRR / retention / unit-economics charts (`series: [{label, value}]`, `unitPrefix`, `unitSuffix`).
+- `quadrant-2x2`: Inline SVG competitive positioning matrix (`xAxisLeft`, `xAxisRight`, `yAxisBottom`, `yAxisTop`, `points: [{name, x, y, highlight}]`).
+- `product-frame`: Clean browser mockup embedding a screenshot (`imagePath`, e.g., `assets/screenshot.png`) or crisp wireframe steps (`mockupSteps`) paired with outcome `highlights`.
 
 ## Workflow
 

@@ -40,9 +40,9 @@ class TestPitchDeckAndScaffolder(unittest.TestCase):
         self.assertIn("fi-specific-audience", rules)
         self.assertIn("fi-secret-sauce", rules)
 
-    def test_problem_solution_and_traction_templates_compile(self) -> None:
+    def test_problem_solution_traction_and_teaser_templates_compile(self) -> None:
         res_dir = ROOT / "skills" / "pitch-deck-builder" / "resources"
-        for tpl_name in ("deck.problem-solution.json", "deck.traction.json"):
+        for tpl_name in ("deck.problem-solution.json", "deck.traction.json", "deck.teaser.json"):
             with tempfile.TemporaryDirectory() as td:
                 src = Path(td) / "deck.json"
                 src.write_text((res_dir / tpl_name).read_text(encoding="utf-8"), encoding="utf-8")
@@ -52,9 +52,46 @@ class TestPitchDeckAndScaffolder(unittest.TestCase):
                 self.assertTrue(html_path.exists())
                 self.assertTrue(md_path.exists())
                 html_txt = html_path.read_text(encoding="utf-8")
-                self.assertIn("class=\"slide", html_txt)
+                self.assertIn('class="slide', html_txt)
                 self.assertIn("Export PDF", html_txt)
                 self.assertIn("marp: true", md_path.read_text(encoding="utf-8"))
+                if tpl_name == "deck.teaser.json":
+                    self.assertIn("<svg", html_txt)
+                    self.assertIn("<polyline", html_txt)
+                if tpl_name == "deck.traction.json":
+                    self.assertIn("Competitive 2x2 Quadrant", html_txt)
+                    self.assertIn("browser-frame", html_txt)
+
+    def test_chart_bar_slide_renders_svg_bars(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            deck = {
+                "meta": {
+                    "companyName": "ClaimGuard",
+                    "deckMode": "teaser",
+                    "fiOneSentencePitch": (
+                        "My company, ClaimGuard, is developing billing software to help "
+                        "independent dental clinics stop claim losses with automated payer checks."
+                    ),
+                },
+                "slides": [
+                    {"id": "cover", "type": "cover", "headline": "ClaimGuard Teaser"},
+                    {
+                        "id": "bar",
+                        "type": "chart-bar",
+                        "headline": "Quarterly Net Profit Growth",
+                        "unitPrefix": "$",
+                        "series": [{"label": "Q1", "value": 10000}, {"label": "Q2", "value": 28000}],
+                    },
+                    {"id": "ask", "type": "ask", "headline": "Raising $500K Seed", "askAmount": "$500K"},
+                ],
+            }
+            src = Path(td) / "deck.json"
+            src.write_text(json.dumps(deck), encoding="utf-8")
+            out = build_deck(src)
+            html_txt = Path(out["htmlPath"]).read_text(encoding="utf-8")
+            self.assertIn("<rect ", html_txt)
+            self.assertIn("$28K", html_txt)
+            self.assertTrue(out["lint"]["passed"])
 
     def test_deck_linter_detects_mismatched_problem_solution_bullets(self) -> None:
         deck = {

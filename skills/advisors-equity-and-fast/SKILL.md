@@ -26,7 +26,7 @@ Call `financial_calc(mode="fast_advisor_equity", stage=..., tier=...)` where:
 
 1. **24-Month Vesting + 3-Month Trial Cliff**: Never grant fully vested advisor equity up front. A 3-month cliff lets both sides verify real chemistry and output.
 2. **Concrete Deliverables**: Write 3 measurable 90-day outcomes (e.g., *"5 warm intros to target ICP buyers"*, *"Review enterprise security architecture"*) before signing.
-3. **Total Advisory Pool Cap**: Keep total advisor grants combined under **2–5%** of the cap table.
+3. **Total Advisory Pool Cap**: Keep total advisor grants combined under **2–5%** of the cap table. Use `financial_calc(mode="cap_table_model", ...)` to simulate how advisor grants + SAFE + Seed rounds dilute founders over time.
 4. **Co-Founder Hygiene**: Always use 4-year vesting with a 1-year cliff for every founder, and remind founders about the strict **30-day IRS 83(b) election** deadline (verify with startup legal counsel!).
 
 > [!IMPORTANT]

@@ -31,7 +31,7 @@ Top emerging VCs (including VC Lab / Decile Group firms) invest strictly inside 
 
 ## Step 3: Model Dilution & Run a PACT Soft-Circle Pipeline
 
-1. Run `financial_calc(mode="safe_dilution", raise_usd=..., valuation_cap_usd=..., safe_type="post_money", option_pool_pct=10, founder_count=...)` so the founder sees exact ownership before negotiating.
+1. Run `financial_calc(mode="safe_dilution", ...)` for a quick single-SAFE check, or `financial_calc(mode="cap_table_model", founders=[...], advisors=[...], safe_raise_usd=..., safe_cap_usd=..., seed_raise_usd=..., seed_pre_money_usd=..., seed_option_pool_pct=10)` to model full multi-round dilution across Founders + FI FAST Advisors + Pre-Seed SAFE + Seed Priced Round before negotiating.
 2. Track every investor conversation via `pact_pipeline_manage(kind="investor", ...)`:
    - Convert vague *"love what you're building, keep me updated"* replies into explicit written soft-circle commitments (`pact_signed`: amount + target close timeframe) — inspired by Decile Group's PACT discipline.
 3. Run a mock partner-meeting stress test by invoking the `vc-lab-partner-skeptic` subagent against `pitch-deck/deck.json` and `docs/ONE_PAGER.md`.
