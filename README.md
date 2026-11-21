@@ -2,6 +2,8 @@
 
 > **Install one Antigravity plugin, open an empty folder, and build a high-margin, ethically grounded, fundable company from scratch.**
 
+> **Independence & Attribution Notice:** **Startup Antigravity** is an **independent, community-built plugin** created by a **Previous Founder Institute Director and Current Mentor & Advisor**. It is **not** an official product, endorsement, or release of Founder Institute (`fi.co`), VC Lab, or Decile Group (`govclab.com`). All references to Founder Institute and VC Lab / Decile Group methodologies (such as the One-Sentence Pitch, FAST Agreement benchmarks, For-Progress iKPIs, Mensarius Oath, and PACT frameworks) are educational adaptations inspired by those ecosystems.
+
 **Startup Antigravity** (`startup-antigravity`) is a turnkey Founder Operating System for **Google Antigravity** (Antigravity 2.0 App, Antigravity IDE, and `agy` CLI) that fuses three battle-tested venture frameworks into one zero-dependency bundle:
 
 1. **Founder Institute (`fi.co`) Execution Engine** — FI One-Sentence Madlibs Pitch (+ Secret Sauce) linter, triple-mode FI Pitch Deck compiler (*Problem-Solution*, *Traction*, and *3-Slide Teaser*), FI Funding Readiness milestones (`$1K–$10K` -> `$10K–$25K` -> `$25K–$200K+` MRR), **FAST Agreement** advisor equity math, Weekly Sprint accountability, and **For-Progress** UN SDG 1–17 Impact KPIs (`iKPIs`).
@@ -414,4 +416,5 @@ Runs locally via Python 3 stdio (zero external API keys):
 
 Licensed under the [MIT License](./LICENSE).
 
-Operational templates and calculators included in this plugin (FI **FAST Agreement** equity splits, SAFE dilution models, multi-round cap tables, Customer/Investor PACTs, and entity checklists) are **educational business frameworks, not legal or tax advice**. Always have qualified startup counsel review binding agreements and tax filings (including 83(b) elections).
+- **Independent Creator Notice:** Created independently by a **Previous Founder Institute Director and Current Mentor & Advisor**. This project is **not** affiliated with, sponsored by, or an official release of Founder Institute (`fi.co`), VC Lab, or Decile Group (`govclab.com`). Trademarks belong to their respective owners.
+- **Not Legal or Tax Advice:** Operational templates and calculators included in this plugin (FI **FAST Agreement** equity splits, SAFE dilution models, multi-round cap tables, Customer/Investor PACTs, and entity checklists) are **educational business frameworks, not legal or tax advice**. Always have qualified startup counsel review binding agreements and tax filings (including 83(b) elections).

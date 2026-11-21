@@ -6,7 +6,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [0.0.1-alpha] - 2026-11-20
 
-Initial Alpha release of the **Startup Antigravity** Antigravity plugin — uniting **Founder Institute (`fi.co`)** execution, **VC Lab / Decile Group (`govclab.com`)** capital & Mensarius Oath ethics, and rapid high-margin profit velocity.
+Initial Alpha release of **Startup Antigravity — Ethical Venture OS**, an **independent community plugin** created by a **Previous Founder Institute Director and Current Mentor & Advisor**. *(Note: This is not an official release of Founder Institute (`fi.co`), VC Lab, or Decile Group (`govclab.com`); it adapts proven frameworks inspired by those ecosystems for founders.)*
 
 ### Added
 - **Plugin Bundle & Guardrails**: `plugin.json`, vector `assets/logo.svg`, and always-on Mensarius Oath + FI clarity + Revenue-First rules in `rules/AGENTS.md`.
