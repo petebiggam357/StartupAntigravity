@@ -204,6 +204,76 @@ class TestNativeAppPackages(unittest.TestCase):
         self.assertGreaterEqual(len(prompts), 6)
         self.assertTrue(any("x402" in p["prompt"] for p in prompts))
 
+    def test_local_web_studio_server_and_pages_site_and_community_kit(self) -> None:
+        import threading
+        import urllib.error
+        import urllib.request
+
+        sys.path.insert(0, str(ROOT / "launcher"))
+        from studio_server import create_studio_server  # noqa: E402
+
+        with tempfile.TemporaryDirectory() as tmp:
+            demo_dir = Path(tmp) / "demo"
+            subprocess.run(
+                [sys.executable, str(ROOT / "scripts" / "generate_demo_workspace.py"), "--output", str(demo_dir)],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+
+            server = create_studio_server(demo_dir, plugin_root=ROOT, port=0)
+            port = server.server_address[1]
+            t = threading.Thread(target=server.serve_forever, daemon=True)
+            t.start()
+            try:
+                base = f"http://127.0.0.1:{port}"
+                shell = urllib.request.urlopen(base + "/").read().decode("utf-8")
+                self.assertIn("STARTUP ANTIGRAVITY STUDIO", shell)
+                self.assertIn("SolarLedger", shell)
+
+                health = json.loads(urllib.request.urlopen(base + "/api/health").read().decode("utf-8"))
+                self.assertTrue(health["ok"])
+                self.assertGreaterEqual(health["resourceCount"], 48)
+
+                res = json.loads(urllib.request.urlopen(base + "/api/resources?q=x402").read().decode("utf-8"))
+                self.assertGreaterEqual(res["count"], 2)
+
+                dash = urllib.request.urlopen(base + "/workspace/dashboard/index.html").read().decode("utf-8")
+                self.assertIn("SolarLedger", dash)
+
+                # Path-traversal guard
+                with self.assertRaises(urllib.error.HTTPError) as ctx:
+                    urllib.request.urlopen(base + "/workspace/../../etc/passwd")
+                self.assertEqual(ctx.exception.code, 403)
+            finally:
+                server.shutdown()
+                server.server_close()
+
+            # Build public GitHub Pages site + live demo
+            site_dir = Path(tmp) / "site_dist"
+            site_proc = subprocess.run(
+                [sys.executable, str(ROOT / "scripts" / "build_site.py"), "--out-dir", str(site_dir)],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            site_res = json.loads(site_proc.stdout)
+            self.assertTrue(Path(site_res["indexHtml"]).exists())
+            self.assertTrue((site_dir / ".nojekyll").exists())
+            self.assertTrue((site_dir / "demo" / "dashboard" / "index.html").exists())
+            self.assertTrue((site_dir / "demo" / "data-room" / "index.html").exists())
+
+        # Community & trust kit files
+        for rel in (
+            "CONTRIBUTING.md",
+            "SECURITY.md",
+            ".github/workflows/pages.yml",
+            ".github/ISSUE_TEMPLATE/bug_report.md",
+            ".github/ISSUE_TEMPLATE/feature_request.md",
+            ".github/ISSUE_TEMPLATE/resource_submission.md",
+        ):
+            self.assertTrue((ROOT / rel).exists(), f"Missing {rel}")
+
 
 if __name__ == "__main__":
     unittest.main()

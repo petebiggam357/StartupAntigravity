@@ -18,6 +18,9 @@ import shutil
 import stat
 import subprocess
 import sys
+import threading
+import urllib.error
+import urllib.request
 import webbrowser
 import zipfile
 from pathlib import Path
@@ -25,7 +28,8 @@ from typing import Any
 
 APP_NAME = "Startup Antigravity"
 PLUGIN_NAME = "startup-antigravity"
-APP_VERSION = "0.0.4-alpha"
+APP_VERSION = "0.0.5-alpha"
+GITHUB_RELEASES_API = "https://api.github.com/repos/petebiggam357/StartupAntigravity/releases"
 
 STARTER_PROMPTS: list[tuple[str, str]] = [
     (
@@ -339,6 +343,55 @@ def preview_demo_workspace(
     return res
 
 
+def check_for_updates(plugin_dir: Path | None = None, timeout: float = 5.0) -> dict[str, Any]:
+    """Read-only check against public GitHub Releases for a newer Startup Antigravity version."""
+    current = detect_installed_version(plugin_dir) or APP_VERSION
+    req = urllib.request.Request(
+        GITHUB_RELEASES_API,
+        headers={"Accept": "application/vnd.github+json", "User-Agent": f"{PLUGIN_NAME}/{APP_VERSION}"},
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            releases = json.loads(resp.read().decode("utf-8"))
+        if not releases:
+            return {"ok": True, "currentVersion": current, "latestVersion": current, "updateAvailable": False}
+        latest_rel = releases[0]
+        latest_tag = str(latest_rel.get("tag_name", "")).lstrip("v")
+        html_url = str(latest_rel.get("html_url", "https://github.com/petebiggam357/StartupAntigravity/releases"))
+        return {
+            "ok": True,
+            "currentVersion": current,
+            "latestVersion": latest_tag,
+            "updateAvailable": bool(latest_tag and latest_tag != current),
+            "releaseUrl": html_url,
+        }
+    except Exception as exc:
+        return {
+            "ok": False,
+            "currentVersion": current,
+            "updateAvailable": False,
+            "error": str(exc),
+        }
+
+
+def launch_local_studio(
+    workspace: Path,
+    plugin_dir: Path | None = None,
+    port: int = 4020,
+    open_browser: bool = True,
+) -> None:
+    """Start the zero-dependency unified Startup Antigravity Web Studio."""
+    here = Path(__file__).resolve().parent
+    if str(here) not in sys.path:
+        sys.path.insert(0, str(here))
+    from studio_server import serve_studio  # noqa: E402
+
+    p_root = plugin_dir or default_plugin_dir()
+    if not (p_root / "mcp_server" / "founder_resources.json").exists():
+        p_root = here.parent
+    serve_studio(workspace=workspace, plugin_root=p_root, port=port, open_browser=open_browser)
+
+
 def launch_gui() -> int:
     """Launch the native dark-mode Tkinter desktop launcher."""
     try:
@@ -548,6 +601,32 @@ def launch_gui() -> int:
         log(f"[OK] Uninstalled plugin (removed={res['removed']})")
         refresh_status()
 
+    def on_studio() -> None:
+        ws = Path(workspace_var.get())
+        threading.Thread(
+            target=launch_local_studio,
+            kwargs={"workspace": ws, "port": 4020, "open_browser": True},
+            daemon=True,
+        ).start()
+        log(f"[OK] Started Startup Antigravity Web Studio at http://127.0.0.1:4020 for {ws}")
+
+    def on_check_updates() -> None:
+        res = check_for_updates()
+        if not res.get("ok"):
+            log(f"[INFO] Update check skipped (offline): {res.get('error')}")
+            return
+        if res.get("updateAvailable"):
+            log(f"[UPDATE] New release v{res['latestVersion']} available (current: v{res['currentVersion']})")
+            if messagebox.askyesno(
+                APP_NAME,
+                f"Startup Antigravity v{res['latestVersion']} is available!\n"
+                f"Current version: v{res['currentVersion']}\n\nOpen the GitHub Releases page now?",
+            ):
+                webbrowser.open(res["releaseUrl"])
+        else:
+            log(f"[OK] You are up to date (v{res['currentVersion']}).")
+            messagebox.showinfo(APP_NAME, f"You are running the latest version (v{res['currentVersion']}).")
+
     # Action Buttons
     btn_frame = tk.Frame(root, bg=BG, padx=24)
     btn_frame.pack(fill="x", pady=(0, 12))
@@ -571,7 +650,22 @@ def launch_gui() -> int:
 
     tk.Button(
         row1,
-        text="Preview Sample Startup",
+        text="Open Web Studio",
+        command=on_studio,
+        bg="#0284C7",
+        fg=TEXT,
+        activebackground="#0369A1",
+        activeforeground=TEXT,
+        font=("Sans", 10, "bold"),
+        relief="flat",
+        padx=12,
+        pady=10,
+        cursor="hand2",
+    ).pack(side="left", padx=(0, 6))
+
+    tk.Button(
+        row1,
+        text="Sample Demo",
         command=on_demo,
         bg=AMBER,
         fg="#1C1917",
@@ -579,7 +673,7 @@ def launch_gui() -> int:
         activeforeground=TEXT,
         font=("Sans", 10, "bold"),
         relief="flat",
-        padx=14,
+        padx=12,
         pady=10,
         cursor="hand2",
     ).pack(side="right")
@@ -588,17 +682,17 @@ def launch_gui() -> int:
     row2.pack(fill="x")
     tk.Button(
         row2,
-        text="Founder Dashboard",
+        text="Dashboard",
         command=on_dashboard,
         bg=SLATE_BTN,
         fg=TEXT,
         activebackground=BORDER,
         activeforeground=TEXT,
         relief="flat",
-        padx=10,
+        padx=8,
         pady=8,
         cursor="hand2",
-    ).pack(side="left", expand=True, fill="x", padx=(0, 6))
+    ).pack(side="left", expand=True, fill="x", padx=(0, 5))
 
     tk.Button(
         row2,
@@ -609,24 +703,38 @@ def launch_gui() -> int:
         activebackground=BORDER,
         activeforeground=TEXT,
         relief="flat",
-        padx=10,
+        padx=8,
         pady=8,
         cursor="hand2",
-    ).pack(side="left", expand=True, fill="x", padx=(0, 6))
+    ).pack(side="left", expand=True, fill="x", padx=(0, 5))
 
     tk.Button(
         row2,
-        text="Investor Data Room",
+        text="Data Room",
         command=on_data_room,
         bg=SLATE_BTN,
         fg=TEXT,
         activebackground=BORDER,
         activeforeground=TEXT,
         relief="flat",
-        padx=10,
+        padx=8,
         pady=8,
         cursor="hand2",
-    ).pack(side="left", expand=True, fill="x", padx=(0, 6))
+    ).pack(side="left", expand=True, fill="x", padx=(0, 5))
+
+    tk.Button(
+        row2,
+        text="Check Updates",
+        command=on_check_updates,
+        bg=SLATE_BTN,
+        fg=EMERALD,
+        activebackground=BORDER,
+        activeforeground=TEXT,
+        relief="flat",
+        padx=8,
+        pady=8,
+        cursor="hand2",
+    ).pack(side="left", expand=True, fill="x", padx=(0, 5))
 
     tk.Button(
         row2,
@@ -637,7 +745,7 @@ def launch_gui() -> int:
         activebackground="#991B1B",
         activeforeground=TEXT,
         relief="flat",
-        padx=10,
+        padx=8,
         pady=8,
         cursor="hand2",
     ).pack(side="right")
@@ -704,13 +812,22 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--deck", metavar="WORKSPACE", help="Open interactive Pitch Deck for WORKSPACE")
     parser.add_argument("--data-room", metavar="WORKSPACE", help="Build & open Investor Data Room for WORKSPACE")
     parser.add_argument(
+        "--serve",
+        nargs="?",
+        const=".",
+        metavar="WORKSPACE",
+        help="Start unified local Web Studio HTTP server for WORKSPACE (default: current directory)",
+    )
+    parser.add_argument("--port", type=int, default=4020, help="Port for --serve Web Studio (default: 4020)")
+    parser.add_argument("--check-update", action="store_true", help="Check GitHub Releases for a newer version")
+    parser.add_argument(
         "--demo",
         nargs="?",
         const="",
         metavar="DIR",
         help="Generate the SolarLedger sample startup workspace (optionally at DIR)",
     )
-    parser.add_argument("--no-browser", action="store_true", help="Do not launch browser during --demo")
+    parser.add_argument("--no-browser", action="store_true", help="Do not launch browser during --demo or --serve")
     parser.add_argument("--plugin-dir", metavar="DIR", help="Override target plugin installation directory")
     parser.add_argument("--zip", metavar="ARCHIVE", help="Override bundled plugin ZIP path")
     parser.add_argument("--version", action="store_true", help="Print launcher version and exit")
@@ -726,6 +843,19 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.prompts:
         print(json.dumps([{"label": k, "prompt": v} for k, v in STARTER_PROMPTS], indent=2))
+        return 0
+
+    if args.check_update:
+        print(json.dumps(check_for_updates(plugin_dir=plugin_dir), indent=2))
+        return 0
+
+    if args.serve is not None:
+        launch_local_studio(
+            workspace=Path(args.serve),
+            plugin_dir=plugin_dir,
+            port=args.port,
+            open_browser=not args.no_browser,
+        )
         return 0
 
     if args.status:

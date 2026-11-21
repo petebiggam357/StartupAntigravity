@@ -53,7 +53,7 @@ from build_deck import (  # noqa: E402
 from build_landing_page import build_landing_page  # noqa: E402
 
 SERVER_NAME = "startup-antigravity-os"
-SERVER_VERSION = "0.0.4-alpha"
+SERVER_VERSION = "0.0.5-alpha"
 PROTOCOL_VERSION = "2024-11-05"
 
 FI_STAGE_BENCHMARKS: dict[str, dict[str, Any]] = {
@@ -1504,7 +1504,8 @@ def tool_data_room_build(args: dict[str, Any]) -> dict[str, Any]:
 
 
 def tool_ai_x402_calc(args: dict[str, Any]) -> dict[str, Any]:
-    ws = _resolve_workspace(args.get("workspace_path")) if args.get("workspace_path") or args.get("write_spec") else None
+    needs_ws = args.get("workspace_path") or args.get("write_spec") or args.get("action") == "x402_starter_scaffold"
+    ws = _resolve_workspace(args.get("workspace_path")) if needs_ws else None
     return run_ai_x402_calc(args, workspace=ws)
 
 
@@ -2203,14 +2204,20 @@ TOOLS: list[dict[str, Any]] = [
     },
     {
         "name": "ai_x402_calc",
-        "description": "Deterministic AI-native economics & programmable-finance engine: (1) 'ai_cogs_margin' models LLM token COGS, model routing & caching against the 75% gross margin floor; (2) 'x402_micropayment_model' compares legacy card rails vs x402 HTTP 402 USDC settlement for AI agent pay-per-call APIs and optionally exports docs/X402_AGENT_MONETIZATION_SPEC.md; (3) 'tokenization_readiness' runs an ethical 'Do You Even Need a Token?' scorecard.",
+        "description": "Deterministic AI-native economics & programmable-finance engine: (1) 'ai_cogs_margin' models LLM token COGS, model routing & caching against the 75% gross margin floor; (2) 'x402_micropayment_model' compares legacy card rails vs x402 HTTP 402 USDC settlement for AI agent pay-per-call APIs and optionally exports docs/X402_AGENT_MONETIZATION_SPEC.md; (3) 'tokenization_readiness' runs an ethical 'Do You Even Need a Token?' scorecard; (4) 'x402_starter_scaffold' generates a runnable HTTP 402 pay-per-call starter (Python or Node, Base Sepolia testnet default).",
         "inputSchema": {
             "type": "object",
             "properties": {
                 "action": {
                     "type": "string",
-                    "enum": ["ai_cogs_margin", "x402_micropayment_model", "tokenization_readiness"],
+                    "enum": [
+                        "ai_cogs_margin",
+                        "x402_micropayment_model",
+                        "tokenization_readiness",
+                        "x402_starter_scaffold",
+                    ],
                 },
+                "stack": {"type": "string", "enum": ["python-fastapi", "node-express"]},
                 "workspace_path": {"type": "string"},
                 "monthly_arpu_usd": {"type": "number"},
                 "monthly_requests_per_user": {"type": "number"},

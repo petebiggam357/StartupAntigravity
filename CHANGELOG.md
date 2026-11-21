@@ -4,6 +4,17 @@ All notable changes to **Startup Antigravity — Ethical Venture OS** are docume
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.0.5-alpha] - 2026-11-21
+
+Public-launch & developer-experience milestone for **Startup Antigravity — Ethical Venture OS**, adding a unified local Web Studio, public GitHub Pages showcase + live interactive demo, runnable `x402` pay-per-call starter scaffolding, 1-click launcher update checks, and open-source community docs.
+
+### Added in 0.0.5-alpha
+- **Unified Local Web Studio (`launcher/studio_server.py` + `startup-antigravity --serve`)**: Zero-dependency local HTTP server (`127.0.0.1:4020`, path-traversal protected) uniting the **Founder Command Center**, **Interactive Pitch Deck**, **Investor Data Room**, **Smoke-Test Landing Page**, and **Live 48-Resource Search** in one auto-reloading dark-mode browser workspace.
+- **Public GitHub Pages Showcase & Live Interactive Demo (`scripts/build_site.py` + `.github/workflows/pages.yml`)**: Automatically builds and deploys an OS-aware download page (`https://petebiggam357.github.io/StartupAntigravity/`) alongside a live hosted **SolarLedger** demo (Dashboard, Pitch Deck, Data Room & Landing Page).
+- **Runnable x402 Pay-Per-Call Starter Scaffold (`ai_x402_calc(action="x402_starter_scaffold")`)**: Generates a zero-dependency runnable HTTP `402 Payment Required` starter (`x402-starter/` in `python-fastapi` or `node-express` flavors, defaulting safely to `base-sepolia` testnet with `.env.example` and a local handshake test client).
+- **1-Click Update Checker in Desktop Launcher (`launcher/app.py` + `--check-update`)**: Read-only check against public GitHub Releases with graceful offline fallback and 1-click link to the latest release.
+- **Open-Source Community & Trust Kit**: Added `CONTRIBUTING.md`, `SECURITY.md`, and `.github/ISSUE_TEMPLATE/` (`bug_report.md`, `feature_request.md`, `resource_submission.md`).
+
 ## [0.0.4-alpha] - 2026-11-21
 
 AI-Forward & Programmable Finance expansion for **Startup Antigravity — Ethical Venture OS** (**19 skills, 8 founding advisory subagents, 22 zero-dependency local MCP tools, 48 curated founder resources, 4 lifecycle hooks**), equipping founders of every level for AI-native execution, `x402` agent micropayments, stablecoin rails, and compliant tokenization under Mensarius Oath ethics.

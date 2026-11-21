@@ -21,8 +21,11 @@ Thumbs.db
 # Release builds & local test scratch workspaces
 dist/
 build/
+site_dist/
 *.spec
 .startup/
 pitch-deck/
 dashboard/
+data-room/
+x402-starter/
 tmp/

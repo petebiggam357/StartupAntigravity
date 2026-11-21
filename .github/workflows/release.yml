@@ -49,6 +49,8 @@ jobs:
           pyinstaller \
             --onefile \
             --name startup-antigravity \
+            --paths launcher \
+            --hidden-import studio_server \
             --add-data "dist/startup-antigravity-v${VERSION}.zip:." \
             launcher/app.py
 
@@ -95,6 +97,8 @@ jobs:
           pyinstaller \
             --windowed \
             --name "Startup Antigravity" \
+            --paths launcher \
+            --hidden-import studio_server \
             --icon dist/icons/startup-antigravity.icns \
             --add-data "dist/startup-antigravity-v${VERSION}.zip:." \
             launcher/app.py
@@ -142,6 +146,8 @@ jobs:
             --onefile `
             --windowed `
             --name "StartupAntigravity-v${VERSION}-win64" `
+            --paths launcher `
+            --hidden-import studio_server `
             --icon dist/icons/startup-antigravity.ico `
             --add-data "dist/startup-antigravity-v${VERSION}.zip;." `
             launcher/app.py

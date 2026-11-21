@@ -206,6 +206,216 @@ def eval_tokenization_readiness(args: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def scaffold_x402_starter(
+    args: dict[str, Any],
+    workspace: Path | None = None,
+) -> dict[str, Any]:
+    """Generate a runnable HTTP 402 (x402) pay-per-call starter defaulting safely to Base Sepolia testnet."""
+    ws = (workspace or Path.cwd()).resolve()
+    stack = str(args.get("stack", "python-fastapi")).strip().lower()
+    if stack not in ("python-fastapi", "node-express"):
+        raise ValueError("stack must be 'python-fastapi' or 'node-express'.")
+    price_usdc = float(args.get("price_per_call_usd", 0.05))
+    endpoint_path = str(args.get("endpoint_path", "/api/v1/agent-query")).strip()
+    if not endpoint_path.startswith("/"):
+        endpoint_path = "/" + endpoint_path
+    network = str(args.get("network", "base-sepolia")).strip()
+
+    out_dir = ws / "x402-starter"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    created: list[str] = []
+
+    env_example = (
+        "# Startup Antigravity x402 Starter — NEVER commit real private keys to Git!\n"
+        f"X402_NETWORK={network}\n"
+        f"X402_PRICE_USDC={price_usdc:.4f}\n"
+        "X402_PAY_TO_ADDRESS=0xYOUR_TESTNET_OR_TREASURY_ADDRESS\n"
+        "X402_FACILITATOR_URL=https://x402.org/facilitator\n"
+        "PORT=8402\n"
+    )
+    (out_dir / ".env.example").write_text(env_example, encoding="utf-8")
+    created.append(str(out_dir / ".env.example"))
+
+    if stack == "python-fastapi":
+        server_code = f'''#!/usr/bin/env python3
+"""Runnable x402 HTTP 402 Pay-Per-Call Starter (Python stdlib — zero pip installs required to test!).
+
+Swap the simulated facilitator verifier for the official Coinbase x402 facilitator SDK
+before moving from {network} testnet to production mainnet.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+NETWORK = os.environ.get("X402_NETWORK", "{network}")
+PRICE_USDC = os.environ.get("X402_PRICE_USDC", "{price_usdc:.4f}")
+PAY_TO = os.environ.get("X402_PAY_TO_ADDRESS", "0xYOUR_TESTNET_OR_TREASURY_ADDRESS")
+ENDPOINT = "{endpoint_path}"
+
+
+class X402Handler(BaseHTTPRequestHandler):
+    def _json(self, status: int, body: dict, extra_headers: dict[str, str] | None = None) -> None:
+        raw = json.dumps(body, indent=2).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(raw)))
+        for k, v in (extra_headers or {{}}).items():
+            self.send_header(k, v)
+        self.end_headers()
+        self.wfile.write(raw)
+
+    def do_POST(self) -> None:  # noqa: N802
+        if self.path != ENDPOINT:
+            self._json(404, {{"error": "Not found", "expectedEndpoint": ENDPOINT}})
+            return
+
+        payment_header = self.headers.get("X-PAYMENT")
+        if not payment_header:
+            challenge = {{
+                "x402Version": 1,
+                "accepts": [
+                    {{
+                        "scheme": "exact",
+                        "network": NETWORK,
+                        "asset": "USDC",
+                        "maxAmountRequired": PRICE_USDC,
+                        "payTo": PAY_TO,
+                        "resource": ENDPOINT,
+                    }}
+                ],
+            }}
+            self._json(
+                402,
+                {{"error": "Payment Required", "paymentRequirements": challenge}},
+                extra_headers={{"X-PAYMENT-REQUIRED": json.dumps(challenge)}},
+            )
+            return
+
+        # In production: verify & settle `payment_header` via X402_FACILITATOR_URL before fulfilling
+        length = int(self.headers.get("Content-Length", "0"))
+        req_body = self.rfile.read(length).decode("utf-8") if length > 0 else "{{}}"
+        self._json(
+            200,
+            {{
+                "ok": True,
+                "settledNetwork": NETWORK,
+                "chargedUsdc": PRICE_USDC,
+                "paymentProofReceived": payment_header[:32] + "...",
+                "result": {{"echo": req_body, "message": "Paid AI-agent call fulfilled cleanly."}},
+            }},
+        )
+
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", "8402"))
+    print(f"x402 starter listening on http://127.0.0.1:{{port}}{{ENDPOINT}} (network={{NETWORK}})")
+    HTTPServer(("127.0.0.1", port), X402Handler).serve_forever()
+'''
+        (out_dir / "server.py").write_text(server_code, encoding="utf-8")
+        created.append(str(out_dir / "server.py"))
+
+        client_code = f'''#!/usr/bin/env python3
+"""Local test client demonstrating the 2-step HTTP 402 -> X-PAYMENT retry handshake."""
+
+import json
+import urllib.error
+import urllib.request
+
+URL = "http://127.0.0.1:8402{endpoint_path}"
+BODY = json.dumps({{"query": "Analyze solar EPC churn signals"}}).encode("utf-8")
+
+req1 = urllib.request.Request(URL, data=BODY, headers={{"Content-Type": "application/json"}}, method="POST")
+try:
+    urllib.request.urlopen(req1)
+except urllib.error.HTTPError as err:
+    print("Step 1 — Received expected HTTP", err.code)
+    print("X-PAYMENT-REQUIRED:", err.headers.get("X-PAYMENT-REQUIRED"))
+
+req2 = urllib.request.Request(
+    URL,
+    data=BODY,
+    headers={{
+        "Content-Type": "application/json",
+        "X-PAYMENT": "demo-signed-base-sepolia-usdc-authorization",
+    }},
+    method="POST",
+)
+with urllib.request.urlopen(req2) as resp:
+    print("Step 2 — Paid retry HTTP", resp.status)
+    print(resp.read().decode("utf-8"))
+'''
+        (out_dir / "test_agent_client.py").write_text(client_code, encoding="utf-8")
+        created.append(str(out_dir / "test_agent_client.py"))
+    else:
+        server_js = f'''// Runnable x402 HTTP 402 Pay-Per-Call Starter (Node.js 18+ built-in http — zero npm install!)
+const http = require("http");
+
+const NETWORK = process.env.X402_NETWORK || "{network}";
+const PRICE_USDC = process.env.X402_PRICE_USDC || "{price_usdc:.4f}";
+const PAY_TO = process.env.X402_PAY_TO_ADDRESS || "0xYOUR_TESTNET_OR_TREASURY_ADDRESS";
+const ENDPOINT = "{endpoint_path}";
+const PORT = Number(process.env.PORT || 8402);
+
+const server = http.createServer((req, res) => {{
+  if (req.method !== "POST" || req.url !== ENDPOINT) {{
+    res.writeHead(404, {{ "Content-Type": "application/json" }});
+    return res.end(JSON.stringify({{ error: "Not found", expectedEndpoint: ENDPOINT }}));
+  }}
+  const payment = req.headers["x-payment"];
+  if (!payment) {{
+    const challenge = {{
+      x402Version: 1,
+      accepts: [{{ scheme: "exact", network: NETWORK, asset: "USDC", maxAmountRequired: PRICE_USDC, payTo: PAY_TO, resource: ENDPOINT }}],
+    }};
+    res.writeHead(402, {{
+      "Content-Type": "application/json",
+      "X-PAYMENT-REQUIRED": JSON.stringify(challenge),
+    }});
+    return res.end(JSON.stringify({{ error: "Payment Required", paymentRequirements: challenge }}));
+  }}
+  res.writeHead(200, {{ "Content-Type": "application/json" }});
+  res.end(JSON.stringify({{ ok: true, settledNetwork: NETWORK, chargedUsdc: PRICE_USDC, message: "Paid AI-agent call fulfilled cleanly." }}));
+}});
+
+server.listen(PORT, "127.0.0.1", () => {{
+  console.log(`x402 starter listening on http://127.0.0.1:${{PORT}}${{ENDPOINT}} (network=${{NETWORK}})`);
+}});
+'''
+        (out_dir / "server.js").write_text(server_js, encoding="utf-8")
+        created.append(str(out_dir / "server.js"))
+
+    readme = f"""# x402 Pay-Per-Call Agent Starter (`{stack}`)
+
+> Safe default network: **`{network}`** (testnet). Never deploy to mainnet without verifying facilitator settlement and hardware/multisig treasury custody.
+
+## Quickstart
+1. Copy `.env.example` to `.env` and set your testnet `X402_PAY_TO_ADDRESS`.
+2. Start the server: `{"python3 server.py" if stack == "python-fastapi" else "node server.js"}`
+3. Test the HTTP `402` -> `X-PAYMENT` retry handshake: `{"python3 test_agent_client.py" if stack == "python-fastapi" else f"curl -i -X POST http://127.0.0.1:8402{endpoint_path}"}`
+
+## Mensarius Oath & Accounting Hygiene
+- Keep exact pricing transparent in every `402` challenge before charging an agent.
+- Sync realized USDC receipts into QuickBooks Online (fiat-denominated) for clean tax compliance.
+- Consult qualified legal/tax counsel before launching production digital-asset rails.
+"""
+    (out_dir / "README.md").write_text(readme, encoding="utf-8")
+    created.append(str(out_dir / "README.md"))
+
+    return {
+        "ok": True,
+        "action": "x402_starter_scaffold",
+        "stack": stack,
+        "network": network,
+        "pricePerCallUsdc": price_usdc,
+        "endpointPath": endpoint_path,
+        "outputDir": str(out_dir),
+        "createdFiles": created,
+    }
+
+
 def run_ai_x402_calc(args: dict[str, Any], workspace: Path | None = None) -> dict[str, Any]:
     action = str(args.get("action", "ai_cogs_margin")).strip()
     if action == "ai_cogs_margin":
@@ -214,8 +424,10 @@ def run_ai_x402_calc(args: dict[str, Any], workspace: Path | None = None) -> dic
         return calc_x402_micropayment_model(args, workspace=workspace)
     if action == "tokenization_readiness":
         return eval_tokenization_readiness(args)
+    if action == "x402_starter_scaffold":
+        return scaffold_x402_starter(args, workspace=workspace)
     raise ValueError(
-        f"Unknown ai_x402_calc action '{action}'. Use 'ai_cogs_margin', 'x402_micropayment_model', or 'tokenization_readiness'."
+        f"Unknown ai_x402_calc action '{action}'. Use 'ai_cogs_margin', 'x402_micropayment_model', 'tokenization_readiness', or 'x402_starter_scaffold'."
     )
 
 

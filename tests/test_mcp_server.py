@@ -825,6 +825,20 @@ class TestMCPServer(unittest.TestCase):
                         },
                     },
                 },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 5,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "ai_x402_calc",
+                        "arguments": {
+                            "action": "x402_starter_scaffold",
+                            "stack": "python-fastapi",
+                            "price_per_call_usd": 0.05,
+                            "workspace_path": td,
+                        },
+                    },
+                },
             ]
             resps = self._run_rpc(calls)
             cogs = json.loads(resps[0]["result"]["content"][0]["text"])
@@ -844,6 +858,13 @@ class TestMCPServer(unittest.TestCase):
             tok_no = json.loads(resps[3]["result"]["content"][0]["text"])
             self.assertEqual(tok_no["verdict"], "DO_NOT_LAUNCH_SPECULATIVE_TOKEN")
             self.assertTrue(tok_no["warnings"])
+
+            scaf = json.loads(resps[4]["result"]["content"][0]["text"])
+            self.assertTrue(scaf["ok"])
+            self.assertEqual(scaf["network"], "base-sepolia")
+            self.assertTrue((Path(td) / "x402-starter" / "server.py").exists())
+            self.assertTrue((Path(td) / "x402-starter" / ".env.example").exists())
+            self.assertTrue((Path(td) / "x402-starter" / "test_agent_client.py").exists())
 
 
 if __name__ == "__main__":

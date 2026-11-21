@@ -28,6 +28,7 @@ from package_release import package_release  # noqa: E402
 
 DIST_DIR = ROOT / "dist"
 LAUNCHER_SRC = ROOT / "launcher" / "app.py"
+STUDIO_SERVER_SRC = ROOT / "launcher" / "studio_server.py"
 ICON_SRC = ROOT / "assets" / "logo.svg"
 
 
@@ -79,10 +80,11 @@ def build_deb(zip_path: Path, manifest: dict[str, Any]) -> Path:
     for d in (debian_dir, bin_dir, share_dir, apps_dir, icons_dir):
         d.mkdir(parents=True, exist_ok=True)
 
-    # Payload: offline plugin ZIP + launcher script
+    # Payload: offline plugin ZIP + launcher script + local Studio server
     shutil.copy2(zip_path, share_dir / zip_path.name)
     launcher_dest = share_dir / "launcher.py"
     shutil.copy2(LAUNCHER_SRC, launcher_dest)
+    shutil.copy2(STUDIO_SERVER_SRC, share_dir / "studio_server.py")
     _chmod_exec(launcher_dest)
 
     # CLI & desktop wrapper in /usr/bin
@@ -172,6 +174,7 @@ def build_appdir(
     else:
         launcher_dest = usr_share / "launcher.py"
         shutil.copy2(LAUNCHER_SRC, launcher_dest)
+        shutil.copy2(STUDIO_SERVER_SRC, usr_share / "studio_server.py")
         _chmod_exec(launcher_dest)
         apprun_exec = f'exec python3 "$HERE/usr/share/{pkg_name}/launcher.py" "$@"'
 
