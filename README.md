@@ -28,7 +28,7 @@
   - [2. Companion Design, Cloud & Ops Stack (Canva, Figma, Replit, QuickBooks & Zapier)](#2-companion-design-cloud--ops-stack-canva-figma-replit-quickbooks--zapier)
   - [3. Eighteen Progressive-Disclosure Startup Skills](#3-eighteen-progressive-disclosure-startup-skills)
   - [4. Seven Founding Advisory Subagents](#4-seven-founding-advisory-subagents)
-  - [5. Eighteen-Tool Local MCP Server (`startup-antigravity-os`)](#5-eighteen-tool-local-mcp-server-startup-antigravity-os)
+  - [5. Twenty-Tool Local MCP Server (`startup-antigravity-os`)](#5-twenty-tool-local-mcp-server-startup-antigravity-os)
   - [6. Optional BYO-AI Addon Connectors (Claude, OpenAI, xAI Grok, Gemini CLI & Ollama)](#6-optional-byo-ai-addon-connectors-claude-openai-xai-grok-gemini-cli--ollama)
   - [7. Always-On Guardrails & Four Lifecycle Hooks](#7-always-on-guardrails--four-lifecycle-hooks)
 - [Creator's Recommended Founder Stack (Personal Endorsements)](#creators-recommended-founder-stack-personal-endorsements)
@@ -249,25 +249,25 @@ git clone https://github.com/petebiggam357/StartupAntigravity.git ".agents\plugi
 
 ## Verifying Your Installation
 
-### 1. Run the Built-In Automated Self-Test (All 29 Checks)
+### 1. Run the Built-In Automated Self-Test (All 31 Checks)
 
-**macOS / Linux:**
+**macOS / Linux (or run `./install.sh` for one-command install + test):**
 ```bash
 cd ~/.gemini/config/plugins/startup-antigravity
 python3 -m unittest discover -s tests -v
 ```
 
-**Windows (PowerShell):**
+**Windows PowerShell (or run `.\install.ps1` for one-command install + Python fix + test):**
 ```powershell
 cd "$env:USERPROFILE\.gemini\config\plugins\startup-antigravity"
 python3 -m unittest discover -s tests -v
 ```
 
-Expected result: **`Ran 29 tests ... OK`** (under 1 second).
+Expected result: **`Ran 31 tests ... OK`** (under 1 second).
 
 ### 2. Verify Inside Antigravity
 1. **Customizations > Plugins:** You should see **Startup Antigravity — Ethical Venture OS (`v0.0.2-alpha`)** enabled with **18 skills**, **7 agents**, **1 rule file**, **4 hooks**, and **1 MCP server**.
-2. **Additional Options (`...`) > MCP Servers:** Confirm `startup-antigravity_startup-antigravity-os` shows as connected with **18 tools**.
+2. **Additional Options (`...`) > MCP Servers:** Confirm `startup-antigravity_startup-antigravity-os` shows as connected with **20 tools**.
 3. **Antigravity CLI (optional):**
    ```bash
    agy plugin enable startup-antigravity
@@ -396,7 +396,7 @@ Startup Antigravity works 100% offline with zero dependencies, and pairs seamles
 - **`lean-cto-margin-architect`** — Pragmatic founding CTO who cuts engineering scope 50–70% and protects `>= 75%` gross margins.
 - **`ethical-growth-strategist`** — Value-pricing, positioning, and ethical acquisition strategist (zero dark patterns).
 
-### 5. Eighteen-Tool Local MCP Server (`startup-antigravity-os`)
+### 5. Twenty-Tool Local MCP Server (`startup-antigravity-os`)
 Runs locally via Python 3 stdio (zero external API keys):
 1. `startup_get_state` — Live telemetry, FI stage benchmark, interviews, PACT totals, and deck score
 2. `startup_update_stage` — Persist stage, FI pitch, MRR, burn, cash, gross margin, and iKPI
@@ -416,6 +416,8 @@ Runs locally via Python 3 stdio (zero external API keys):
 16. `ai_connectors_manage` — Detect optional BYO-AI CLIs/env vars, sync `CLAUDE.md`/`GROK_CONTEXT.md`/`AI_CONTEXT_PACK.md`/`DIPITY_BRAND_BRAIN.md`/`SHELLED_HANDOFF.md`, and run multi-model second opinions
 17. `pmf_engine_manage` — Track Sean Ellis 40% Very Disappointed surveys, per-segment HXC PMF scores, cohort retention flattening, Superhuman 50/50 roadmaps, and `docs/PMF_SCORECARD.md`
 18. `founder_resources_hub` — Search 36+ curated FI.co, VC Lab, Startup Grind, Founders Guild, PMF, legal, accounting, growth & AI founder resources, pull stage-matched Action Kits, or save custom team/cohort bookmarks
+19. `founder_dashboard_build` — Compile all live `.startup/*.json` telemetry into a single-file interactive local browser Command Center (`dashboard/index.html`) with PMF 40% SVG gauge, PACT funnel, and Riskiest Assumptions board
+20. `transcript_ingest` — Extract pain severity (1–5), dollar WTP, workarounds, pilot intent, verbatim quotes, and Mom Test bias warnings from raw Zoom/Loom/Otter call transcripts (auto-logging to `.startup/interviews.json`)
 
 ### 6. Optional BYO-AI Addon Connectors (Claude, OpenAI, xAI Grok, Gemini CLI & Ollama)
 **Startup Antigravity is built for Google Antigravity first** — zero external AI keys are required. However, if a novice or technical founder already loves another AI platform, the `multi-ai-connectors` skill lets them plug it in cleanly without losing company context:

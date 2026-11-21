@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -21,14 +22,16 @@ PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 DECK_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "pitch-deck-builder" / "scripts"
 LANDING_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "revenue-first-validation" / "scripts"
 CONNECTOR_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "multi-ai-connectors" / "scripts"
+DASHBOARD_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "unit-economics-and-profit-os" / "scripts"
 IKPI_CATALOG_PATH = Path(__file__).resolve().parent / "ikpi_catalog.json"
 FOUNDER_RESOURCES_PATH = Path(__file__).resolve().parent / "founder_resources.json"
 
-for _p in (DECK_SCRIPTS_DIR, LANDING_SCRIPTS_DIR, CONNECTOR_SCRIPTS_DIR):
+for _p in (DECK_SCRIPTS_DIR, LANDING_SCRIPTS_DIR, CONNECTOR_SCRIPTS_DIR, DASHBOARD_SCRIPTS_DIR):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
 from ai_connector import detect_connectors, run_second_opinion, sync_ai_context  # noqa: E402
+from build_dashboard import build_dashboard  # noqa: E402
 from build_deck import (  # noqa: E402
     BANNED_BUZZWORDS,
     build_deck,
@@ -1479,6 +1482,122 @@ def tool_founder_resources_hub(args: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def tool_founder_dashboard_build(args: dict[str, Any]) -> dict[str, Any]:
+    ws = _resolve_workspace(args.get("workspace_path"))
+    return build_dashboard(ws)
+
+
+def tool_transcript_ingest(args: dict[str, Any]) -> dict[str, Any]:
+    """Extract structured Mom Test discovery signals from raw call transcripts and optionally log into .startup/interviews.json."""
+    text = str(args.get("transcript_text") or "").strip()
+    if not text:
+        raise ValueError("'transcript_text' is required.")
+    persona = str(args.get("persona") or "Interviewee").strip()
+    segment = str(args.get("company_segment") or "").strip()
+
+    sentences = [s.strip() for s in re.split(r"(?<=[.!?])\s+|\n+", text) if len(s.strip()) >= 12]
+    lower = text.lower()
+
+    # Extract dollar amounts ($500, $4,000, $10k)
+    money_vals: list[float] = []
+    for m in re.finditer(r"\$\s*([0-9][0-9,]*(?:\.[0-9]+)?)\s*([kKmM])?", text):
+        raw_num = float(m.group(1).replace(",", ""))
+        suffix = (m.group(2) or "").lower()
+        if suffix == "k":
+            raw_num *= 1000.0
+        elif suffix == "m":
+            raw_num *= 1_000_000.0
+        money_vals.append(raw_num)
+
+    # Pain urgency scoring (1-5)
+    pain_hits = re.findall(
+        r"\b(hate|painful|nightmare|broken|losing|waste|wasting|hours|manual|frustrat\w*|expensive|headache|error|rejected|urgent|costly)\b",
+        lower,
+    )
+    pain_severity = min(5, max(1, 2 + len(set(pain_hits)) // 2))
+    if len(money_vals) > 0 and pain_severity < 4:
+        pain_severity = 4
+
+    # Workaround detection
+    workarounds = sorted(
+        set(
+            re.findall(
+                r"\b(spreadsheet|spreadsheets|excel|google sheets|manual|agency|agencies|email|intern|contractor|legacy|quickbooks|csv|pdf)\b",
+                lower,
+            )
+        )
+    )
+    workaround_str = ", ".join(workarounds) if workarounds else "Not explicitly stated"
+
+    # Pilot / buying pull detection
+    pilot_intent = bool(
+        re.search(
+            r"\b(pilot|sign|pay for|willing to pay|budget|next week|when can we start|send (me |us )?(a |the )?(contract|invoice|pact|link))\b",
+            lower,
+        )
+    )
+
+    # Mom Test bias detector (flags leading founder questions in transcript)
+    mom_test_warnings: list[str] = []
+    if re.search(r"\b(would you (use|pay|buy)|do you think this is a good idea|do you like our)\b", lower):
+        mom_test_warnings.append(
+            "Detected leading/hypothetical Mom Test question ('would you use/pay...' or 'do you like...'). "
+            "Weight future-tense praise lower than past spend or signed PACTs."
+        )
+
+    # Pick highest-signal verbatim quotes
+    scored_quotes: list[tuple[int, str]] = []
+    for s in sentences:
+        sl = s.lower()
+        qscore = (
+            (3 if "$" in s else 0)
+            + (2 if re.search(r"\b(hate|losing|waste|hours|manual|broken|spreadsheet|pilot|pay)\b", sl) else 0)
+        )
+        if qscore > 0:
+            scored_quotes.append((qscore, s))
+    scored_quotes.sort(key=lambda x: -x[0])
+    top_quotes = [q for _, q in scored_quotes[:3]] or sentences[:1]
+
+    wtp_guess = min(money_vals) if money_vals else 0.0
+    extracted = {
+        "persona": persona,
+        "companySegment": segment,
+        "estimatedPainSeverity": pain_severity,
+        "currentWorkaround": workaround_str,
+        "dollarAmountsMentioned": sorted(set(round(v, 2) for v in money_vals)),
+        "estimatedWtpUsd": round(wtp_guess, 2),
+        "pledgedPilotSignal": pilot_intent,
+        "topVerbatimQuotes": top_quotes,
+        "momTestBiasWarnings": mom_test_warnings,
+    }
+
+    logged_entry = None
+    if bool(args.get("auto_log", True)) and args.get("workspace_path"):
+        logged_entry = tool_interview_manage(
+            {
+                "action": "log",
+                "workspace_path": args["workspace_path"],
+                "persona": persona,
+                "company_segment": segment,
+                "pain_severity": pain_severity,
+                "current_workaround": workaround_str,
+                "willingness_to_pay_usd": wtp_guess,
+                "pledged_pilot": pilot_intent,
+                "verbatim_quote": top_quotes[0] if top_quotes else "",
+            }
+        )
+
+    return {
+        "extracted": extracted,
+        "loggedInterview": logged_entry,
+        "nextStep": (
+            "Strong pilot signal detected — immediately offer a 1-page Paid Pilot PACT and log in pact_pipeline_manage!"
+            if pilot_intent or pain_severity >= 4
+            else "Review extracted workaround & pain; dig deeper on past budget spent in next discovery call."
+        ),
+    }
+
+
 def tool_landing_page_build(args: dict[str, Any]) -> dict[str, Any]:
     ws = _resolve_workspace(args.get("workspace_path"))
     overrides = args.get("overrides") if isinstance(args.get("overrides"), dict) else {}
@@ -2004,7 +2123,7 @@ TOOLS: list[dict[str, Any]] = [
     },
     {
         "name": "founder_resources_hub",
-        "description": "Search the curated offline Founder Resources Library (32+ FI.co, VC Lab, PMF, Mom Test, legal/equity, accounting, Replit, Canva, Figma, Zapier, Dipity & Shelled AI resources), get a stage-matched Action Kit from .startup/state.json, browse categories, or save custom team/cohort bookmarks to .startup/custom_resources.json.",
+        "description": "Search the curated offline Founder Resources Library (36+ FI.co, VC Lab, Startup Grind, Founders Guild, PMF, Mom Test, legal/equity, accounting, Replit, Canva, Figma, Zapier, Dipity & Shelled AI resources), get a stage-matched Action Kit from .startup/state.json, browse categories, or save custom team/cohort bookmarks to .startup/custom_resources.json.",
         "inputSchema": {
             "type": "object",
             "properties": {
@@ -2014,7 +2133,7 @@ TOOLS: list[dict[str, Any]] = [
                 "category": {"type": "string"},
                 "stage": {"type": "string", "enum": ["idea", "validation", "mvp", "pre_seed_traction", "seed_scale"]},
                 "format": {"type": "string"},
-                "limit": {"type": "integer", "minimum": 1, "maximum": 32},
+                "limit": {"type": "integer", "minimum": 1, "maximum": 36},
                 "title": {"type": "string"},
                 "url": {"type": "string"},
                 "source": {"type": "string"},
@@ -2024,6 +2143,31 @@ TOOLS: list[dict[str, Any]] = [
                 "stages": {"type": "array", "items": {"type": "string"}},
             },
             "required": ["action"],
+        },
+    },
+    {
+        "name": "founder_dashboard_build",
+        "description": "Compile all live .startup/*.json telemetry (FI stage, MRR, runway, PMF 40% SVG gauge, PACT pipeline, Riskiest Assumptions, weekly sprints & For-Progress iKPI) into a single-file interactive local browser dashboard at dashboard/index.html.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "workspace_path": {"type": "string"},
+            },
+        },
+    },
+    {
+        "name": "transcript_ingest",
+        "description": "Parse a raw Zoom/Loom/Otter customer discovery call transcript to deterministically extract pain severity (1-5), dollar WTP mentions, current workarounds, pilot intent, verbatim quotes, and Mom Test bias warnings — optionally auto-logging directly into .startup/interviews.json.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "transcript_text": {"type": "string"},
+                "persona": {"type": "string"},
+                "company_segment": {"type": "string"},
+                "workspace_path": {"type": "string"},
+                "auto_log": {"type": "boolean"},
+            },
+            "required": ["transcript_text"],
         },
     },
 ]
@@ -2047,6 +2191,8 @@ TOOL_HANDLERS = {
     "ai_connectors_manage": tool_ai_connectors_manage,
     "pmf_engine_manage": tool_pmf_engine_manage,
     "founder_resources_hub": tool_founder_resources_hub,
+    "founder_dashboard_build": tool_founder_dashboard_build,
+    "transcript_ingest": tool_transcript_ingest,
 }
 
 

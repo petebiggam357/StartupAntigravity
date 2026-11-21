@@ -40,7 +40,7 @@ class TestMCPServer(unittest.TestCase):
         self.assertEqual(len(resps), 2)
         self.assertEqual(resps[0]["result"]["serverInfo"]["name"], "startup-antigravity-os")
         tool_names = {t["name"] for t in resps[1]["result"]["tools"]}
-        self.assertEqual(len(tool_names), 18)
+        self.assertEqual(len(tool_names), 20)
         self.assertIn("financial_calc", tool_names)
         self.assertIn("fi_pitch_lint", tool_names)
         self.assertIn("pact_pipeline_manage", tool_names)
@@ -53,6 +53,8 @@ class TestMCPServer(unittest.TestCase):
         self.assertIn("ai_connectors_manage", tool_names)
         self.assertIn("pmf_engine_manage", tool_names)
         self.assertIn("founder_resources_hub", tool_names)
+        self.assertIn("founder_dashboard_build", tool_names)
+        self.assertIn("transcript_ingest", tool_names)
 
     def test_financial_calculators_deterministic(self) -> None:
         calls = [
@@ -673,7 +675,79 @@ class TestMCPServer(unittest.TestCase):
 
             cats = json.loads(resps[4]["result"]["content"][0]["text"])
             self.assertEqual(cats["customCount"], 1)
-            self.assertGreaterEqual(cats["builtinCount"], 32)
+            self.assertGreaterEqual(cats["builtinCount"], 36)
+
+    def test_founder_dashboard_build_and_transcript_ingest(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            sample_call = (
+                "Founder: Walk me through how you handle rejected insurance claims today?\n"
+                "Buyer: Honestly it's a nightmare. We waste 12 hours every week manually checking spreadsheets "
+                "and Excel exports, and we're losing at least $4,500 every month on unbilled claims. "
+                "If you can fix that, we have budget for a $500 pilot next week—send me the link!"
+            )
+            calls = [
+                {
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "startup_update_stage",
+                        "arguments": {
+                            "workspace_path": td,
+                            "companyName": "ClaimGuard",
+                            "stage": "mvp",
+                            "mrrUsd": 4500,
+                            "monthlyBurnUsd": 3000,
+                            "cashOnHandUsd": 45000,
+                            "grossMarginPct": 84,
+                        },
+                    },
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 2,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "transcript_ingest",
+                        "arguments": {
+                            "workspace_path": td,
+                            "persona": "Clinic Operations Director",
+                            "company_segment": "Independent Dental Clinics",
+                            "transcript_text": sample_call,
+                            "auto_log": True,
+                        },
+                    },
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 3,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "founder_dashboard_build",
+                        "arguments": {"workspace_path": td},
+                    },
+                },
+            ]
+            resps = self._run_rpc(calls)
+            ing = json.loads(resps[1]["result"]["content"][0]["text"])
+            ext = ing["extracted"]
+            self.assertGreaterEqual(ext["estimatedPainSeverity"], 4)
+            self.assertTrue(ext["pledgedPilotSignal"])
+            self.assertIn(500.0, ext["dollarAmountsMentioned"])
+            self.assertIn(4500.0, ext["dollarAmountsMentioned"])
+            self.assertEqual(ing["loggedInterview"]["totalInterviews"], 1)
+
+            dash = json.loads(resps[2]["result"]["content"][0]["text"])
+            dash_html = Path(dash["dashboardPath"]).read_text(encoding="utf-8")
+            self.assertIn("ClaimGuard", dash_html)
+            self.assertIn("Command Center", dash_html)
+            self.assertIn("PMF Gauge", dash_html)
+            self.assertIn("Default-Alive", dash_html)
+
+    def test_installer_and_ci_files_exist(self) -> None:
+        self.assertTrue((ROOT / "install.sh").exists())
+        self.assertTrue((ROOT / "install.ps1").exists())
+        self.assertTrue((ROOT / ".github" / "workflows" / "ci.yml").exists())
 
 
 if __name__ == "__main__":

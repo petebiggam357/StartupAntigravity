@@ -9,9 +9,12 @@ from pathlib import Path
 
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 DECK_SCRIPTS = PLUGIN_ROOT / "skills" / "pitch-deck-builder" / "scripts"
-if str(DECK_SCRIPTS) not in sys.path:
-    sys.path.insert(0, str(DECK_SCRIPTS))
+DASHBOARD_SCRIPTS = PLUGIN_ROOT / "skills" / "unit-economics-and-profit-os" / "scripts"
+for _p in (DECK_SCRIPTS, DASHBOARD_SCRIPTS):
+    if str(_p) not in sys.path:
+        sys.path.insert(0, str(_p))
 
+from build_dashboard import build_dashboard  # noqa: E402
 from build_deck import build_deck  # noqa: E402
 
 
@@ -38,6 +41,14 @@ def main() -> int:
                 build_deck(p)
             except Exception:
                 # Never break the tool loop; Stop hook will catch invalid JSON cleanly
+                pass
+    elif "/.startup/" in normalized and normalized.endswith(".json"):
+        p = Path(target_path)
+        ws = p.parent.parent
+        if (ws / "dashboard" / "index.html").exists():
+            try:
+                build_dashboard(ws)
+            except Exception:
                 pass
 
     print("{}")

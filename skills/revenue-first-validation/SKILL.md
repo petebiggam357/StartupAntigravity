@@ -25,7 +25,7 @@ See [fi-validation-playbook.md](./references/fi-validation-playbook.md) for Mom 
 ## Step 2: Run 15+ Unbiased Discovery Interviews
 
 - Never pitch during discovery. Ask about **past behavior, current spend, and failed fixes**.
-- After every call, log structured evidence via `interview_manage(action="log", ...)`.
+- After every call, paste the raw Zoom/Loom/Otter transcript straight into `transcript_ingest(transcript_text=..., persona=..., workspace_path=..., auto_log=true)` (or log manually via `interview_manage(action="log", ...)`) to extract pain severity, dollar WTP, workarounds, verbatim quotes, and Mom Test bias warnings automatically.
 - Run `interview_manage(action="summary")` to verify:
   - Target: **>= 15 interviews**, **average pain >= 4.0/5**, and **>= 40% showing real willingness-to-pay**.
   - Delegate raw transcripts or draft questions to the `customer-revenue-coach` subagent to strip leading bias.
