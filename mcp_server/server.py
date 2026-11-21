@@ -30,7 +30,7 @@ from build_deck import build_deck, lint_deck, lint_one_sentence_pitch  # noqa: E
 from build_landing_page import build_landing_page  # noqa: E402
 
 SERVER_NAME = "startup-antigravity-os"
-SERVER_VERSION = "1.1.0"
+SERVER_VERSION = "0.0.1-alpha"
 PROTOCOL_VERSION = "2024-11-05"
 
 FI_STAGE_BENCHMARKS: dict[str, dict[str, Any]] = {

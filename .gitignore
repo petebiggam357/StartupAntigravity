@@ -18,7 +18,8 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Local test scratch workspaces
+# Release builds & local test scratch workspaces
+dist/
 .startup/
 pitch-deck/
 tmp/

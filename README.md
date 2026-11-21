@@ -261,7 +261,7 @@ python3 -m unittest discover -s tests -v
 Expected result: **`Ran 22 tests ... OK`** (under 1 second).
 
 ### 2. Verify Inside Antigravity
-1. **Customizations > Plugins:** You should see **Startup Antigravity — Ethical Venture OS (`v1.1.0`)** enabled with **10 skills**, **5 agents**, **1 rule file**, **4 hooks**, and **1 MCP server**.
+1. **Customizations > Plugins:** You should see **Startup Antigravity — Ethical Venture OS (`v0.0.1-alpha`)** enabled with **10 skills**, **5 agents**, **1 rule file**, **4 hooks**, and **1 MCP server**.
 2. **Additional Options (`...`) > MCP Servers:** Confirm `startup-antigravity_startup-antigravity-os` shows as connected with **12 tools**.
 3. **Antigravity CLI (optional):**
    ```bash

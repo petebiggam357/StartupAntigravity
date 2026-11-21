@@ -1,0 +1,19 @@
+# Changelog
+
+All notable changes to **Startup Antigravity — Ethical Venture OS** are documented in this file.
+
+This project adheres to [Semantic Versioning](https://semver.org/).
+
+## [0.0.1-alpha] - 2026-11-20
+
+Initial Alpha release of the **Startup Antigravity** Antigravity plugin — uniting **Founder Institute (`fi.co`)** execution, **VC Lab / Decile Group (`govclab.com`)** capital & Mensarius Oath ethics, and rapid high-margin profit velocity.
+
+### Added
+- **Plugin Bundle & Guardrails**: `plugin.json`, vector `assets/logo.svg`, and always-on Mensarius Oath + FI clarity + Revenue-First rules in `rules/AGENTS.md`.
+- **Visual Interactive FI Pitch Deck 2.0**: Single-source-of-truth `deck.json` compiler (`build_deck.py`) producing zero-dependency 16:9 `index.html` (with 3-minute FI pitch timer `T`, speaker notes `S`, slide grid `G`, badge toggle `B`, 1-click PDF export) + Marp `DECK.md` + optional `.pptx`. Includes 3 templates (`problem-solution`, `traction`, 3-slide `teaser`) and inline SVG `chart-line`, `chart-bar`, `quadrant-2x2`, and `product-frame` slide types.
+- **48-Hour Ethical Smoke-Test Landing Page Generator**: Zero-dependency `build_landing_page.py` + `landing_page_build` MCP tool generating a deploy-ready `landing/index.html` with interactive ROI calculator, transparent 3-tier pricing, For-Progress iKPI charter, and 1-page Paid-Pilot PACT intake.
+- **10 Progressive-Disclosure Startup Skills**: `startup-kickstart`, `revenue-first-validation`, `pitch-deck-builder`, `mvp-and-profit-architecture`, `market-and-unfair-moat`, `gtm-and-cash-velocity`, `unit-economics-and-profit-os`, `advisors-equity-and-fast`, `vc-lab-fundraising-os`, and `weekly-sprint-review`.
+- **5 Founding Advisory Subagents**: `fi-mentor-pitch-critic`, `vc-lab-partner-skeptic`, `customer-revenue-coach`, `lean-cto-margin-architect`, and `ethical-growth-strategist`.
+- **12-Tool Bundled Local MCP Server (`startup-antigravity-os`)**: Pure Python 3 standard library stdio JSON-RPC server covering state management, FI Madlibs & slide linting, Riskiest Assumption board, experiments, Mom Test interviews, Customer/Investor PACT pipeline, deterministic financial calculators (`runway`, `unit_economics`, `tam_bottom_up`, `safe_dilution`, `fast_advisor_equity`, `cap_table_model`), offline UN SDG 1–17 `ikpi_catalog_search` (34 metrics), weekly `sprint_manage` + `docs/INVESTOR_UPDATE.md` generator, `pitch_deck_build`, and `landing_page_build`.
+- **4 Lifecycle Hooks (`hooks.json`)**: `SessionStart` bootstrap/Founder Pulse, `PreToolUse` secret-leak blocker & early-stage infra guard, `PostToolUse` automatic pitch deck rebuild, and `Stop` JSON integrity check.
+- **Cross-Platform Documentation & Test Suite**: Complete Windows (PowerShell/CMD/ZIP/Junction/WSL2), macOS, and Linux installation guide in `README.md`, release packager (`scripts/package_release.py`), and 22 automated unit/integration/contract tests.
