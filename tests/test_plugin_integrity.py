@@ -85,7 +85,7 @@ class TestPluginIntegrity(unittest.TestCase):
         self.assertIn("matcher", post[0])
         self.assertIn("hooks", post[0])
 
-    def test_all_sixteen_skills(self) -> None:
+    def test_all_seventeen_skills(self) -> None:
         expected_skills = {
             "startup-kickstart",
             "pitch-deck-builder",
@@ -94,6 +94,7 @@ class TestPluginIntegrity(unittest.TestCase):
             "product-hunt-launch",
             "multi-ai-connectors",
             "quickbooks-cfo-and-zapier",
+            "fi-alumni-scale-stack",
             "product-market-fit-engine",
             "revenue-first-validation",
             "mvp-and-profit-architecture",

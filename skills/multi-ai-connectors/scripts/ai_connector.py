@@ -55,6 +55,11 @@ CLI_PROBES = {
         "label": "Intuit Official QuickBooks Online CLI",
         "installHint": "https://github.com/intuit/intuit-cli-for-quickbooks",
     },
+    "shelled-cli": {
+        "binary": "shelled",
+        "label": "Shelled AI Multi-Agent Engineering Platform (FI Grad)",
+        "installHint": "https://www.shelled.ai/",
+    },
 }
 
 API_ENV_PROBES = {
@@ -85,6 +90,20 @@ API_ENV_PROBES = {
         "defaultModel": "gemini-2.5-flash",
         "endpoint": "https://generativelanguage.googleapis.com/v1beta/models",
         "docsUrl": "https://aistudio.google.com/apikey",
+    },
+    "dipity": {
+        "envVar": "DIPITY_API_KEY",
+        "label": "Dipity Studio / Sera Content Engine (FI Mentor & Grad)",
+        "defaultModel": "sera",
+        "endpoint": "https://www.dipity.studio/dev-pages/documentation",
+        "docsUrl": "https://www.dipity.studio/dev-pages/documentation",
+    },
+    "shelled": {
+        "envVar": "SHELLED_API_KEY",
+        "label": "Shelled AI Multi-Agent Platform (FI Grad)",
+        "defaultModel": "shelled-pod",
+        "endpoint": "https://www.shelled.ai/",
+        "docsUrl": "https://www.shelled.ai/",
     },
 }
 
@@ -217,11 +236,40 @@ def sync_ai_context(workspace_path: str | Path, targets: list[str] | None = None
         )
         files_written.append(str(pack_md))
 
+    if "all" in wanted or "dipity" in wanted or "sera" in wanted:
+        dipity_md = docs_dir / "DIPITY_BRAND_BRAIN.md"
+        dipity_md.write_text(
+            f"# {company} — Dipity Studio / Sera Brand Second-Brain Pack\n\n"
+            "> Built for **Dipity Studio / Sera** (https://www.dipity.studio/dev-pages/documentation) by FI Mentor & Graduate Morgan Von Druitt (https://x.com/MorganVonDruitt).\n"
+            "> Ingest this file into Sera's second brain (or via Dipity API/MCP) so every LinkedIn post, X thread, newsletter, and Gen Studio visual stays 100% aligned with your FI-linted positioning and Mensarius ethics.\n\n"
+            + core_block
+            + "\n## Content Distribution Guardrails for Sera\n"
+            "- Lead with verified customer pain, real lessons learned, and measurable ROI (zero buzzwords or hype).\n"
+            "- Weave our For-Progress iKPI naturally into founder storytelling.\n"
+            "- Never use fake scarcity, engagement-bait dark patterns, or unverified traction claims.\n",
+            encoding="utf-8",
+        )
+        files_written.append(str(dipity_md))
+
+    if "all" in wanted or "shelled" in wanted:
+        shelled_md = docs_dir / "SHELLED_HANDOFF.md"
+        shelled_md.write_text(
+            f"# {company} — Shelled AI Multi-Agent Engineering Handoff\n\n"
+            "> Built for **Shelled AI** (https://www.shelled.ai/) by FI Silicon Valley AI Graduate Jacob Wellinghoff (https://x.com/binaryreality).\n"
+            "> Connect this repository to Shelled AI (local, Shelled Cloud, or private/on-prem) so specialist architect, coder, tester, and reviewer agents ship tested Pull Requests aligned with Startup Antigravity.\n\n"
+            + core_block
+            + "\n## Multi-Agent PR & Scaling Guardrails for Shelled AI\n"
+            "- Respect `docs/MVP_SPEC.md` and the explicit *NOT-Building-Yet* Cut-List.\n"
+            "- Every PR must include automated tests, preserve >=75% gross margin efficiency, and never commit `.env` secrets or customer PII.\n",
+            encoding="utf-8",
+        )
+        files_written.append(str(shelled_md))
+
     return {
         "companyName": company,
         "stage": stage,
         "filesWritten": files_written,
-        "tip": "Re-run sync_context after major stage or pitch updates so Claude, OpenAI, Grok, and Ollama stay 100% aligned with Antigravity.",
+        "tip": "Re-run sync_context after major stage or pitch updates so Claude, OpenAI, Grok, Ollama, Dipity Studio, and Shelled AI stay 100% aligned with Antigravity.",
     }
 
 

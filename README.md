@@ -26,7 +26,7 @@
 - [What's Inside the Plugin](#whats-inside-the-plugin)
   - [1. Visual Interactive FI Pitch Deck 2.0](#1-visual-interactive-fi-pitch-deck-20)
   - [2. Companion Design, Cloud & Ops Stack (Canva, Figma, Replit, QuickBooks & Zapier)](#2-companion-design-cloud--ops-stack-canva-figma-replit-quickbooks--zapier)
-  - [3. Sixteen Progressive-Disclosure Startup Skills](#3-sixteen-progressive-disclosure-startup-skills)
+  - [3. Seventeen Progressive-Disclosure Startup Skills](#3-seventeen-progressive-disclosure-startup-skills)
   - [4. Seven Founding Advisory Subagents](#4-seven-founding-advisory-subagents)
   - [5. Seventeen-Tool Local MCP Server (`startup-antigravity-os`)](#5-seventeen-tool-local-mcp-server-startup-antigravity-os)
   - [6. Optional BYO-AI Addon Connectors (Claude, OpenAI, xAI Grok, Gemini CLI & Ollama)](#6-optional-byo-ai-addon-connectors-claude-openai-xai-grok-gemini-cli--ollama)
@@ -266,7 +266,7 @@ python3 -m unittest discover -s tests -v
 Expected result: **`Ran 27 tests ... OK`** (under 1 second).
 
 ### 2. Verify Inside Antigravity
-1. **Customizations > Plugins:** You should see **Startup Antigravity — Ethical Venture OS (`v0.0.1-alpha`)** enabled with **16 skills**, **7 agents**, **1 rule file**, **4 hooks**, and **1 MCP server**.
+1. **Customizations > Plugins:** You should see **Startup Antigravity — Ethical Venture OS (`v0.0.1-alpha`)** enabled with **17 skills**, **7 agents**, **1 rule file**, **4 hooks**, and **1 MCP server**.
 2. **Additional Options (`...`) > MCP Servers:** Confirm `startup-antigravity_startup-antigravity-os` shows as connected with **17 tools**.
 3. **Antigravity CLI (optional):**
    ```bash
@@ -365,7 +365,7 @@ Startup Antigravity works 100% offline with zero dependencies, and pairs seamles
 - **Figma (`antigravity-plugins-partners/plugin/figma`):** Run `pitch_deck_design_brief(target="figma")` to export `FIGMA_SLIDES_BRIEF.md` + W3C `FIGMA_TOKENS.json`, build native 1920x1080 variable-bound **Figma Slides** (`figma-use-slides`), push `landing/index.html` into editable Figma frames (`figma-generate-design`), or convert Figma wireframes straight into your 7-day MVP (`figma-design-to-code`).
 - **Zapier (`antigravity-plugins-partners/plugin/zapier`) & QuickBooks Online (`intuit/quickbooks-online-mcp-server` / `intuit` CLI):** Connect **QuickBooks Online + 9,000+ apps** (Stripe, Gmail, Slack, HubSpot, Notion, Google Sheets) via 1-click Zapier OAuth or Intuit's official read-first MCP/CLI so Antigravity's `cfo-bookkeeper-copilot` answers plain-English P&L/cash/invoice questions, syncs verified numbers into `.startup/state.json` & `docs/INVESTOR_UPDATE.md`, and previews draft invoices before posting.
 
-### 3. Sixteen Progressive-Disclosure Startup Skills
+### 3. Seventeen Progressive-Disclosure Startup Skills
 | Skill | Purpose |
 | :--- | :--- |
 | `startup-kickstart` | Day-0 5-question intake, FI One-Sentence Pitch linting, UN SDG iKPI selection, and full workspace scaffold |
@@ -375,8 +375,9 @@ Startup Antigravity works 100% offline with zero dependencies, and pairs seamles
 | `design-studio-canva-figma` | Bridge FI-linted decks, landing pages, and launch kits directly into official Canva & Figma Slides MCP workflows |
 | `replit-launchpad` | Zero-double-token Antigravity ↔ Replit Free-Tier bridge: Replit Design System, Web & Expo Mobile apps, and one-shot Replit Slides |
 | `product-hunt-launch` | End-to-end ethical Product Hunt launch kit: linted <=60-char tagline, Maker Comment, `1270x760` Canva/Figma gallery storyboard, and T-14 -> 12:01 AM PT runbook |
-| `multi-ai-connectors` | Optional BYO-AI addon hub: detect CLIs/env vars (`claude`, `codex`, `xai/grok`, `gemini`, `ollama`, `intuit`), sync `CLAUDE.md`/`GROK_CONTEXT.md`/`AI_CONTEXT_PACK.md`, and run second-opinion critiques |
+| `multi-ai-connectors` | Optional BYO-AI addon hub: detect CLIs/env vars (`claude`, `codex`, `xai/grok`, `gemini`, `ollama`, `intuit`, `shelled`, `dipity`), sync context files, and run second-opinion critiques |
 | `quickbooks-cfo-and-zapier` | Connect QuickBooks Online & 9,000+ apps via Zapier MCP, Intuit QBO MCP, or Intuit CLI with read-first accounting safety & preview-before-write invoicing |
+| `fi-alumni-scale-stack` | Scale founder content with **Dipity Studio / Sera** (`docs/DIPITY_BRAND_BRAIN.md`) and multi-agent engineering PR pods with **Shelled AI** (`docs/SHELLED_HANDOFF.md`) |
 | `mvp-and-profit-architecture` | 7-day vertical slice MVP spec, explicit *NOT-Building-Yet* Cut-List, and `>= 75%` gross margin COGS audit |
 | `market-and-unfair-moat` | Bottom-up TAM/SAM/SOM calculation, competitive teardowns, Why-Now analysis, and Secret Sauce audit |
 | `gtm-and-cash-velocity` | Value-based pricing (10x ROI), ethical cold outbound, Show HN / Product Hunt launches, and first-100-customers loops |
@@ -439,6 +440,8 @@ Runs locally via Python 3 stdio (zero external API keys):
 | **Replit** | You can genuinely run your whole early startup on Replit: **Replit Design Mode** for your Design System, full-stack **Web Platforms**, **Expo Mobile Apps** with instant QR previews, built-in DB/Secrets, 1-click hosting, and **Replit Slides**—paired locally with Antigravity via GitHub so you stay on the Free tier without double token burn. | [replit.com/refer/peterbiggam](https://replit.com/refer/peterbiggam) *(referral link)* |
 | **Stripe Atlas** | When Customer PACTs or revenue prove it's time to incorporate, **Stripe Atlas** gives founders a clean, investor-standard Delaware C-Corp, EIN, founder stock issuance with guided **83(b) election** filing, and instant Stripe payments readiness—zero messy DIY legal headaches. | [stripe.com/atlas](https://stripe.com/atlas) |
 | **QuickBooks Online** | Don't wait until tax season or Seed due diligence to organize your finances. **QuickBooks Online** makes bookkeeping, expense tracking, real-time P&L / cash-flow visibility, and CPA handoffs effortless from Dollar #1. | [quickbooks.intuit.com/online](https://quickbooks.intuit.com/online/) |
+| **Dipity Studio / Sera** *(FI Mentor & Grad)* | Built by fellow FI Mentor & Graduate [Morgan Von Druitt](https://x.com/MorganVonDruitt). Turns weekly founder voice notes and company docs into an AI executive "second brain" and on-brand content engine (LinkedIn, X, newsletters, blogs & Gen Studio visuals) with API & MCP support—synced directly from `docs/DIPITY_BRAND_BRAIN.md`. | [dipity.studio](https://www.dipity.studio/) · [Dev Docs](https://www.dipity.studio/dev-pages/documentation) |
+| **Shelled AI** *(FI Silicon Valley AI Grad)* | Built by FI Graduate [Jacob Wellinghoff](https://x.com/binaryreality). Coordinates specialist AI engineering agents (architects, coders, testers, reviewers) over shared repo context—local, cloud, or private/on-prem—to scale tested PR velocity once PMF is validated, synced directly via `docs/SHELLED_HANDOFF.md`. | [shelled.ai](https://www.shelled.ai/) |
 
 ---
 
