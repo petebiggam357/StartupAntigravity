@@ -257,6 +257,61 @@ def open_pitch_deck(workspace: Path) -> dict[str, Any]:
     return {"ok": True, "opened": str(deck_html)}
 
 
+def open_data_room(workspace: Path, plugin_dir: Path | None = None) -> dict[str, Any]:
+    """Build (if possible) and open data-room/index.html for a startup workspace."""
+    ws = workspace.resolve()
+    dr_html = ws / "data-room" / "index.html"
+    target = plugin_dir or default_plugin_dir()
+    builder = target / "skills" / "vc-lab-fundraising-os" / "scripts" / "build_data_room.py"
+
+    if builder.exists() and (ws / ".startup").exists():
+        subprocess.run(
+            [sys.executable, str(builder), "--workspace", str(ws)],
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+
+    if not dr_html.exists():
+        raise FileNotFoundError(
+            f"No investor data room found at {dr_html}. Run data_room_build or Preview Sample Startup first."
+        )
+    webbrowser.open(dr_html.as_uri())
+    return {"ok": True, "opened": str(dr_html)}
+
+
+def preview_demo_workspace(
+    output_dir: Path | None = None,
+    plugin_dir: Path | None = None,
+    zip_path: Path | None = None,
+    open_browser: bool = True,
+) -> dict[str, Any]:
+    """Generate the realistic SolarLedger sample startup workspace and optionally open it."""
+    target = plugin_dir or default_plugin_dir()
+    # Locate generate_demo_workspace.py in installed plugin or repo checkout
+    repo_root = Path(__file__).resolve().parent.parent
+    gen_script = target / "scripts" / "generate_demo_workspace.py"
+    if not gen_script.exists():
+        if (repo_root / "scripts" / "generate_demo_workspace.py").exists():
+            gen_script = repo_root / "scripts" / "generate_demo_workspace.py"
+        else:
+            # Install plugin from bundled zip first so demo generator is available offline
+            install_plugin(plugin_dir=target, zip_path=zip_path)
+            gen_script = target / "scripts" / "generate_demo_workspace.py"
+
+    demo_dir = (output_dir or (Path.home() / ".cache" / "startup-antigravity-demo")).resolve()
+    proc = subprocess.run(
+        [sys.executable, str(gen_script), "--output", str(demo_dir)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    res = json.loads(proc.stdout)
+    if open_browser:
+        webbrowser.open(Path(res["dashboardHtml"]).as_uri())
+    return res
+
+
 def launch_gui() -> int:
     """Launch the native dark-mode Tkinter desktop launcher."""
     try:
@@ -437,6 +492,25 @@ def launch_gui() -> int:
             log(f"[WARN] {exc}")
             messagebox.showwarning(APP_NAME, str(exc))
 
+    def on_data_room() -> None:
+        try:
+            res = open_data_room(Path(workspace_var.get()))
+            log(f"[OK] Opened Investor Data Room -> {res['opened']}")
+        except Exception as exc:
+            log(f"[WARN] {exc}")
+            messagebox.showwarning(APP_NAME, str(exc))
+
+    def on_demo() -> None:
+        try:
+            res = preview_demo_workspace(open_browser=True)
+            workspace_var.set(res["workspace"])
+            log(f"[OK] Built SolarLedger Sample Startup -> {res['workspace']}")
+            log(f"     Dashboard, Pitch Deck, Landing Page & Data Room ({res['dataRoomReadinessPct']}% ready) compiled!")
+            refresh_status()
+        except Exception as exc:
+            log(f"[ERROR] Demo preview failed: {exc}")
+            messagebox.showerror(APP_NAME, f"Demo preview failed:\n{exc}")
+
     def on_uninstall() -> None:
         if not messagebox.askyesno(
             APP_NAME,
@@ -451,8 +525,10 @@ def launch_gui() -> int:
     btn_frame = tk.Frame(root, bg=BG, padx=24)
     btn_frame.pack(fill="x", pady=(0, 12))
 
+    row1 = tk.Frame(btn_frame, bg=BG)
+    row1.pack(fill="x", pady=(0, 8))
     tk.Button(
-        btn_frame,
+        row1,
         text="Install / Update Antigravity Plugin",
         command=on_install,
         bg=EMERALD,
@@ -464,34 +540,63 @@ def launch_gui() -> int:
         padx=16,
         pady=10,
         cursor="hand2",
-    ).pack(fill="x", pady=(0, 8))
+    ).pack(side="left", expand=True, fill="x", padx=(0, 6))
+
+    tk.Button(
+        row1,
+        text="Preview Sample Startup",
+        command=on_demo,
+        bg=AMBER,
+        fg="#1C1917",
+        activebackground="#D97706",
+        activeforeground=TEXT,
+        font=("Sans", 10, "bold"),
+        relief="flat",
+        padx=14,
+        pady=10,
+        cursor="hand2",
+    ).pack(side="right")
 
     row2 = tk.Frame(btn_frame, bg=BG)
     row2.pack(fill="x")
     tk.Button(
         row2,
-        text="Open Founder Dashboard",
+        text="Founder Dashboard",
         command=on_dashboard,
         bg=SLATE_BTN,
         fg=TEXT,
         activebackground=BORDER,
         activeforeground=TEXT,
         relief="flat",
-        padx=12,
+        padx=10,
         pady=8,
         cursor="hand2",
     ).pack(side="left", expand=True, fill="x", padx=(0, 6))
 
     tk.Button(
         row2,
-        text="Open Pitch Deck",
+        text="Pitch Deck",
         command=on_deck,
         bg=SLATE_BTN,
         fg=TEXT,
         activebackground=BORDER,
         activeforeground=TEXT,
         relief="flat",
-        padx=12,
+        padx=10,
+        pady=8,
+        cursor="hand2",
+    ).pack(side="left", expand=True, fill="x", padx=(0, 6))
+
+    tk.Button(
+        row2,
+        text="Investor Data Room",
+        command=on_data_room,
+        bg=SLATE_BTN,
+        fg=TEXT,
+        activebackground=BORDER,
+        activeforeground=TEXT,
+        relief="flat",
+        padx=10,
         pady=8,
         cursor="hand2",
     ).pack(side="left", expand=True, fill="x", padx=(0, 6))
@@ -505,7 +610,7 @@ def launch_gui() -> int:
         activebackground="#991B1B",
         activeforeground=TEXT,
         relief="flat",
-        padx=12,
+        padx=10,
         pady=8,
         cursor="hand2",
     ).pack(side="right")
@@ -527,6 +632,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--status", action="store_true", help="Print installation & runtime status")
     parser.add_argument("--dashboard", metavar="WORKSPACE", help="Open Founder Command Center for WORKSPACE")
     parser.add_argument("--deck", metavar="WORKSPACE", help="Open interactive Pitch Deck for WORKSPACE")
+    parser.add_argument("--data-room", metavar="WORKSPACE", help="Build & open Investor Data Room for WORKSPACE")
+    parser.add_argument(
+        "--demo",
+        nargs="?",
+        const="",
+        metavar="DIR",
+        help="Generate the SolarLedger sample startup workspace (optionally at DIR)",
+    )
+    parser.add_argument("--no-browser", action="store_true", help="Do not launch browser during --demo")
     parser.add_argument("--plugin-dir", metavar="DIR", help="Override target plugin installation directory")
     parser.add_argument("--zip", metavar="ARCHIVE", help="Override bundled plugin ZIP path")
     parser.add_argument("--version", action="store_true", help="Print launcher version and exit")
@@ -562,6 +676,22 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.deck:
         res = open_pitch_deck(Path(args.deck))
+        print(json.dumps(res, indent=2))
+        return 0
+
+    if args.data_room:
+        res = open_data_room(Path(args.data_room), plugin_dir=plugin_dir)
+        print(json.dumps(res, indent=2))
+        return 0
+
+    if args.demo is not None:
+        out_dir = Path(args.demo) if args.demo else None
+        res = preview_demo_workspace(
+            output_dir=out_dir,
+            plugin_dir=plugin_dir,
+            zip_path=zip_override,
+            open_browser=not args.no_browser,
+        )
         print(json.dumps(res, indent=2))
         return 0
 

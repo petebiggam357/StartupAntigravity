@@ -23,15 +23,17 @@ DECK_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "pitch-deck-builder" / "scripts"
 LANDING_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "revenue-first-validation" / "scripts"
 CONNECTOR_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "multi-ai-connectors" / "scripts"
 DASHBOARD_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "unit-economics-and-profit-os" / "scripts"
+DATAROOM_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "vc-lab-fundraising-os" / "scripts"
 IKPI_CATALOG_PATH = Path(__file__).resolve().parent / "ikpi_catalog.json"
 FOUNDER_RESOURCES_PATH = Path(__file__).resolve().parent / "founder_resources.json"
 
-for _p in (DECK_SCRIPTS_DIR, LANDING_SCRIPTS_DIR, CONNECTOR_SCRIPTS_DIR, DASHBOARD_SCRIPTS_DIR):
+for _p in (DECK_SCRIPTS_DIR, LANDING_SCRIPTS_DIR, CONNECTOR_SCRIPTS_DIR, DASHBOARD_SCRIPTS_DIR, DATAROOM_SCRIPTS_DIR):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
 from ai_connector import detect_connectors, run_second_opinion, sync_ai_context  # noqa: E402
 from build_dashboard import build_dashboard  # noqa: E402
+from build_data_room import build_data_room  # noqa: E402
 from build_deck import (  # noqa: E402
     BANNED_BUZZWORDS,
     build_deck,
@@ -42,7 +44,7 @@ from build_deck import (  # noqa: E402
 from build_landing_page import build_landing_page  # noqa: E402
 
 SERVER_NAME = "startup-antigravity-os"
-SERVER_VERSION = "0.0.2-alpha"
+SERVER_VERSION = "0.0.3-alpha"
 PROTOCOL_VERSION = "2024-11-05"
 
 FI_STAGE_BENCHMARKS: dict[str, dict[str, Any]] = {
@@ -1487,6 +1489,11 @@ def tool_founder_dashboard_build(args: dict[str, Any]) -> dict[str, Any]:
     return build_dashboard(ws)
 
 
+def tool_data_room_build(args: dict[str, Any]) -> dict[str, Any]:
+    ws = _resolve_workspace(args.get("workspace_path"))
+    return build_data_room(ws)
+
+
 def tool_transcript_ingest(args: dict[str, Any]) -> dict[str, Any]:
     """Extract structured Mom Test discovery signals from raw call transcripts and optionally log into .startup/interviews.json."""
     text = str(args.get("transcript_text") or "").strip()
@@ -2170,6 +2177,16 @@ TOOLS: list[dict[str, Any]] = [
             "required": ["transcript_text"],
         },
     },
+    {
+        "name": "data_room_build",
+        "description": "Compile an investor-ready VC Lab / Founder Institute Data Room (data-room/index.html, DATA_ROOM_INDEX.md, Executive One-Pager, pitch deck, metrics dashboard, PII-redacted customer proof, and diligence readiness checklist) from .startup/ state.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "workspace_path": {"type": "string"},
+            },
+        },
+    },
 ]
 
 TOOL_HANDLERS = {
@@ -2193,6 +2210,7 @@ TOOL_HANDLERS = {
     "founder_resources_hub": tool_founder_resources_hub,
     "founder_dashboard_build": tool_founder_dashboard_build,
     "transcript_ingest": tool_transcript_ingest,
+    "data_room_build": tool_data_room_build,
 }
 
 

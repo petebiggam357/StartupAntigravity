@@ -68,9 +68,11 @@ Starting in **`v0.0.3-alpha`**, every GitHub Release includes **native compiled 
 **CLI mode** is also built into every native package:
 ```bash
 startup-antigravity --install          # Install or update plugin offline
+startup-antigravity --demo             # Generate & open the SolarLedger sample startup
 startup-antigravity --status           # Show installed version, runtime & paths
 startup-antigravity --dashboard .      # Refresh & open Founder Command Center
 startup-antigravity --deck .           # Open interactive Pitch Deck
+startup-antigravity --data-room .      # Build & open Investor Data Room portal
 ```
 
 **Building packages locally on Linux:**

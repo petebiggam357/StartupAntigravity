@@ -40,7 +40,8 @@ class TestMCPServer(unittest.TestCase):
         self.assertEqual(len(resps), 2)
         self.assertEqual(resps[0]["result"]["serverInfo"]["name"], "startup-antigravity-os")
         tool_names = {t["name"] for t in resps[1]["result"]["tools"]}
-        self.assertEqual(len(tool_names), 20)
+        self.assertEqual(len(tool_names), 21)
+        self.assertIn("data_room_build", tool_names)
         self.assertIn("financial_calc", tool_names)
         self.assertIn("fi_pitch_lint", tool_names)
         self.assertIn("pact_pipeline_manage", tool_names)
@@ -727,6 +728,15 @@ class TestMCPServer(unittest.TestCase):
                         "arguments": {"workspace_path": td},
                     },
                 },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 4,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "data_room_build",
+                        "arguments": {"workspace_path": td},
+                    },
+                },
             ]
             resps = self._run_rpc(calls)
             ing = json.loads(resps[1]["result"]["content"][0]["text"])
@@ -743,6 +753,12 @@ class TestMCPServer(unittest.TestCase):
             self.assertIn("Command Center", dash_html)
             self.assertIn("PMF Gauge", dash_html)
             self.assertIn("Default-Alive", dash_html)
+
+            dr = json.loads(resps[3]["result"]["content"][0]["text"])
+            self.assertTrue(dr["ok"])
+            self.assertTrue(Path(dr["portalHtml"]).exists())
+            self.assertTrue(Path(dr["indexMarkdown"]).exists())
+            self.assertIn("ClaimGuard", Path(dr["portalHtml"]).read_text(encoding="utf-8"))
 
     def test_installer_and_ci_files_exist(self) -> None:
         self.assertTrue((ROOT / "install.sh").exists())

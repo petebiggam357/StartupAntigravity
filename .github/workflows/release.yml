@@ -82,18 +82,20 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install PyInstaller
-        run: python -m pip install --upgrade pip pyinstaller
+      - name: Install PyInstaller & Pillow
+        run: python -m pip install --upgrade pip pyinstaller pillow
 
-      - name: Build plugin ZIP & compile macOS .app bundle
+      - name: Build plugin ZIP, generate native .icns icon & compile macOS .app bundle
         id: meta
         run: |
           VERSION=$(python -c "import json; print(json.load(open('plugin.json'))['version'])")
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           python scripts/package_release.py
+          python scripts/generate_app_icons.py
           pyinstaller \
             --windowed \
             --name "Startup Antigravity" \
+            --icon dist/icons/startup-antigravity.icns \
             --add-data "dist/startup-antigravity-v${VERSION}.zip:." \
             launcher/app.py
 
@@ -127,18 +129,20 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install PyInstaller
-        run: python -m pip install --upgrade pip pyinstaller
+      - name: Install PyInstaller & Pillow
+        run: python -m pip install --upgrade pip pyinstaller pillow
 
-      - name: Build plugin ZIP & compile standalone Windows .exe
+      - name: Build plugin ZIP, generate native .ico icon & compile standalone Windows .exe
         shell: pwsh
         run: |
           $VERSION = python -c "import json; print(json.load(open('plugin.json'))['version'])"
           python scripts/package_release.py
+          python scripts/generate_app_icons.py
           pyinstaller `
             --onefile `
             --windowed `
             --name "StartupAntigravity-v${VERSION}-win64" `
+            --icon dist/icons/startup-antigravity.ico `
             --add-data "dist/startup-antigravity-v${VERSION}.zip;." `
             launcher/app.py
 

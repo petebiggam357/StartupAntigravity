@@ -164,8 +164,34 @@ class TestNativeAppPackages(unittest.TestCase):
             "-macos-arm64.dmg",
             "-win64.exe",
             "SHA256SUMS.txt",
+            "generate_app_icons.py",
+            "startup-antigravity.icns",
+            "startup-antigravity.ico",
         ):
             self.assertIn(token, text, f"release.yml missing {token}")
+
+    def test_demo_workspace_generator_and_launcher_flag(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            demo_dir = Path(tmp) / "solarledger-demo"
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "launcher" / "app.py"),
+                    "--demo",
+                    str(demo_dir),
+                    "--no-browser",
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            res = json.loads(proc.stdout)
+            self.assertTrue(res["ok"])
+            self.assertTrue(Path(res["dashboardHtml"]).exists())
+            self.assertTrue(Path(res["pitchDeckHtml"]).exists())
+            self.assertTrue(Path(res["landingHtml"]).exists())
+            self.assertTrue(Path(res["dataRoomHtml"]).exists())
+            self.assertEqual(res["dataRoomReadinessPct"], 100)
 
 
 if __name__ == "__main__":
