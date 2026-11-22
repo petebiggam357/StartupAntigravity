@@ -243,6 +243,13 @@ class TestNativeAppPackages(unittest.TestCase):
                 dash = urllib.request.urlopen(base + "/workspace/dashboard/index.html").read().decode("utf-8")
                 self.assertIn("Startup <span>Command Center</span>", dash)
                 self.assertIn("ClaimPulse", dash)
+                self.assertIn("83.6/100", dash)
+                self.assertIn("6Ds Stage: Disruptive", dash)
+
+                # Live 3-Lens Board Review API
+                br = json.loads(urllib.request.urlopen(base + "/api/board-review").read().decode("utf-8"))
+                self.assertTrue(br["ok"])
+                self.assertGreaterEqual(br["overallScore"], 4.0)
 
                 # Path-traversal guard
                 with self.assertRaises(urllib.error.HTTPError) as ctx:
@@ -272,6 +279,18 @@ class TestNativeAppPackages(unittest.TestCase):
             good_hash = hashlib.sha256(b"startup-antigravity-beta").hexdigest()
             self.assertTrue(verify_sha256_file(sample_f, good_hash))
             self.assertFalse(verify_sha256_file(sample_f, "0" * 64))
+
+            # Verify --doctor preflight CLI checks Python, manifest, hooks & live 25-tool MCP handshake
+            doc_proc = subprocess.run(
+                [sys.executable, str(ROOT / "launcher" / "app.py"), "--doctor"],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            doc = json.loads(doc_proc.stdout)
+            self.assertTrue(doc["ok"])
+            self.assertTrue(doc["mcpHandshakeOk"])
+            self.assertGreaterEqual(doc["mcpToolCount"], 25)
 
             # Build public GitHub Pages site + live demo
             site_dir = Path(tmp) / "site_dist"

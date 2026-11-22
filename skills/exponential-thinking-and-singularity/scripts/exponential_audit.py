@@ -55,6 +55,27 @@ def calc_exo_scorecard(args: dict[str, Any], workspace: Path | None = None) -> d
     )
 
     doc_path: str | None = None
+    if workspace is not None:
+        sdir = workspace / ".startup"
+        sdir.mkdir(parents=True, exist_ok=True)
+        exo_file = sdir / "exponential.json"
+        existing: dict[str, Any] = {}
+        if exo_file.exists():
+            try:
+                existing = json.loads(exo_file.read_text(encoding="utf-8"))
+            except Exception:
+                existing = {}
+        existing.update(
+            {
+                "mtp": mtp or existing.get("mtp", ""),
+                "exoQuotient": exo_quotient,
+                "tier": tier,
+                "scaleScores": scale_scores,
+                "ideasScores": ideas_scores,
+            }
+        )
+        exo_file.write_text(json.dumps(existing, indent=2), encoding="utf-8")
+
     if write_doc and workspace is not None:
         docs_dir = workspace / "docs"
         docs_dir.mkdir(parents=True, exist_ok=True)

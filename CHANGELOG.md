@@ -4,6 +4,16 @@ All notable changes to **Startup Antigravity — Ethical Venture OS** are docume
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.2.1-beta] - 2026-11-22
+
+UX & diagnostics polish release for **Startup Antigravity — Ethical Venture OS**.
+
+### Added & Improved in 0.2.1-beta
+- **Interactive Web Studio Controls (`launcher/studio_server.py`)**: Added a dark-mode **Edit Metrics** modal (updates MRR, gross margin, cash, burn, and stage live), **Switch Workspace** control, and a live **3-Lens Board Review** tab (`GET /api/board-review`).
+- **One-Command Preflight Diagnostics (`startup-antigravity --doctor`)**: Verifies Python 3.10+, plugin manifest, hooks, runs a live stdio JSON-RPC handshake confirming all **25 MCP tools**, and detects companion CLIs (`agy`, `git`, `gh`, `node`, `ollama`, `claude`, `codex`).
+- **Startup Command Center ExO & 6Ds Card (`build_dashboard.py`)**: Surfaces the startup's **Massive Transformative Purpose (MTP)**, **ExO Quotient (`0–100`)**, and **6Ds Stage** directly inside `dashboard/index.html` alongside live MRR, PMF, and iKPI metrics (and unified flat/nested `state.json` + `pmf.json` loading).
+- **Documentation Sync (`README.md`)**: Synced all Table of Contents, verification, and architecture counts to **20 skills, 9 subagents, 25 MCP tools, 54+ resources, and 4 safety hooks**.
+
 ## [0.2.0-beta] - 2026-11-22
 
 Singularity & Exponential Thinking expansion for **Startup Antigravity — Ethical Venture OS** (**20 skills, 9 advisory subagents, 25 zero-dependency local MCP tools, 54 curated resources, 4 hardened safety hooks**, plus the researched **13-slide ClaimPulse Pre-Seed Demo Deck** scoring **100/100** on the FI linter and **Startup Command Center** branding).

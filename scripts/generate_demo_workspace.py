@@ -211,6 +211,16 @@ def generate_demo_workspace(target_dir: Path) -> dict[str, Any]:
     ]
     (startup / "sprints.json").write_text(json.dumps(sprints, indent=2), encoding="utf-8")
 
+    exponential = {
+        "mtp": "Eliminate $4B+ in preventable healthcare billing waste so independent family practices thrive.",
+        "exoQuotient": 83.6,
+        "tier": "EXPONENTIAL_READY",
+        "currentD": "disruptive",
+        "scaleScores": {"staff_on_demand": 7, "community_crowd": 8, "algorithms": 9, "leveraged_assets": 9, "engagement": 8},
+        "ideasScores": {"interfaces": 9, "dashboards": 9, "experimentation": 8, "autonomy": 8, "social_tech": 7},
+    }
+    (startup / "exponential.json").write_text(json.dumps(exponential, indent=2), encoding="utf-8")
+
     (docs / "INVESTOR_UPDATE.md").write_text(
         "# ClaimPulse — Monthly Investor Update\n\n"
         "- **MRR:** $14,400 (+28% MoM across 16 paying clinics) `[VALIDATED]`\n"

@@ -32,9 +32,9 @@
 - [What's Inside the Plugin](#whats-inside-the-plugin)
   - [1. Visual Interactive FI Pitch Deck 2.0](#1-visual-interactive-fi-pitch-deck-20)
   - [2. Companion Design, Cloud & Ops Stack (Canva, Figma, Replit, QuickBooks & Zapier)](#2-companion-design-cloud--ops-stack-canva-figma-replit-quickbooks--zapier)
-  - [3. Eighteen Progressive-Disclosure Startup Skills](#3-eighteen-progressive-disclosure-startup-skills)
-  - [4. Seven Founding Advisory Subagents](#4-seven-founding-advisory-subagents)
-  - [5. Twenty-Tool Local MCP Server (`startup-antigravity-os`)](#5-twenty-tool-local-mcp-server-startup-antigravity-os)
+  - [3. Twenty Progressive-Disclosure Startup Skills](#3-twenty-progressive-disclosure-startup-skills)
+  - [4. Nine Founding Advisory Subagents](#4-nine-founding-advisory-subagents)
+  - [5. Twenty-Five-Tool Local MCP Server (`startup-antigravity-os`)](#5-twenty-five-tool-local-mcp-server-startup-antigravity-os)
   - [6. Optional BYO-AI Addon Connectors (Claude, OpenAI, xAI Grok, Gemini CLI & Ollama)](#6-optional-byo-ai-addon-connectors-claude-openai-xai-grok-gemini-cli--ollama)
   - [7. Always-On Guardrails & Four Lifecycle Hooks](#7-always-on-guardrails--four-lifecycle-hooks)
 - [Creator's Recommended Founder Stack (Personal Endorsements)](#creators-recommended-founder-stack-personal-endorsements)
@@ -63,24 +63,25 @@ Starting in **`v0.0.3-alpha`**, every GitHub Release includes **native compiled 
 
 | Platform | Package File | How to Run |
 | :--- | :--- | :--- |
-| **Linux (Portable)** | `StartupAntigravity-v0.2.0-beta-x86_64.AppImage` | `chmod +x StartupAntigravity-*.AppImage && ./StartupAntigravity-*.AppImage` (or double-click in Files) |
-| **Ubuntu / Pop!_OS / Debian** | `startup-antigravity_0.2.0-beta_all.deb` | `sudo apt install ./startup-antigravity_0.2.0-beta_all.deb` — adds **Startup Antigravity** to your COSMIC / GNOME app launcher + `startup-antigravity` CLI |
-| **macOS (Apple Silicon / Intel)** | `StartupAntigravity-v0.2.0-beta-macos-arm64.dmg` | Open `.dmg`, drag **Startup Antigravity.app** to **Applications**, and launch |
-| **Windows 10 & 11** | `StartupAntigravity-v0.2.0-beta-win64.exe` | Double-click `.exe` (installs plugin offline & creates `python3.exe` shim if missing) |
-| **Universal Plugin Archive** | `startup-antigravity-v0.2.0-beta.zip` | Unzip directly into your Antigravity plugins folder |
+| **Linux (Portable)** | `StartupAntigravity-v0.2.1-beta-x86_64.AppImage` | `chmod +x StartupAntigravity-*.AppImage && ./StartupAntigravity-*.AppImage` (or double-click in Files) |
+| **Ubuntu / Pop!_OS / Debian** | `startup-antigravity_0.2.1-beta_all.deb` | `sudo apt install ./startup-antigravity_0.2.1-beta_all.deb` — adds **Startup Antigravity** to your COSMIC / GNOME app launcher + `startup-antigravity` CLI |
+| **macOS (Apple Silicon / Intel)** | `StartupAntigravity-v0.2.1-beta-macos-arm64.dmg` | Open `.dmg`, drag **Startup Antigravity.app** to **Applications**, and launch |
+| **Windows 10 & 11** | `StartupAntigravity-v0.2.1-beta-win64.exe` | Double-click `.exe` (installs plugin offline & creates `python3.exe` shim if missing) |
+| **Universal Plugin Archive** | `startup-antigravity-v0.2.1-beta.zip` | Unzip directly into your Antigravity plugins folder |
 | **Integrity Checksums** | `SHA256SUMS.txt` | Verify with `sha256sum -c SHA256SUMS.txt` |
 
 **CLI mode** is also built into every native package:
 ```bash
 startup-antigravity --install          # Install or update plugin offline
+startup-antigravity --doctor           # Run 3-second preflight check (Python, manifest, 25 MCP tools & CLIs)
 startup-antigravity --update           # Download, SHA-256 verify & install latest GitHub Release
 startup-antigravity --serve .          # Launch unified local Web Studio (http://127.0.0.1:4020)
-startup-antigravity --demo             # Generate & open the SolarLedger sample startup
+startup-antigravity --demo             # Generate & open the ClaimPulse sample startup
 startup-antigravity --prompts          # List 1-click starter prompts for Antigravity
 startup-antigravity --check-update     # Check GitHub Releases for a newer version
 startup-antigravity --status           # Show installed version, runtime & paths
-startup-antigravity --dashboard .      # Refresh & open Founder Command Center
-startup-antigravity --deck .           # Open interactive Pitch Deck
+startup-antigravity --dashboard .      # Refresh & open Startup Command Center
+startup-antigravity --deck .           # Open interactive 13-slide Pitch Deck
 startup-antigravity --data-room .      # Build & open Investor Data Room portal
 ```
 
@@ -306,8 +307,8 @@ python3 -m unittest discover -s tests -v
 Expected result: **`Ran 31 tests ... OK`** (under 1 second).
 
 ### 2. Verify Inside Antigravity
-1. **Customizations > Plugins:** You should see **Startup Antigravity — Ethical Venture OS (`v0.0.2-alpha`)** enabled with **18 skills**, **7 agents**, **1 rule file**, **4 hooks**, and **1 MCP server**.
-2. **Additional Options (`...`) > MCP Servers:** Confirm `startup-antigravity_startup-antigravity-os` shows as connected with **20 tools**.
+1. **Customizations > Plugins:** You should see **Startup Antigravity — Ethical Venture OS (`v0.2.1-beta`)** enabled with **20 skills**, **9 agents**, **1 rule file**, **4 hooks**, and **1 MCP server**.
+2. **Additional Options (`...`) > MCP Servers:** Confirm `startup-antigravity_startup-antigravity-os` shows as connected with **25 tools**.
 3. **Antigravity CLI (optional):**
    ```bash
    agy plugin enable startup-antigravity
@@ -405,7 +406,7 @@ Startup Antigravity works 100% offline with zero dependencies, and pairs seamles
 - **Figma (`antigravity-plugins-partners/plugin/figma`):** Run `pitch_deck_design_brief(target="figma")` to export `FIGMA_SLIDES_BRIEF.md` + W3C `FIGMA_TOKENS.json`, build native 1920x1080 variable-bound **Figma Slides** (`figma-use-slides`), push `landing/index.html` into editable Figma frames (`figma-generate-design`), or convert Figma wireframes straight into your 7-day MVP (`figma-design-to-code`).
 - **Zapier (`antigravity-plugins-partners/plugin/zapier`) & QuickBooks Online (`intuit/quickbooks-online-mcp-server` / `intuit` CLI):** Connect **QuickBooks Online + 9,000+ apps** (Stripe, Gmail, Slack, HubSpot, Notion, Google Sheets) via 1-click Zapier OAuth or Intuit's official read-first MCP/CLI so Antigravity's `cfo-bookkeeper-copilot` answers plain-English P&L/cash/invoice questions, syncs verified numbers into `.startup/state.json` & `docs/INVESTOR_UPDATE.md`, and previews draft invoices before posting.
 
-### 3. Eighteen Progressive-Disclosure Startup Skills
+### 3. Twenty Progressive-Disclosure Startup Skills
 | Skill | Purpose |
 | :--- | :--- |
 | `startup-kickstart` | Day-0 5-question intake, FI One-Sentence Pitch linting, UN SDG iKPI selection, and full workspace scaffold |
@@ -427,7 +428,7 @@ Startup Antigravity works 100% offline with zero dependencies, and pairs seamles
 | `vc-lab-fundraising-os` | VC fund thesis mapping, PACT soft-circle pipeline, multi-round cap table & SAFE math, Stripe Atlas + QuickBooks Data Room, and partner drills |
 | `weekly-sprint-review` | FI weekly sprint accountability (`.startup/sprints.json`, 1.0–5.0 velocity) and VC Lab `docs/INVESTOR_UPDATE.md` generator |
 
-### 4. Seven Founding Advisory Subagents
+### 4. Nine Founding Advisory Subagents
 - **`fi-mentor-pitch-critic`** — Veteran FI Mentor who shreds buzzwords, grades slides 1.0–5.0, and sets 7-day homework sprints.
 - **`vc-lab-partner-skeptic`** — Mensarius-bound VC Lab General Partner who audits fundability, math, moat, and runs 10-question partner drills.
 - **`pmf-truth-auditor`** — Brutally honest Product-Market Fit investigator who answers *"Is there a REAL paying customer for this?"*, exposes leaky buckets, discovers your highest-PMF HXC segment, and builds your 50/50 PMF roadmap.
@@ -436,7 +437,7 @@ Startup Antigravity works 100% offline with zero dependencies, and pairs seamles
 - **`lean-cto-margin-architect`** — Pragmatic founding CTO who cuts engineering scope 50–70% and protects `>= 75%` gross margins.
 - **`ethical-growth-strategist`** — Value-pricing, positioning, and ethical acquisition strategist (zero dark patterns).
 
-### 5. Twenty-Tool Local MCP Server (`startup-antigravity-os`)
+### 5. Twenty-Five-Tool Local MCP Server (`startup-antigravity-os`)
 Runs locally via Python 3 stdio (zero external API keys):
 1. `startup_get_state` — Live telemetry, FI stage benchmark, interviews, PACT totals, and deck score
 2. `startup_update_stage` — Persist stage, FI pitch, MRR, burn, cash, gross margin, and iKPI

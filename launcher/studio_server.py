@@ -87,7 +87,7 @@ def render_studio_shell(workspace: Path) -> str:
     button.tab.active {{ background:var(--accent); color:#022c22; border-color:var(--accent); }}
     main {{ flex:1; position:relative; display:flex; }}
     iframe {{ width:100%; height:100%; border:0; background:#0b1120; }}
-    #resources-panel {{ display:none; width:100%; height:100%; overflow:auto; padding:24px; max-width:1100px; margin:0 auto; }}
+    #resources-panel, #board-panel {{ display:none; width:100%; height:100%; overflow:auto; padding:24px; max-width:1100px; margin:0 auto; }}
     .search-bar {{ width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--border); background:var(--nav); color:var(--text); font-size:15px; margin-bottom:18px; }}
     .res-grid {{ display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:14px; }}
     .res-card {{ background:var(--nav); border:1px solid var(--border); border-radius:12px; padding:16px; display:flex; flex-direction:column; gap:8px; }}
@@ -95,6 +95,13 @@ def render_studio_shell(workspace: Path) -> str:
     .res-card a {{ color:var(--accent); font-weight:700; text-decoration:none; font-size:15px; }}
     .res-card p {{ margin:0; color:var(--muted); font-size:13px; line-height:1.45; }}
     .res-takeaway {{ font-size:12px; color:#e2e8f0; background:#1e293b; padding:8px 10px; border-radius:8px; }}
+    .modal-bg {{ display:none; position:fixed; inset:0; background:rgba(2,6,23,.78); align-items:center; justify-content:center; z-index:99; }}
+    .modal {{ background:var(--nav); border:1px solid var(--border); border-radius:14px; padding:22px; width:min(460px,92vw); display:grid; gap:10px; }}
+    .modal label {{ font-size:12px; color:var(--muted); font-weight:700; display:grid; gap:4px; }}
+    .modal input, .modal select {{ padding:8px 10px; border-radius:8px; border:1px solid var(--border); background:#020617; color:var(--text); font-size:14px; }}
+    .score-grid {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; margin:16px 0; }}
+    .score-card {{ background:var(--nav); border:1px solid var(--border); border-radius:12px; padding:16px; }}
+    .score-val {{ font-size:28px; font-weight:800; color:var(--accent); }}
   </style>
 </head>
 <body>
@@ -107,16 +114,48 @@ def render_studio_shell(workspace: Path) -> str:
       <button class="tab" data-tab="deck" onclick="selectTab('deck')">Pitch Deck</button>
       <button class="tab" data-tab="dataroom" onclick="selectTab('dataroom')">Data Room</button>
       <button class="tab" data-tab="landing" onclick="selectTab('landing')">Landing Page</button>
-      <button class="tab" data-tab="resources" onclick="selectTab('resources')">48+ Resources</button>
+      <button class="tab" data-tab="board" onclick="selectTab('board')">Board Review</button>
+      <button class="tab" data-tab="resources" onclick="selectTab('resources')">54+ Resources</button>
+      <button class="tab" onclick="openMetricsModal()" style="border-color:#f59e0b;color:#fbbf24;">Edit Metrics</button>
+      <button class="tab" onclick="switchWorkspace()" style="border-color:#38bdf8;color:#7dd3fc;">Switch Workspace</button>
     </nav>
   </header>
   <main>
     <iframe id="viewport" src="/workspace/dashboard/index.html"></iframe>
+    <div id="board-panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+        <h2 style="margin:0;">3-Lens Partner &amp; Mentor Board Review</h2>
+        <button class="tab active" onclick="loadBoardReview()">Re-Run Audit</button>
+      </div>
+      <div id="board-content" style="margin-top:14px;color:var(--muted);">Loading live audit...</div>
+    </div>
     <div id="resources-panel">
-      <input id="res-search" class="search-bar" placeholder="Search 48+ founder resources (e.g. x402, pmf, mom test, startup grind, ai, quickbooks)..." oninput="renderResources()" />
+      <input id="res-search" class="search-bar" placeholder="Search 54+ founder resources (e.g. singularity, 6ds, x402, pmf, mom test, startup grind, ai)..." oninput="renderResources()" />
       <div id="res-grid" class="res-grid"></div>
     </div>
   </main>
+  <div id="metrics-modal" class="modal-bg" onclick="if(event.target===this)closeMetricsModal()">
+    <div class="modal">
+      <h3 style="margin:0;">Update Live Startup Metrics</h3>
+      <label>FI Stage
+        <select id="m-stage">
+          <option value="idea">idea</option>
+          <option value="validation">validation</option>
+          <option value="mvp">mvp</option>
+          <option value="pre_seed_traction">pre_seed_traction</option>
+          <option value="seed_scale">seed_scale</option>
+        </select>
+      </label>
+      <label>MRR (USD)<input id="m-mrr" type="number" step="100" placeholder="14400" /></label>
+      <label>Gross Margin (%)<input id="m-gm" type="number" step="1" placeholder="84" /></label>
+      <label>Cash on Hand (USD)<input id="m-cash" type="number" step="1000" placeholder="215000" /></label>
+      <label>Monthly Burn (USD)<input id="m-burn" type="number" step="500" placeholder="14800" /></label>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px;">
+        <button class="tab" onclick="closeMetricsModal()">Cancel</button>
+        <button class="tab active" onclick="saveMetrics()">Save &amp; Rebuild</button>
+      </div>
+    </div>
+  </div>
   <script>
     const ROUTES = {{
       dashboard: '/workspace/dashboard/index.html',
@@ -130,18 +169,72 @@ def render_studio_shell(workspace: Path) -> str:
 
     function selectTab(tab) {{
       currentTab = tab;
-      document.querySelectorAll('button.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+      document.querySelectorAll('button.tab[data-tab]').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
       const frame = document.getElementById('viewport');
-      const panel = document.getElementById('resources-panel');
+      const resPanel = document.getElementById('resources-panel');
+      const boardPanel = document.getElementById('board-panel');
+      frame.style.display = 'none';
+      resPanel.style.display = 'none';
+      boardPanel.style.display = 'none';
       if (tab === 'resources') {{
-        frame.style.display = 'none';
-        panel.style.display = 'block';
+        resPanel.style.display = 'block';
         if (!allResources.length) loadResources();
+      }} else if (tab === 'board') {{
+        boardPanel.style.display = 'block';
+        loadBoardReview();
       }} else {{
-        panel.style.display = 'none';
         frame.style.display = 'block';
-        frame.src = ROUTES[tab];
+        frame.src = ROUTES[tab] + '?t=' + Date.now();
       }}
+    }}
+
+    async function loadBoardReview() {{
+      const box = document.getElementById('board-content');
+      box.innerHTML = 'Running 3-lens audit...';
+      const r = await fetch('/api/board-review');
+      const d = await r.json();
+      if (!d.ok) {{ box.innerHTML = 'Error: ' + (d.error || 'unknown'); return; }}
+      box.innerHTML = `
+        <div class="score-grid">
+          <div class="score-card"><div class="res-cat">Overall Readiness</div><div class="score-val">${{d.overallScore}} / 5.0</div><div>${{d.verdict}}</div></div>
+          <div class="score-card"><div class="res-cat">FI Mentor</div><div class="score-val">${{d.scores.fiMentor}} / 5.0</div></div>
+          <div class="score-card"><div class="res-cat">VC Lab Partner</div><div class="score-val">${{d.scores.vcLabPartner}} / 5.0</div></div>
+          <div class="score-card"><div class="res-cat">PMF Truth Auditor</div><div class="score-val">${{d.scores.pmfTruthAuditor}} / 5.0</div></div>
+        </div>
+        <div class="res-card">
+          <div class="res-cat">Top 3 Prioritized 7-Day Actions</div>
+          <ol style="margin:4px 0 0 18px;padding:0;color:#e2e8f0;">
+            ${{(d.topActions || []).map(a => '<li style="margin:6px 0;">' + a + '</li>').join('')}}
+          </ol>
+        </div>`;
+    }}
+
+    function openMetricsModal() {{ document.getElementById('metrics-modal').style.display = 'flex'; }}
+    function closeMetricsModal() {{ document.getElementById('metrics-modal').style.display = 'none'; }}
+
+    async function saveMetrics() {{
+      const payload = {{ stage: document.getElementById('m-stage').value }};
+      const mrr = document.getElementById('m-mrr').value;
+      const gm = document.getElementById('m-gm').value;
+      const cash = document.getElementById('m-cash').value;
+      const burn = document.getElementById('m-burn').value;
+      if (mrr !== '') payload.mrrUsd = Number(mrr);
+      if (gm !== '') payload.grossMarginPct = Number(gm);
+      if (cash !== '') payload.cashOnHandUsd = Number(cash);
+      if (burn !== '') payload.monthlyBurnUsd = Number(burn);
+      await fetch('/api/metrics', {{ method:'POST', headers:{{'Content-Type':'application/json'}}, body:JSON.stringify(payload) }});
+      closeMetricsModal();
+      if (currentTab === 'dashboard' || currentTab === 'dataroom') {{
+        document.getElementById('viewport').src = ROUTES[currentTab] + '?t=' + Date.now();
+      }}
+    }}
+
+    async function switchWorkspace() {{
+      const next = prompt('Enter full path to another startup workspace folder:');
+      if (!next) return;
+      const r = await fetch('/api/workspace', {{ method:'POST', headers:{{'Content-Type':'application/json'}}, body:JSON.stringify({{workspace:next}}) }});
+      const d = await r.json();
+      if (d.ok) location.reload(); else alert(d.error || 'Could not switch workspace');
     }}
 
     async function loadResources() {{
@@ -172,7 +265,7 @@ def render_studio_shell(workspace: Path) -> str:
       try {{
         const r = await fetch('/api/health');
         const h = await r.json();
-        if (lastFp !== null && h.fingerprint !== lastFp && currentTab !== 'resources') {{
+        if (lastFp !== null && h.fingerprint !== lastFp && ROUTES[currentTab]) {{
           document.getElementById('viewport').src = ROUTES[currentTab] + '?t=' + Date.now();
         }}
         lastFp = h.fingerprint;
@@ -292,6 +385,16 @@ def create_studio_server(
                     "resourceCount": len(resources),
                 }
                 self._send_bytes(json.dumps(payload).encode("utf-8"), "application/json")
+                return
+
+            if path == "/api/board-review":
+                board_scripts = p_root / "skills" / "weekly-sprint-review" / "scripts"
+                if str(board_scripts) not in sys.path:
+                    sys.path.insert(0, str(board_scripts))
+                from board_review import run_board_review  # noqa: E402
+
+                res = run_board_review(ws, write_memo=True)
+                self._send_bytes(json.dumps(res).encode("utf-8"), "application/json")
                 return
 
             if path == "/api/resources":

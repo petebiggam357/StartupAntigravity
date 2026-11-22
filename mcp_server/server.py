@@ -59,7 +59,7 @@ from build_landing_page import build_landing_page  # noqa: E402
 from exponential_audit import run_exponential_audit  # noqa: E402
 
 SERVER_NAME = "startup-antigravity-os"
-SERVER_VERSION = "0.2.0-beta"
+SERVER_VERSION = "0.2.1-beta"
 PROTOCOL_VERSION = "2024-11-05"
 
 FI_STAGE_BENCHMARKS: dict[str, dict[str, Any]] = {

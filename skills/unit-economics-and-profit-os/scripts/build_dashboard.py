@@ -44,16 +44,22 @@ def render_dashboard_html(workspace: Path) -> str:
     pacts = _read_json(sdir / "pacts.json", [])
     sprints = _read_json(sdir / "sprints.json", [])
     pmf = _read_json(sdir / "pmf.json", {"surveys": [], "cohorts": []})
+    exo = _read_json(sdir / "exponential.json", {})
 
     company = html.escape(str(state.get("companyName") or "Your Startup"))
     pitch = html.escape(
-        str(state.get("fiOneSentencePitch") or "Run startup-kickstart to define your FI One-Sentence Pitch.")
+        str(
+            state.get("fiOneSentencePitch")
+            or state.get("oneSentencePitch")
+            or "Run startup-kickstart to define your FI One-Sentence Pitch."
+        )
     )
     stage = str(state.get("stage") or "idea")
-    mrr = float(state.get("mrrUsd", 0))
-    burn = float(state.get("monthlyBurnUsd", 0))
-    cash = float(state.get("cashOnHandUsd", 0))
-    gm = float(state.get("grossMarginPct", 80))
+    metrics_obj = state.get("metrics") or {}
+    mrr = float(metrics_obj.get("mrrUsd", state.get("mrrUsd", 0)) or 0)
+    burn = float(metrics_obj.get("monthlyBurnUsd", state.get("monthlyBurnUsd", 0)) or 0)
+    cash = float(metrics_obj.get("cashOnHandUsd", state.get("cashOnHandUsd", 0)) or 0)
+    gm = float(metrics_obj.get("grossMarginPct", state.get("grossMarginPct", 80)) or 80)
     net_burn = max(0.0, burn - mrr * (gm / 100.0))
     default_alive = net_burn == 0
     runway_str = "Default-Alive" if default_alive else f"{round(cash / net_burn, 1)} mo"
@@ -65,8 +71,8 @@ def render_dashboard_html(workspace: Path) -> str:
         cls = "st-done" if i < stage_idx else ("st-now" if i == stage_idx else "st-todo")
         stage_pills.append(f'<div class="stage-pill {cls}">{html.escape(lbl)}</div>')
 
-    # PMF Gauge
-    surveys = pmf.get("surveys") or []
+    # PMF Gauge (supports both 'surveys' and 'responses')
+    surveys = pmf.get("surveys") or pmf.get("responses") or []
     cohorts = pmf.get("cohorts") or []
     very_cnt = sum(1 for s in surveys if s.get("disappointment") == "very_disappointed")
     pmf_pct = round((very_cnt / len(surveys)) * 100.0, 1) if surveys else 0.0
@@ -147,6 +153,12 @@ def render_dashboard_html(workspace: Path) -> str:
     dash_total = 219.9
     dash_fill = round(dash_total * (min(100.0, max(0.0, pmf_pct)) / 100.0), 1)
     updated_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+
+    exo_mtp = html.escape(str(exo.get("mtp") or "Run exponential_audit(action='exo_scorecard') to define your 10x Massive Transformative Purpose."))
+    exo_q = exo.get("exoQuotient")
+    exo_tier = html.escape(str(exo.get("tier") or "UNSCORED"))
+    exo_6d = html.escape(str(exo.get("currentD") or "disruptive").title())
+    exo_badge = f"{exo_q}/100 • {exo_tier}" if exo_q is not None else "Not Scored Yet"
 
     return f"""<!DOCTYPE html>
 <html lang="en">
@@ -338,6 +350,20 @@ def render_dashboard_html(workspace: Path) -> str:
               <tr><td>Investor Soft-Circles</td><td><strong>${inv_closed:,.0f}</strong></td><td>${inv_signed:,.0f}</td></tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Exponential Thinking &amp; Singularity Readiness (ExO / 6Ds)</h2>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+        <div>
+          <div class="muted">MASSIVE TRANSFORMATIVE PURPOSE (MTP)</div>
+          <div style="font-size:15px;font-weight:700;margin-top:4px;">{exo_mtp}</div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <span class="badge st-now">ExO Quotient: {exo_badge}</span>
+          <span class="badge st-done">6Ds Stage: {exo_6d}</span>
         </div>
       </div>
     </section>

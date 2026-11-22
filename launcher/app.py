@@ -30,7 +30,7 @@ from typing import Any
 
 APP_NAME = "Startup Antigravity"
 PLUGIN_NAME = "startup-antigravity"
-APP_VERSION = "0.2.0-beta"
+APP_VERSION = "0.2.1-beta"
 GITHUB_RELEASES_API = "https://api.github.com/repos/petebiggam357/StartupAntigravity/releases"
 
 STARTER_PROMPTS: list[tuple[str, str]] = [
@@ -428,6 +428,63 @@ def self_update_plugin(plugin_dir: Path | None = None, timeout: float = 15.0) ->
         res["sha256Verified"] = sha_verified
         res["releaseTag"] = latest.get("tag_name")
         return res
+
+
+def run_doctor(plugin_dir: Path | None = None) -> dict[str, Any]:
+    """Run a 3-second preflight check: Python, plugin manifest, live MCP 25-tool handshake & companion CLIs."""
+    target = plugin_dir or default_plugin_dir()
+    repo_root = Path(__file__).resolve().parent.parent
+    probe_root = target if (target / "mcp_server" / "server.py").exists() else repo_root
+
+    py_ok = sys.version_info >= (3, 10)
+    manifest_ok = (probe_root / "plugin.json").exists()
+    hooks_ok = (probe_root / "hooks.json").exists()
+    mcp_server = probe_root / "mcp_server" / "server.py"
+
+    mcp_ok = False
+    mcp_tool_count = 0
+    mcp_error: str | None = None
+    if mcp_server.exists():
+        try:
+            payload = (
+                json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}})
+                + "\n"
+                + json.dumps({"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}})
+                + "\n"
+            )
+            env = {**os.environ, "PLUGIN_ROOT": str(probe_root)}
+            proc = subprocess.run(
+                [sys.executable, str(mcp_server)],
+                input=payload,
+                capture_output=True,
+                text=True,
+                timeout=10,
+                env=env,
+            )
+            lines = [json.loads(ln) for ln in proc.stdout.splitlines() if ln.strip()]
+            if len(lines) >= 2 and "tools" in (lines[1].get("result") or {}):
+                mcp_tool_count = len(lines[1]["result"]["tools"])
+                mcp_ok = proc.returncode == 0 and mcp_tool_count >= 25
+        except Exception as exc:
+            mcp_error = str(exc)
+
+    companions = {
+        cli: shutil.which(cli) is not None
+        for cli in ("agy", "git", "gh", "node", "ollama", "claude", "codex")
+    }
+
+    return {
+        "ok": py_ok and manifest_ok and hooks_ok and mcp_ok,
+        "pythonVersion": platform.python_version(),
+        "pythonSupported": py_ok,
+        "probeRoot": str(probe_root),
+        "manifestFound": manifest_ok,
+        "hooksFound": hooks_ok,
+        "mcpHandshakeOk": mcp_ok,
+        "mcpToolCount": mcp_tool_count,
+        "mcpError": mcp_error,
+        "companionClis": companions,
+    }
 
 
 def launch_local_studio(
@@ -884,6 +941,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--port", type=int, default=4020, help="Port for --serve Web Studio (default: 4020)")
     parser.add_argument("--check-update", action="store_true", help="Check GitHub Releases for a newer version")
     parser.add_argument("--update", action="store_true", help="Download, SHA-256 verify, and install latest GitHub Release")
+    parser.add_argument("--doctor", action="store_true", help="Run preflight diagnostics (Python, manifest, live MCP handshake, CLIs)")
     parser.add_argument(
         "--demo",
         nargs="?",
@@ -916,6 +974,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.update:
         print(json.dumps(self_update_plugin(plugin_dir=plugin_dir), indent=2))
         return 0
+
+    if args.doctor:
+        doc = run_doctor(plugin_dir=plugin_dir)
+        print(json.dumps(doc, indent=2))
+        return 0 if doc["ok"] else 1
 
     if args.serve is not None:
         launch_local_studio(

@@ -1,7 +1,7 @@
 {
   "name": "startup-antigravity",
   "displayName": "Startup Antigravity — Ethical Venture OS",
-  "version": "0.2.0-beta",
+  "version": "0.2.1-beta",
   "description": "Independent open-source Founder Operating System for building high-margin, fundable startups from Day 0. Bundles a Startup Command Center, 13-slide pitch deck compiler, PMF & unit-economics calculators, AI/x402 finance tools, Exponential/Singularity ExO blueprints, 1-click Investor Data Room, and 54+ curated founder resources.",
   "logo": "assets/logo.svg",
   "author": {
