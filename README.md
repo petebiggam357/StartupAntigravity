@@ -34,7 +34,7 @@
   - [2. Companion Design, Cloud & Ops Stack (Canva, Figma, Replit, QuickBooks & Zapier)](#2-companion-design-cloud--ops-stack-canva-figma-replit-quickbooks--zapier)
   - [3. Twenty Progressive-Disclosure Startup Skills](#3-twenty-progressive-disclosure-startup-skills)
   - [4. Nine Founding Advisory Subagents](#4-nine-founding-advisory-subagents)
-  - [5. Twenty-Five-Tool Local MCP Server (`startup-antigravity-os`)](#5-twenty-five-tool-local-mcp-server-startup-antigravity-os)
+  - [5. Twenty-Eight-Tool Local MCP Server (`startup-antigravity-os`)](#5-twenty-eight-tool-local-mcp-server-startup-antigravity-os)
   - [6. Optional BYO-AI Addon Connectors (Claude, OpenAI, xAI Grok, Gemini CLI & Ollama)](#6-optional-byo-ai-addon-connectors-claude-openai-xai-grok-gemini-cli--ollama)
   - [7. Always-On Guardrails & Four Lifecycle Hooks](#7-always-on-guardrails--four-lifecycle-hooks)
 - [Creator's Recommended Founder Stack (Personal Endorsements)](#creators-recommended-founder-stack-personal-endorsements)
@@ -63,11 +63,11 @@ Starting in **`v0.0.3-alpha`**, every GitHub Release includes **native compiled 
 
 | Platform | Package File | How to Run |
 | :--- | :--- | :--- |
-| **Linux (Portable)** | `StartupAntigravity-v0.3.0-beta-x86_64.AppImage` | `chmod +x StartupAntigravity-*.AppImage && ./StartupAntigravity-*.AppImage` (or double-click in Files) |
-| **Ubuntu / Pop!_OS / Debian** | `startup-antigravity_0.3.0-beta_all.deb` | `sudo apt install ./startup-antigravity_0.3.0-beta_all.deb` — adds **Startup Antigravity** to your COSMIC / GNOME app launcher + `startup-antigravity` CLI |
-| **macOS (Apple Silicon / Intel)** | `StartupAntigravity-v0.3.0-beta-macos-arm64.dmg` | Open `.dmg`, drag **Startup Antigravity.app** to **Applications**, and launch |
-| **Windows 10 & 11** | `StartupAntigravity-v0.3.0-beta-win64.exe` | Double-click `.exe` (installs plugin offline & creates `python3.exe` shim if missing) |
-| **Universal Plugin Archive** | `startup-antigravity-v0.3.0-beta.zip` | Unzip directly into your Antigravity plugins folder |
+| **Linux (Portable)** | `StartupAntigravity-v0.3.1-beta-x86_64.AppImage` | `chmod +x StartupAntigravity-*.AppImage && ./StartupAntigravity-*.AppImage` (or double-click in Files) |
+| **Ubuntu / Pop!_OS / Debian** | `startup-antigravity_0.3.1-beta_all.deb` | `sudo apt install ./startup-antigravity_0.3.1-beta_all.deb` — adds **Startup Antigravity** to your COSMIC / GNOME app launcher + `startup-antigravity` CLI |
+| **macOS (Apple Silicon / Intel)** | `StartupAntigravity-v0.3.1-beta-macos-arm64.dmg` | Open `.dmg`, drag **Startup Antigravity.app** to **Applications**, and launch |
+| **Windows 10 & 11** | `StartupAntigravity-v0.3.1-beta-win64.exe` | Double-click `.exe` (installs plugin offline & creates `python3.exe` shim if missing) |
+| **Universal Plugin Archive** | `startup-antigravity-v0.3.1-beta.zip` | Unzip directly into your Antigravity plugins folder |
 | **Integrity Checksums** | `SHA256SUMS.txt` | Verify with `sha256sum -c SHA256SUMS.txt` |
 
 **CLI mode** is also built into every native package:
@@ -307,7 +307,7 @@ python3 -m unittest discover -s tests -v
 Expected result: **`Ran 31 tests ... OK`** (under 1 second).
 
 ### 2. Verify Inside Antigravity
-1. **Customizations > Plugins:** You should see **Startup Antigravity — Ethical Venture OS (`v0.3.0-beta`)** enabled with **20 skills**, **9 agents**, **1 rule file**, **4 hooks**, **10 languages**, and **1 MCP server**.
+1. **Customizations > Plugins:** You should see **Startup Antigravity — Ethical Venture OS (`v0.3.1-beta`)** enabled with **20 skills**, **9 agents**, **1 rule file**, **4 hooks**, **10 languages**, and **1 MCP server**.
 2. **Additional Options (`...`) > MCP Servers:** Confirm `startup-antigravity_startup-antigravity-os` shows as connected with **28 tools**.
 3. **Antigravity CLI (optional):**
    ```bash
@@ -426,7 +426,9 @@ Startup Antigravity works 100% offline with zero dependencies, and pairs seamles
 | `unit-economics-and-profit-os` | Default-Alive runway modeling, CAC/LTV/Payback, QuickBooks Online bookkeeping hygiene, and FI Funding Readiness scoring |
 | `advisors-equity-and-fast` | Founder Institute **FAST Agreement** advisor equity calculator, 3-month trial cliffs, and co-founder vesting hygiene |
 | `vc-lab-fundraising-os` | VC fund thesis mapping, PACT soft-circle pipeline, multi-round cap table & SAFE math, Stripe Atlas + QuickBooks Data Room, and partner drills |
-| `weekly-sprint-review` | FI weekly sprint accountability (`.startup/sprints.json`, 1.0–5.0 velocity) and VC Lab `docs/INVESTOR_UPDATE.md` generator |
+| `weekly-sprint-review` | FI weekly sprint accountability (`.startup/sprints.json`, 1.0–5.0 velocity), 3-lens Board Review, 4-Exec War Room, and VC Lab `docs/INVESTOR_UPDATE.md` generator |
+| `ai-native-and-x402-finance` | All-level AI-forward playbook (model routing, `>=75%` AI gross margins, evals, MCP/A2A, GEO) + `x402` HTTP 402 USDC micropayments, stablecoin rails, and compliant RWA tokenization |
+| `exponential-thinking-and-singularity` | Singularity University (`su.org`) inspired 6Ds of Exponentials, Exponential Organizations (ExO: MTP + SCALE + IDEAS), and Ray Kurzweil's Law of Accelerating Returns |
 
 ### 4. Nine Founding Advisory Subagents
 - **`fi-mentor-pitch-critic`** — Veteran FI Mentor who shreds buzzwords, grades slides 1.0–5.0, and sets 7-day homework sprints.
@@ -436,8 +438,10 @@ Startup Antigravity works 100% offline with zero dependencies, and pairs seamles
 - **`customer-revenue-coach`** — *Mom Test* & paid-pilot coach who role-plays skeptical ICP buyers and turns pain into signed Customer PACTs.
 - **`lean-cto-margin-architect`** — Pragmatic founding CTO who cuts engineering scope 50–70% and protects `>= 75%` gross margins.
 - **`ethical-growth-strategist`** — Value-pricing, positioning, and ethical acquisition strategist (zero dark patterns).
+- **`ai-x402-finance-architect`** — AI-native margin/evals & programmable-finance architect for `x402` USDC agent monetization, stablecoin rails, and ethical tokenization reviews.
+- **`exponential-moonshot-strategist`** — Exponential Thinking, 6Ds inflection timing, ExO (MTP + SCALE + IDEAS), and Law of Accelerating Returns strategist anchored in first-dollar revenue.
 
-### 5. Twenty-Five-Tool Local MCP Server (`startup-antigravity-os`)
+### 5. Twenty-Eight-Tool Local MCP Server (`startup-antigravity-os`)
 Runs locally via Python 3 stdio (zero external API keys):
 1. `startup_get_state` — Live telemetry, FI stage benchmark, interviews, PACT totals, and deck score
 2. `startup_update_stage` — Persist stage, FI pitch, MRR, burn, cash, gross margin, and iKPI
@@ -456,9 +460,17 @@ Runs locally via Python 3 stdio (zero external API keys):
 15. `product_hunt_kit_build` — Lint Product Hunt character limits & buzzwords and generate `launch/product-hunt/PH_LAUNCH_KIT.md` + `launch-plan.json`
 16. `ai_connectors_manage` — Detect optional BYO-AI CLIs/env vars, sync `CLAUDE.md`/`GROK_CONTEXT.md`/`AI_CONTEXT_PACK.md`/`DIPITY_BRAND_BRAIN.md`/`SHELLED_HANDOFF.md`, and run multi-model second opinions
 17. `pmf_engine_manage` — Track Sean Ellis 40% Very Disappointed surveys, per-segment HXC PMF scores, cohort retention flattening, Superhuman 50/50 roadmaps, and `docs/PMF_SCORECARD.md`
-18. `founder_resources_hub` — Search 36+ curated FI.co, VC Lab, Startup Grind, Founders Guild, PMF, legal, accounting, growth & AI founder resources, pull stage-matched Action Kits, or save custom team/cohort bookmarks
-19. `founder_dashboard_build` — Compile all live `.startup/*.json` telemetry into a single-file interactive local browser Command Center (`dashboard/index.html`) with PMF 40% SVG gauge, PACT funnel, and Riskiest Assumptions board
+18. `founder_resources_hub` — Search 54+ curated FI.co, VC Lab, Startup Grind, Founders Guild, Singularity/ExO, AI-native, x402, PMF, legal, and accounting resources, pull stage-matched Action Kits, or save custom bookmarks
+19. `founder_dashboard_build` — Compile all live `.startup/*.json` telemetry into the 10-language **Startup Command Center** (`dashboard/index.html`) with PMF 40% SVG gauge, ExO/6Ds card, x402 USDC revenue, and interactive What-If Runway Sliders
 20. `transcript_ingest` — Extract pain severity (1–5), dollar WTP, workarounds, pilot intent, verbatim quotes, and Mom Test bias warnings from raw Zoom/Loom/Otter call transcripts (auto-logging to `.startup/interviews.json`)
+21. `data_room_build` — Compile a 10-language investor-ready Data Room (`data-room/index.html`, `DATA_ROOM_INDEX.md`, Executive One-Pager, PII-redacted customer proof, and VC Lab / FI diligence checklist)
+22. `ai_x402_calc` — Deterministic AI token COGS & `>=75%` margin modeler, `x402` USDC vs card comparator + spec generator, ethical tokenization scorecard, and runnable Base Sepolia `x402_starter_scaffold`
+23. `board_review_run` — Deterministic 3-lens Partner & Mentor Board Review (**FI Mentor**, **VC Lab Partner**, **PMF Truth Auditor**) writing `docs/BOARD_REVIEW_MEMO.md`
+24. `competitor_manage` — Track competitors, pricing, 2×2 coordinates, and Secret Sauce in `.startup/competitors.json` and export `docs/COMPETITOR_BATTLECARD.md`
+25. `exponential_audit` — Score ExO Quotient (MTP + SCALE + IDEAS -> `docs/EXPONENTIAL_BLUEPRINT.md`), map the **6Ds of Exponentials**, and simulate 12/24/36-month **Law of Accelerating Returns** margins
+26. `voice_pitch_coach` — Analyze spoken 3-minute FI pitches for WPM pace, filler words, banned buzzwords, quantified proof, and 5 tailored VC Lab / FI Partner grilling questions
+27. `war_room_run` — Convene 4 executive lenses (**Lean CTO**, **Fractional CFO**, **PMF Truth Auditor**, **Exponential Growth Strategist**) on any strategic dilemma and write `docs/WAR_ROOM_DECISION_MEMO.md`
+28. `i18n_locale_manage` — List all 10 global founder languages (`en`, `es`, `zh`, `hi`, `ar` RTL, `pt`, `fr`, `de`, `ja`, `ko`) or set the workspace `locale` in `.startup/state.json`
 
 ### 6. Optional BYO-AI Addon Connectors (Claude, OpenAI, xAI Grok, Gemini CLI & Ollama)
 **Startup Antigravity is built for Google Antigravity first** — zero external AI keys are required. However, if a novice or technical founder already loves another AI platform, the `multi-ai-connectors` skill lets them plug it in cleanly without losing company context:

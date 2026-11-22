@@ -145,6 +145,7 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
           <span id="vc-timer" class="pill" style="font-size:14px;padding:6px 12px;">03:00</span>
           <button id="vc-mic-btn" class="tab active" onclick="toggleVoiceMic()">Start 3-Min Mic Pitch</button>
           <button class="tab" onclick="scoreVoicePitch()">Analyze Transcript</button>
+          <button class="tab" onclick="downloadReport('voice-coach-scorecard.md', lastVoiceMd)">Download .md</button>
         </div>
       </div>
       <textarea id="vc-transcript" class="box" rows="5" placeholder="Click 'Start 3-Min Mic Pitch' (Web Speech API) or paste your 3-minute FI pitch transcript here..."></textarea>
@@ -152,7 +153,10 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
     </div>
 
     <div id="warroom-panel" class="panel">
-      <h2 style="margin:0 0 10px;">Autonomous 4-Executive Startup War Room</h2>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
+        <h2 style="margin:0;">Autonomous 4-Executive Startup War Room</h2>
+        <button class="tab" onclick="downloadReport('WAR_ROOM_DECISION_MEMO.md', lastWarRoomMd)">Download .md</button>
+      </div>
       <div style="display:flex;gap:8px;margin-bottom:14px;">
         <input id="wr-question" class="box" style="margin:0;" placeholder="Ask a hard strategic question (e.g. Should we raise $750K Pre-Seed now or bootstrap to $30K MRR?)" />
         <button class="tab active" style="white-space:nowrap;" onclick="runWarRoom()">Convene War Room</button>
@@ -174,7 +178,10 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
     <div id="board-panel" class="panel">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
         <h2 style="margin:0;">3-Lens Partner &amp; Mentor Board Review</h2>
-        <button class="tab active" onclick="loadBoardReview()">Re-Run Audit</button>
+        <div style="display:flex;gap:8px;">
+          <button class="tab" onclick="downloadReport('BOARD_REVIEW_MEMO.md', lastBoardMd)">Download .md</button>
+          <button class="tab active" onclick="loadBoardReview()">Re-Run Audit</button>
+        </div>
       </div>
       <div id="board-content" style="margin-top:14px;color:var(--muted);">Loading live audit...</div>
     </div>
@@ -218,6 +225,14 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
     let allResources = [];
     let lastFp = null;
     let recognition = null, vcStart = null, vcTimerId = null;
+    let lastVoiceMd = '', lastWarRoomMd = '', lastBoardMd = '';
+
+    function downloadReport(filename, content) {{
+      if (!content) {{ alert('Run the report first before downloading.'); return; }}
+      const blob = new Blob([content], {{ type: 'text/markdown;charset=utf-8' }});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+    }}
 
     function applyStudioLang(code) {{
       const L = I18N[code] || I18N.en;
@@ -283,6 +298,7 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
       const r = await fetch('/api/voice-coach', {{ method:'POST', headers:{{'Content-Type':'application/json'}}, body:JSON.stringify({{transcript, duration_seconds: dur}}) }});
       const d = await r.json();
       if (!d.ok) {{ document.getElementById('vc-results').innerHTML = d.error; return; }}
+      lastVoiceMd = `# Voice Pitch Coach Scorecard\\n\\n- **Clarity Score:** ${{d.clarityScore}}/100 (${{d.verdict}})\\n- **Pace:** ${{d.wordsPerMinute}} WPM (${{d.wordCount}} words)\\n- **Fillers:** ${{d.totalFillers}} • **Buzzwords:** ${{d.buzzwordsFound.join(', ') || 'None'}}\\n\\n## Feedback\\n` + d.coachingFeedback.map(f => '- ' + f).join('\\n');
       document.getElementById('vc-results').innerHTML = `
         <div class="grid" style="margin-bottom:14px;">
           <div class="card"><div class="cat">Clarity Score</div><div class="score-val">${{d.clarityScore}} / 100</div><div>${{d.verdict}}</div></div>
@@ -300,6 +316,7 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
       box.innerHTML = 'Convening 4 executive lenses...';
       const r = await fetch('/api/war-room', {{ method:'POST', headers:{{'Content-Type':'application/json'}}, body:JSON.stringify({{question:q}}) }});
       const d = await r.json();
+      lastWarRoomMd = `# Startup War Room Decision Memo\\n\\n- **Question:** ${{d.question}}\\n- **Decision:** ${{d.decision}}\\n\\n` + (d.perspectives||[]).map(p => `## ${{p.role}} (${{p.stance}})\\n${{p.argument}}\\n`).join('\\n');
       box.innerHTML = `
         <div class="card" style="margin-bottom:14px;"><div class="cat">Unified Decision</div><div class="score-val" style="font-size:20px;">${{d.decision}}</div><p>Saved to docs/WAR_ROOM_DECISION_MEMO.md</p></div>
         <div class="grid" style="margin-bottom:14px;">${{d.perspectives.map(p => '<div class="card"><div class="cat">'+p.role+' • '+p.stance+'</div><p style="color:#e2e8f0;">'+p.argument+'</p></div>').join('')}}</div>
@@ -332,6 +349,7 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
       const box = document.getElementById('board-content');
       const r = await fetch('/api/board-review');
       const d = await r.json();
+      lastBoardMd = `# Board Review Memo\\n\\n- **Overall:** ${{d.overallScore}}/5.0 (${{d.verdict}})\\n- **FI Mentor:** ${{d.scores.fiMentor}} • **VC Lab:** ${{d.scores.vcLabPartner}} • **PMF:** ${{d.scores.pmfTruthAuditor}}\\n\\n## Top 3 Actions\\n` + (d.topActions||[]).map((a,i) => (i+1)+'. '+a).join('\\n');
       box.innerHTML = `
         <div class="grid" style="margin-bottom:14px;">
           <div class="card"><div class="cat">Overall Readiness</div><div class="score-val">${{d.overallScore}} / 5.0</div><div>${{d.verdict}}</div></div>

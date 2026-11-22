@@ -244,6 +244,17 @@ def build_data_room(workspace: Path) -> dict[str, Any]:
     (dr / "DATA_ROOM_INDEX.md").write_text(index_md, encoding="utf-8")
 
     # Sleek Zero-Dependency Local HTML Portal (data-room/index.html)
+    locales_file = Path(__file__).resolve().parent.parent.parent.parent / "i18n" / "locales.json"
+    all_locales = _load_json(locales_file, {})
+    default_locale = str(state.get("locale") or "en")
+    if default_locale not in all_locales:
+        default_locale = "en"
+    locales_json_str = json.dumps(all_locales, ensure_ascii=False)
+    lang_opts = "".join(
+        f'<option value="{code}"{" selected" if code == default_locale else ""}>{html.escape(data.get("nativeName", code))}</option>'
+        for code, data in all_locales.items()
+    )
+
     esc_company = html.escape(str(company))
     esc_pitch = html.escape(str(pitch))
     deck_link = (
@@ -293,7 +304,10 @@ def build_data_room(workspace: Path) -> dict[str, Any]:
 </head>
 <body>
   <div class="wrap">
-    <span class="badge">Investor Data Room • {html.escape(str(stage))}</span>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
+      <span class="badge" id="dr-badge">Investor Data Room • {html.escape(str(stage))}</span>
+      <select id="dr-lang" aria-label="Language" onchange="applyDrLang(this.value)" style="background:#0f172a;color:#f8fafc;border:1px solid #334155;border-radius:8px;padding:6px 10px;font-weight:700;font-size:12px;">{lang_opts}</select>
+    </div>
     <h1>{esc_company}</h1>
     <p class="pitch">{esc_pitch}</p>
 
@@ -318,8 +332,25 @@ def build_data_room(workspace: Path) -> dict[str, Any]:
       <ul class="checks">{check_items_html}</ul>
     </div>
 
-    <footer>Built with Startup Antigravity — Ethical Venture OS • Mensarius Oath Compliant</footer>
+    <footer>Built with Startup Antigravity — Ethical Venture OS • Mensarius Oath Compliant • 10 Languages</footer>
   </div>
+  <script>
+    const DR_I18N = {locales_json_str};
+    function applyDrLang(code) {{
+      const L = DR_I18N[code] || DR_I18N.en;
+      if (!L) return;
+      document.documentElement.lang = code;
+      document.documentElement.dir = L.rtl ? 'rtl' : 'ltr';
+      if (L.nav && L.nav.dataroom) document.getElementById('dr-badge').textContent = L.nav.dataroom + ' • {html.escape(str(stage))}';
+      try {{ localStorage.setItem('sa_lang', code); }} catch (e) {{}}
+    }}
+    (function () {{
+      let saved = "{default_locale}";
+      try {{ saved = localStorage.getItem('sa_lang') || saved; }} catch (e) {{}}
+      const sel = document.getElementById('dr-lang');
+      if (sel && DR_I18N[saved]) {{ sel.value = saved; applyDrLang(saved); }}
+    }})();
+  </script>
 </body>
 </html>
 """

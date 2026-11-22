@@ -245,6 +245,11 @@ class TestNativeAppPackages(unittest.TestCase):
                 self.assertIn("ClaimPulse", dash)
                 self.assertIn("83.6/100", dash)
                 self.assertIn("6Ds Stage: Disruptive", dash)
+                self.assertIn("what-if-simulator", dash)
+
+                dr_html = urllib.request.urlopen(base + "/workspace/data-room/index.html").read().decode("utf-8")
+                self.assertIn("DR_I18N", dr_html)
+                self.assertIn("downloadReport", shell)
 
                 # Live 3-Lens Board Review API
                 br = json.loads(urllib.request.urlopen(base + "/api/board-review").read().decode("utf-8"))

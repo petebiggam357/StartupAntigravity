@@ -4,6 +4,16 @@ All notable changes to **Startup Antigravity — Ethical Venture OS** are docume
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.3.1-beta] - 2026-11-22
+
+Pre-launch UX polish & documentation sync release for **Startup Antigravity — Ethical Venture OS**.
+
+### Added & Improved in 0.3.1-beta
+- **Interactive "What-If" Runway & Default-Alive Sliders (`build_dashboard.py`)**: Client-side sliders right inside the **Startup Command Center** (`dashboard/index.html`) for MoM Revenue Growth %, Extra Monthly Burn / Hiring, and Gross Margin % — recalculating Projected Month-12 MRR, Runway Months, and Default-Alive Month live.
+- **10-Language Switcher in Investor Data Room (`build_data_room.py`)**: Added the synced 🌐 10-language switcher (+ automatic Arabic RTL) to `data-room/index.html`, completing 100% multilingual coverage across the Command Center, Web Studio, Data Room, and Public Showcase.
+- **1-Click `.md` Report Downloads in Local Web Studio (`launcher/studio_server.py`)**: Added **Download .md** export buttons in the **Voice Coach**, **War Room**, and **Board Review** tabs.
+- **Complete `README.md` Architecture Sync**: Updated all skill, subagent, and MCP tool tables to list all **20 skills**, **9 subagents**, **28 MCP tools**, **54+ resources**, and **10 global languages**.
+
 ## [0.3.0-beta] - 2026-11-22
 
 Major feature leap for **Startup Antigravity — Ethical Venture OS** (**20 skills · 9 subagents · 28 zero-dependency local MCP tools · 54+ resources · 10 global languages · 4 hardened safety hooks**).

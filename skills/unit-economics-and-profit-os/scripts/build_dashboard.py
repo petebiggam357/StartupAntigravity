@@ -384,6 +384,29 @@ def render_dashboard_html(workspace: Path) -> str:
       </div>
     </section>
 
+    <section class="card" id="what-if-simulator">
+      <h2>Interactive "What-If" Runway &amp; Default-Alive Simulator</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:8px;">
+        <label style="font-size:12px;color:var(--muted);display:grid;gap:6px;">
+          <span>MoM Revenue Growth: <strong id="wi-growth-lbl" style="color:var(--text);">15%</strong></span>
+          <input id="wi-growth" type="range" min="0" max="50" value="15" oninput="recalcWhatIf()" />
+        </label>
+        <label style="font-size:12px;color:var(--muted);display:grid;gap:6px;">
+          <span>Extra Monthly Burn / Hiring: <strong id="wi-burn-lbl" style="color:var(--text);">$0</strong></span>
+          <input id="wi-burn" type="range" min="-5000" max="25000" step="500" value="0" oninput="recalcWhatIf()" />
+        </label>
+        <label style="font-size:12px;color:var(--muted);display:grid;gap:6px;">
+          <span>Gross Margin %: <strong id="wi-gm-lbl" style="color:var(--text);">{gm:.0f}%</strong></span>
+          <input id="wi-gm" type="range" min="50" max="95" value="{int(round(gm))}" oninput="recalcWhatIf()" />
+        </label>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:14px;">
+        <div class="kpi"><div class="kpi-val" id="wi-mrr12">—</div><div class="kpi-lbl">Projected Month-12 MRR</div></div>
+        <div class="kpi"><div class="kpi-val" id="wi-runway">—</div><div class="kpi-lbl">Simulated Runway</div></div>
+        <div class="kpi"><div class="kpi-val" id="wi-da">—</div><div class="kpi-lbl">Default-Alive Status</div></div>
+      </div>
+    </section>
+
     <section class="card">
       <h2>Riskiest Assumptions Board (Ranked by Impact × Uncertainty)</h2>
       <table>
@@ -419,6 +442,33 @@ def render_dashboard_html(workspace: Path) -> str:
       const sel = document.getElementById('lang-select');
       if (sel && I18N[saved]) {{ sel.value = saved; applyLang(saved); }}
     }})();
+    const BASE_MRR = {mrr};
+    const BASE_CASH = {cash};
+    const BASE_BURN = {burn};
+    function recalcWhatIf() {{
+      const g = Number(document.getElementById('wi-growth').value) / 100;
+      const addBurn = Number(document.getElementById('wi-burn').value);
+      const gm = Number(document.getElementById('wi-gm').value) / 100;
+      document.getElementById('wi-growth-lbl').textContent = Math.round(g * 100) + '%';
+      document.getElementById('wi-burn-lbl').textContent = (addBurn >= 0 ? '+$' : '-$') + Math.abs(addBurn).toLocaleString();
+      document.getElementById('wi-gm-lbl').textContent = Math.round(gm * 100) + '%';
+
+      let cash = BASE_CASH, mrr = BASE_MRR, daMonth = null, runwayMo = null;
+      const totalBurn = Math.max(0, BASE_BURN + addBurn);
+      for (let m = 1; m <= 36; m++) {{
+        mrr = mrr * (1 + g);
+        const gp = mrr * gm;
+        const net = totalBurn - gp;
+        if (net <= 0 && daMonth === null) daMonth = m;
+        cash -= net;
+        if (cash <= 0 && runwayMo === null) runwayMo = m;
+      }}
+      const mrr12 = BASE_MRR * Math.pow(1 + g, 12);
+      document.getElementById('wi-mrr12').textContent = '$' + Math.round(mrr12).toLocaleString();
+      document.getElementById('wi-runway').textContent = runwayMo ? (runwayMo + ' mo') : '36+ mo (Safe)';
+      document.getElementById('wi-da').textContent = daMonth ? ('Default-Alive (Mo ' + daMonth + ')') : 'Default-Dead (>36 mo)';
+    }}
+    recalcWhatIf();
   </script>
 </body>
 </html>

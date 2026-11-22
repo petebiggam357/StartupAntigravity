@@ -64,7 +64,7 @@ from voice_pitch_coach import analyze_voice_pitch  # noqa: E402
 from war_room import run_war_room  # noqa: E402
 
 SERVER_NAME = "startup-antigravity-os"
-SERVER_VERSION = "0.3.0-beta"
+SERVER_VERSION = "0.3.1-beta"
 PROTOCOL_VERSION = "2024-11-05"
 
 FI_STAGE_BENCHMARKS: dict[str, dict[str, Any]] = {
