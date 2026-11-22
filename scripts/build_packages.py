@@ -29,6 +29,7 @@ from package_release import package_release  # noqa: E402
 DIST_DIR = ROOT / "dist"
 LAUNCHER_SRC = ROOT / "launcher" / "app.py"
 STUDIO_SERVER_SRC = ROOT / "launcher" / "studio_server.py"
+X402_STOREFRONT_SRC = ROOT / "launcher" / "x402_storefront.py"
 ICON_SRC = ROOT / "assets" / "logo.svg"
 
 
@@ -85,6 +86,7 @@ def build_deb(zip_path: Path, manifest: dict[str, Any]) -> Path:
     launcher_dest = share_dir / "launcher.py"
     shutil.copy2(LAUNCHER_SRC, launcher_dest)
     shutil.copy2(STUDIO_SERVER_SRC, share_dir / "studio_server.py")
+    shutil.copy2(X402_STOREFRONT_SRC, share_dir / "x402_storefront.py")
     _chmod_exec(launcher_dest)
 
     # CLI & desktop wrapper in /usr/bin
@@ -175,6 +177,7 @@ def build_appdir(
         launcher_dest = usr_share / "launcher.py"
         shutil.copy2(LAUNCHER_SRC, launcher_dest)
         shutil.copy2(STUDIO_SERVER_SRC, usr_share / "studio_server.py")
+        shutil.copy2(X402_STOREFRONT_SRC, usr_share / "x402_storefront.py")
         _chmod_exec(launcher_dest)
         apprun_exec = f'exec python3 "$HERE/usr/share/{pkg_name}/launcher.py" "$@"'
 

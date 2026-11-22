@@ -45,6 +45,19 @@ def render_dashboard_html(workspace: Path) -> str:
     sprints = _read_json(sdir / "sprints.json", [])
     pmf = _read_json(sdir / "pmf.json", {"surveys": [], "cohorts": []})
     exo = _read_json(sdir / "exponential.json", {})
+    x402_ledger = _read_json(sdir / "x402_ledger.json", {"totalCalls": 0, "totalRevenueUsdc": 0.0, "network": "base-sepolia"})
+    locales_file = Path(__file__).resolve().parent.parent.parent.parent / "i18n" / "locales.json"
+    all_locales = _read_json(locales_file, {})
+    default_locale = str(state.get("locale") or "en")
+    if default_locale not in all_locales:
+        default_locale = "en"
+    locales_json_str = json.dumps(all_locales, ensure_ascii=False)
+    locale_options_html = "".join(
+        f'<option value="{code}"{" selected" if code == default_locale else ""}>{html.escape(data.get("nativeName", code))}</option>'
+        for code, data in all_locales.items()
+    )
+    x402_calls = int(x402_ledger.get("totalCalls", 0) or 0)
+    x402_rev = float(x402_ledger.get("totalRevenueUsdc", 0.0) or 0.0)
 
     company = html.escape(str(state.get("companyName") or "Your Startup"))
     pitch = html.escape(
@@ -291,10 +304,13 @@ def render_dashboard_html(workspace: Path) -> str:
   <div class="wrap">
     <header class="top">
       <div>
-        <h1>Startup <span>Command Center</span></h1>
+        <h1 id="i18n-title">Startup <span>Command Center</span></h1>
         <p class="pitch"><strong>{company}</strong> — {pitch}</p>
       </div>
       <div class="top-actions">
+        <select id="lang-select" aria-label="Language" onchange="applyLang(this.value)" style="background:#0F172A;color:#F8FAFC;border:1px solid #334155;border-radius:8px;padding:7px 10px;font-weight:700;font-size:13px;">
+          {locale_options_html}
+        </select>
         {deck_link}
         {land_link}
       </div>
@@ -303,17 +319,17 @@ def render_dashboard_html(workspace: Path) -> str:
     <section class="stage-bar">{"".join(stage_pills)}</section>
 
     <section class="kpi-grid">
-      <div class="kpi"><div class="kpi-val">${mrr:,.0f}</div><div class="kpi-lbl">Monthly Recurring Revenue</div></div>
-      <div class="kpi"><div class="kpi-val">{gm:.0f}%</div><div class="kpi-lbl">Gross Margin (Target >=75%)</div></div>
-      <div class="kpi"><div class="kpi-val">{runway_str}</div><div class="kpi-lbl">Runway (Cash ${cash:,.0f})</div></div>
-      <div class="kpi"><div class="kpi-val">{len(interviews)} / 15</div><div class="kpi-lbl">Mom Test Interviews</div></div>
+      <div class="kpi"><div class="kpi-val">${mrr:,.0f}</div><div class="kpi-lbl" data-i18n="kpi.mrr">Monthly Recurring Revenue</div></div>
+      <div class="kpi"><div class="kpi-val">{gm:.0f}%</div><div class="kpi-lbl" data-i18n="kpi.grossMargin">Gross Margin (Target >=75%)</div></div>
+      <div class="kpi"><div class="kpi-val">{runway_str}</div><div class="kpi-lbl" data-i18n="kpi.runway">Runway (Cash ${cash:,.0f})</div></div>
+      <div class="kpi"><div class="kpi-val">{len(interviews)} / 15</div><div class="kpi-lbl" data-i18n="kpi.interviews">Discovery Interviews</div></div>
       <div class="kpi"><div class="kpi-val">${cust_closed + cust_signed:,.0f}</div><div class="kpi-lbl">Customer PACTs Committed</div></div>
-      <div class="kpi"><div class="kpi-val">${inv_closed + inv_signed:,.0f}</div><div class="kpi-lbl">Investor PACTs Soft-Circled</div></div>
+      <div class="kpi"><div class="kpi-val">${x402_rev:,.2f}</div><div class="kpi-lbl" data-i18n="kpi.x402Rev">x402 Agent Revenue ({x402_calls} calls)</div></div>
     </section>
 
     <section class="grid-2">
       <div class="card">
-        <h2>Product-Market Fit (Sean Ellis 40% Rule)</h2>
+        <h2 data-i18n="sections.pmf">Product-Market Fit (Sean Ellis 40% Rule)</h2>
         <div class="gauge-wrap">
           <svg width="200" height="115" viewBox="0 0 200 115" role="img" aria-label="PMF Gauge">
             <path d="M 30 100 A 70 70 0 0 1 170 100" fill="none" stroke="#1F2937" stroke-width="16" stroke-linecap="round"/>
@@ -377,9 +393,33 @@ def render_dashboard_html(workspace: Path) -> str:
     </section>
 
     <footer class="foot">
-      Startup Antigravity — Ethical Venture OS • Last compiled: {updated_at} • Zero external servers required
+      Startup Antigravity — Ethical Venture OS • Last compiled: {updated_at} • 10 Languages Supported • Zero external servers required
     </footer>
   </div>
+  <script>
+    const I18N = {locales_json_str};
+    function applyLang(code) {{
+      const L = I18N[code] || I18N.en;
+      if (!L) return;
+      document.documentElement.lang = code;
+      document.documentElement.dir = L.rtl ? 'rtl' : 'ltr';
+      const t = document.getElementById('i18n-title');
+      if (t && L.appTitle) t.innerHTML = code === 'en' ? 'Startup <span>Command Center</span>' : L.appTitle;
+      document.querySelectorAll('[data-i18n]').forEach(el => {{
+        const parts = el.dataset.i18n.split('.');
+        let cur = L;
+        for (const p of parts) cur = cur && cur[p];
+        if (typeof cur === 'string') el.textContent = cur;
+      }});
+      try {{ localStorage.setItem('sa_lang', code); }} catch (e) {{}}
+    }}
+    (function () {{
+      let saved = "{default_locale}";
+      try {{ saved = localStorage.getItem('sa_lang') || saved; }} catch (e) {{}}
+      const sel = document.getElementById('lang-select');
+      if (sel && I18N[saved]) {{ sel.value = saved; applyLang(saved); }}
+    }})();
+  </script>
 </body>
 </html>
 """

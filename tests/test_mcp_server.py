@@ -40,12 +40,15 @@ class TestMCPServer(unittest.TestCase):
         self.assertEqual(len(resps), 2)
         self.assertEqual(resps[0]["result"]["serverInfo"]["name"], "startup-antigravity-os")
         tool_names = {t["name"] for t in resps[1]["result"]["tools"]}
-        self.assertEqual(len(tool_names), 25)
+        self.assertEqual(len(tool_names), 28)
         self.assertIn("data_room_build", tool_names)
         self.assertIn("ai_x402_calc", tool_names)
         self.assertIn("board_review_run", tool_names)
         self.assertIn("competitor_manage", tool_names)
         self.assertIn("exponential_audit", tool_names)
+        self.assertIn("voice_pitch_coach", tool_names)
+        self.assertIn("war_room_run", tool_names)
+        self.assertIn("i18n_locale_manage", tool_names)
         self.assertIn("financial_calc", tool_names)
         self.assertIn("fi_pitch_lint", tool_names)
         self.assertIn("pact_pipeline_manage", tool_names)
@@ -983,6 +986,68 @@ class TestMCPServer(unittest.TestCase):
             acc = json.loads(resps[2]["result"]["content"][0]["text"])
             self.assertEqual(len(acc["projections"]), 4)
             self.assertTrue(acc["projections"][2]["meets75PctFloor"])
+
+    def test_v030_voice_coach_war_room_and_i18n_ten_languages(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            calls = [
+                {
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "voice_pitch_coach",
+                        "arguments": {
+                            "transcript": "Um we are building a revolutionary tool with $14,400 MRR and 84% margin raising $750K Pre-Seed.",
+                            "duration_seconds": 35,
+                        },
+                    },
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 2,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "war_room_run",
+                        "arguments": {
+                            "workspace_path": td,
+                            "question": "Should we raise $750K Pre-Seed now or launch an x402 agent tier first?",
+                            "write_memo": True,
+                        },
+                    },
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 3,
+                    "method": "tools/call",
+                    "params": {"name": "i18n_locale_manage", "arguments": {"action": "list"}},
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 4,
+                    "method": "tools/call",
+                    "params": {"name": "i18n_locale_manage", "arguments": {"action": "set", "locale": "ar", "workspace_path": td}},
+                },
+            ]
+            resps = self._run_rpc(calls)
+            vc = json.loads(resps[0]["result"]["content"][0]["text"])
+            self.assertTrue(vc["ok"])
+            self.assertIn("revolutionary", vc["buzzwordsFound"])
+            self.assertGreaterEqual(vc["totalFillers"], 1)
+            self.assertEqual(len(vc["partnerGrillingQuestions"]), 5)
+
+            wr = json.loads(resps[1]["result"]["content"][0]["text"])
+            self.assertTrue(wr["ok"])
+            self.assertEqual(len(wr["perspectives"]), 4)
+            self.assertTrue(Path(wr["memoPath"]).exists())
+
+            langs = json.loads(resps[2]["result"]["content"][0]["text"])
+            self.assertEqual(langs["count"], 10)
+            codes = {l["code"] for l in langs["languages"]}
+            self.assertEqual(codes, {"en", "es", "zh", "hi", "ar", "pt", "fr", "de", "ja", "ko"})
+
+            ar_set = json.loads(resps[3]["result"]["content"][0]["text"])
+            self.assertTrue(ar_set["rtl"])
+            self.assertEqual(ar_set["locale"], "ar")
 
 
 if __name__ == "__main__":

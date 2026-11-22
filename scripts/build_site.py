@@ -28,8 +28,14 @@ def build_site(out_dir: Path) -> dict[str, str]:
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / ".nojekyll").write_text("", encoding="utf-8")
 
-    # Copy logo SVG
+    # Copy logo SVG & load 10-language locales
     shutil.copy2(ROOT / "assets" / "logo.svg", out_dir / "logo.svg")
+    all_locales = json.loads((ROOT / "i18n" / "locales.json").read_text(encoding="utf-8"))
+    locales_json = json.dumps(all_locales, ensure_ascii=False)
+    lang_opts = "".join(
+        f'<option value="{code}">{html.escape(data["nativeName"])}</option>'
+        for code, data in all_locales.items()
+    )
 
     # Build live interactive SolarLedger demo inside site_dist/demo/
     demo_dir = out_dir / "demo"
@@ -96,28 +102,29 @@ def build_site(out_dir: Path) -> dict[str, str]:
         <a href="#demo">Live Demo</a>
         <a href="#features">What's Inside</a>
         <a href="{REPO_URL}" target="_blank" rel="noopener">GitHub Repo</a>
+        <select id="site-lang" aria-label="Language" onchange="applySiteLang(this.value)" style="background:#0f172a;color:#f8fafc;border:1px solid #334155;border-radius:8px;padding:5px 8px;font-weight:700;font-size:12px;">{lang_opts}</select>
       </div>
     </nav>
 
     <section class="hero">
-      <span class="pill">Open Source • {esc_tag} • Zero Dependencies</span>
-      <h1>The Ethical Venture OS for Google Antigravity</h1>
+      <span class="pill">Open Source • {esc_tag} • 10 Languages • Zero Dependencies</span>
+      <h1 id="hero-title">The Ethical Venture OS for Google Antigravity</h1>
       <p class="sub">
-        Install one plugin, open an empty folder, and build a high-margin, AI-native, fundable startup from scratch — uniting Founder Institute execution, VC Lab / Mensarius Oath ethics, and x402 programmable finance.
+        Install one plugin, open an empty folder, and build a high-margin, AI-native, fundable startup from scratch — uniting Founder Institute execution, VC Lab / Mensarius Oath ethics, Exponential / Singularity frameworks, Voice Pitch Coach, 4-Exec War Room, and x402 programmable finance.
       </p>
       <div class="cta-row">
         <a id="smart-dl" class="btn primary" href="{REPO_URL}/releases/tag/{esc_tag}">Download {esc_tag}</a>
-        <a class="btn amber" href="demo/dashboard/index.html">Launch Startup Command Center Demo</a>
-        <a class="btn" href="{REPO_URL}" target="_blank" rel="noopener">View on GitHub</a>
+        <a id="hero-demo-btn" class="btn amber" href="demo/dashboard/index.html">Launch Startup Command Center Demo</a>
+        <a id="hero-gh-btn" class="btn" href="{REPO_URL}" target="_blank" rel="noopener">View on GitHub</a>
       </div>
     </section>
 
     <section class="stats">
       <div class="stat"><strong>20</strong><span>Startup Skills</span></div>
       <div class="stat"><strong>9</strong><span>Advisory Subagents</span></div>
-      <div class="stat"><strong>25</strong><span>Local MCP Tools</span></div>
+      <div class="stat"><strong>28</strong><span>Local MCP Tools</span></div>
       <div class="stat"><strong>54+</strong><span>Curated Resources</span></div>
-      <div class="stat"><strong>4</strong><span>Safety Hooks</span></div>
+      <div class="stat"><strong>10</strong><span>Global Languages</span></div>
       <div class="stat"><strong>$0</strong><span>Dependencies</span></div>
     </section>
 
@@ -207,7 +214,23 @@ startup-antigravity --serve .</code></pre>
   </div>
 
   <script>
+    const SITE_I18N = {locales_json};
+    function applySiteLang(code) {{
+      const L = SITE_I18N[code] || SITE_I18N.en;
+      if (!L) return;
+      document.documentElement.lang = code;
+      document.documentElement.dir = L.rtl ? 'rtl' : 'ltr';
+      if (L.hero && L.hero.title) document.getElementById('hero-title').textContent = L.hero.title;
+      if (L.hero && L.hero.ctaDemo) document.getElementById('hero-demo-btn').textContent = L.hero.ctaDemo;
+      if (L.hero && L.hero.ctaGitHub) document.getElementById('hero-gh-btn').textContent = L.hero.ctaGitHub;
+      try {{ localStorage.setItem('sa_lang', code); }} catch (e) {{}}
+    }}
     (function () {{
+      let init = (navigator.language || 'en').slice(0, 2).toLowerCase();
+      try {{ init = localStorage.getItem('sa_lang') || init; }} catch (e) {{}}
+      if (!SITE_I18N[init]) init = 'en';
+      const sel = document.getElementById('site-lang');
+      if (sel) {{ sel.value = init; applySiteLang(init); }}
       const ua = navigator.userAgent.toLowerCase();
       const btn = document.getElementById('smart-dl');
       const base = "{rel_base}";

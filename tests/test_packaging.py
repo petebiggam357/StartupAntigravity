@@ -251,6 +251,48 @@ class TestNativeAppPackages(unittest.TestCase):
                 self.assertTrue(br["ok"])
                 self.assertGreaterEqual(br["overallScore"], 4.0)
 
+                # Live Metered x402 Storefront: unpaid -> HTTP 402, paid -> HTTP 200 + ledger increment
+                req_unpaid = urllib.request.Request(
+                    base + "/api/x402/agent-call",
+                    data=json.dumps({"query": "test"}).encode("utf-8"),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+                with self.assertRaises(urllib.error.HTTPError) as ctx402:
+                    urllib.request.urlopen(req_unpaid)
+                self.assertEqual(ctx402.exception.code, 402)
+                self.assertTrue(ctx402.exception.headers.get("X-PAYMENT-REQUIRED"))
+
+                req_paid = urllib.request.Request(
+                    base + "/api/x402/agent-call",
+                    data=json.dumps({"query": "test"}).encode("utf-8"),
+                    headers={"Content-Type": "application/json", "X-PAYMENT": "demo-usdc-proof", "X-AGENT-ID": "test-bot"},
+                    method="POST",
+                )
+                paid_res = json.loads(urllib.request.urlopen(req_paid).read().decode("utf-8"))
+                self.assertTrue(paid_res["ok"])
+                self.assertGreaterEqual(paid_res["totalCalls"], 143)
+
+                # Live Voice Coach & War Room Studio APIs
+                req_vc = urllib.request.Request(
+                    base + "/api/voice-coach",
+                    data=json.dumps({"transcript": "ClaimPulse cuts dental denials to 3% with $14,400 MRR raising $750K.", "duration_seconds": 30}).encode("utf-8"),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+                vc_res = json.loads(urllib.request.urlopen(req_vc).read().decode("utf-8"))
+                self.assertTrue(vc_res["ok"])
+
+                req_wr = urllib.request.Request(
+                    base + "/api/war-room",
+                    data=json.dumps({"question": "Should we hire 2 engineers now?"}).encode("utf-8"),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+                wr_res = json.loads(urllib.request.urlopen(req_wr).read().decode("utf-8"))
+                self.assertTrue(wr_res["ok"])
+                self.assertEqual(len(wr_res["perspectives"]), 4)
+
                 # Path-traversal guard
                 with self.assertRaises(urllib.error.HTTPError) as ctx:
                     urllib.request.urlopen(base + "/workspace/../../etc/passwd")

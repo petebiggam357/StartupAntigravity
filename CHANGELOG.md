@@ -4,6 +4,16 @@ All notable changes to **Startup Antigravity — Ethical Venture OS** are docume
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.3.0-beta] - 2026-11-22
+
+Major feature leap for **Startup Antigravity — Ethical Venture OS** (**20 skills · 9 subagents · 28 zero-dependency local MCP tools · 54+ resources · 10 global languages · 4 hardened safety hooks**).
+
+### Added in 0.3.0-beta
+- **Live Voice Pitch Coach & VC Lab Partner Q&A Simulator (`voice_pitch_coach` — 26th MCP Tool + Web Studio Tab)**: Browser Web Speech API live microphone + 3-minute FI countdown timer (plus transcript fallback) scoring delivery pace (WPM), filler words, FI banned buzzwords, quantified proof, and clear Ask (`0–100`) alongside 5 tailored VC Lab / FI Partner grilling questions.
+- **Autonomous 4-Executive Startup War Room (`war_room_run` — 27th MCP Tool + Web Studio Tab)**: Convenes 4 distinct executive lenses (**Lean CTO**, **Fractional CFO**, **PMF Truth Auditor**, **Exponential Growth Strategist**) on any strategic founder question using live `.startup/*.json` telemetry, surfacing consensus, tradeoffs, a unified decision, and `docs/WAR_ROOM_DECISION_MEMO.md`.
+- **Live Metered x402 (HTTP 402) Agent Storefront (`launcher/x402_storefront.py` + Web Studio Tab + Command Center KPI)**: Exposes a live metered `POST /api/x402/agent-call` endpoint on `base-sepolia` testnet returning genuine `HTTP 402 Payment Required` challenges when unpaid and logging settled USDC micropayments into `.startup/x402_ledger.json`, streaming live agent calls & USDC revenue straight into the **Startup Command Center**.
+- **Full Multilingual Support — Top 10 Global Founder Languages (`i18n/locales.json` + `i18n_locale_manage` — 28th MCP Tool)**: Instant zero-dependency localization across **English (`en`), Spanish (`es`), Chinese (`zh`), Hindi (`hi`), Arabic (`ar` with automatic RTL layout), Portuguese (`pt`), French (`fr`), German (`de`), Japanese (`ja`), and Korean (`ko`)** across the Startup Command Center, Local Web Studio, Public Showcase Site, and always-on Antigravity agent rules.
+
 ## [0.2.1-beta] - 2026-11-22
 
 UX & diagnostics polish release for **Startup Antigravity — Ethical Venture OS**.

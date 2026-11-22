@@ -221,6 +221,26 @@ def generate_demo_workspace(target_dir: Path) -> dict[str, Any]:
     }
     (startup / "exponential.json").write_text(json.dumps(exponential, indent=2), encoding="utf-8")
 
+    x402_ledger = {
+        "network": "base-sepolia",
+        "pricePerCallUsdc": 0.05,
+        "endpoint": "/api/x402/agent-call",
+        "payTo": "0xYOUR_BASE_SEPOLIA_TREASURY",
+        "totalCalls": 142,
+        "totalRevenueUsdc": 7.10,
+        "events": [
+            {
+                "timestamp": "2026-11-22T18:10:00Z",
+                "agentId": "dental-rcm-bot-01",
+                "resource": "/api/x402/agent-call",
+                "amountUsdc": 0.05,
+                "network": "base-sepolia",
+                "proofPrefix": "base-sepolia-usdc-demo-tx",
+            }
+        ],
+    }
+    (startup / "x402_ledger.json").write_text(json.dumps(x402_ledger, indent=2), encoding="utf-8")
+
     (docs / "INVESTOR_UPDATE.md").write_text(
         "# ClaimPulse — Monthly Investor Update\n\n"
         "- **MRR:** $14,400 (+28% MoM across 16 paying clinics) `[VALIDATED]`\n"

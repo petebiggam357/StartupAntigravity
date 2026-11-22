@@ -1,0 +1,382 @@
+{
+  "en": {
+    "name": "English",
+    "nativeName": "English",
+    "rtl": false,
+    "appTitle": "Startup Command Center",
+    "studioTitle": "STARTUP ANTIGRAVITY STUDIO",
+    "nav": {
+      "dashboard": "Command Center",
+      "deck": "Pitch Deck",
+      "dataroom": "Data Room",
+      "landing": "Landing Page",
+      "voice": "Voice Coach",
+      "warroom": "War Room",
+      "x402": "x402 Storefront",
+      "board": "Board Review",
+      "resources": "54+ Resources",
+      "editMetrics": "Edit Metrics",
+      "switchWorkspace": "Switch Workspace"
+    },
+    "kpi": {
+      "mrr": "Monthly Recurring Revenue",
+      "grossMargin": "Gross Margin (Target >=75%)",
+      "runway": "Cash Runway",
+      "interviews": "Discovery Interviews",
+      "x402Rev": "x402 Agent Revenue (USDC)"
+    },
+    "sections": {
+      "pmf": "Product-Market Fit Gauge (Sean Ellis 40% Rule)",
+      "sprint": "Weekly Sprint, Experiments & For-Progress iKPI",
+      "exo": "Exponential Thinking & Singularity Readiness (ExO / 6Ds)",
+      "assumptions": "Riskiest Assumptions Board (Ranked by Impact × Uncertainty)"
+    },
+    "hero": {
+      "title": "The Ethical Venture OS for Google Antigravity",
+      "ctaDemo": "Launch Startup Command Center Demo",
+      "ctaGitHub": "View on GitHub"
+    }
+  },
+  "es": {
+    "name": "Spanish",
+    "nativeName": "Español",
+    "rtl": false,
+    "appTitle": "Centro de Comando Startup",
+    "studioTitle": "ESTUDIO STARTUP ANTIGRAVITY",
+    "nav": {
+      "dashboard": "Centro de Comando",
+      "deck": "Pitch Deck",
+      "dataroom": "Sala de Datos",
+      "landing": "Página Web",
+      "voice": "Coach de Voz",
+      "warroom": "Sala de Guerra",
+      "x402": "Tienda x402",
+      "board": "Junta Directiva",
+      "resources": "54+ Recursos",
+      "editMetrics": "Editar Métricas",
+      "switchWorkspace": "Cambiar Proyecto"
+    },
+    "kpi": {
+      "mrr": "Ingresos Mensuales Recurrentes (MRR)",
+      "grossMargin": "Margen Bruto (Meta >=75%)",
+      "runway": "Pista de Efectivo (Runway)",
+      "interviews": "Entrevistas de Descubrimiento",
+      "x402Rev": "Ingresos de Agentes x402 (USDC)"
+    },
+    "sections": {
+      "pmf": "Indicador Product-Market Fit (Regla Sean Ellis 40%)",
+      "sprint": "Sprint Semanal, Experimentos e iKPI de Impacto",
+      "exo": "Pensamiento Exponencial y Singularidad (ExO / 6Ds)",
+      "assumptions": "Tablero de Supuestos Más Riesgosos"
+    },
+    "hero": {
+      "title": "El Sistema Operativo Ético para Startups en Google Antigravity",
+      "ctaDemo": "Abrir Demo del Centro de Comando",
+      "ctaGitHub": "Ver en GitHub"
+    }
+  },
+  "zh": {
+    "name": "Chinese (Simplified)",
+    "nativeName": "中文",
+    "rtl": false,
+    "appTitle": "创业指挥中心",
+    "studioTitle": "STARTUP ANTIGRAVITY 工作室",
+    "nav": {
+      "dashboard": "指挥中心",
+      "deck": "路演文稿",
+      "dataroom": "投资者资料室",
+      "landing": "落地页",
+      "voice": "语音路演教练",
+      "warroom": "战略作战室",
+      "x402": "x402 代理商店",
+      "board": "董事会评估",
+      "resources": "54+ 创业资源",
+      "editMetrics": "编辑指标",
+      "switchWorkspace": "切换工作区"
+    },
+    "kpi": {
+      "mrr": "月度经常性收入 (MRR)",
+      "grossMargin": "毛利率 (目标 >=75%)",
+      "runway": "现金跑道",
+      "interviews": "客户访谈数",
+      "x402Rev": "x402 代理收入 (USDC)"
+    },
+    "sections": {
+      "pmf": "产品市场契合度仪表盘 (Sean Ellis 40% 法则)",
+      "sprint": "每周冲刺、实验与影响力 iKPI",
+      "exo": "指数思维与奇点准备度 (ExO / 6Ds)",
+      "assumptions": "最高风险假设看板"
+    },
+    "hero": {
+      "title": "面向 Google Antigravity 的开源道德创业操作系统",
+      "ctaDemo": "启动创业指挥中心演示",
+      "ctaGitHub": "查看 GitHub"
+    }
+  },
+  "hi": {
+    "name": "Hindi",
+    "nativeName": "हिन्दी",
+    "rtl": false,
+    "appTitle": "स्टार्टअप कमांड सेंटर",
+    "studioTitle": "STARTUP ANTIGRAVITY स्टूडियो",
+    "nav": {
+      "dashboard": "कमांड सेंटर",
+      "deck": "पिच डेक",
+      "dataroom": "डेटा रूम",
+      "landing": "लैंडिंग पेज",
+      "voice": "वॉइस कोच",
+      "warroom": "वॉर रूम",
+      "x402": "x402 स्टोरफ्रंट",
+      "board": "बोर्ड समीक्षा",
+      "resources": "54+ संसाधन",
+      "editMetrics": "मेट्रिक्स संपादित करें",
+      "switchWorkspace": "वर्कस्पेस बदलें"
+    },
+    "kpi": {
+      "mrr": "मासिक आवर्ती राजस्व (MRR)",
+      "grossMargin": "सकल मार्जिन (लक्ष्य >=75%)",
+      "runway": "कैश रनवे",
+      "interviews": "ग्राहक साक्षात्कार",
+      "x402Rev": "x402 एजेंट राजस्व (USDC)"
+    },
+    "sections": {
+      "pmf": "प्रोडक्ट-मार्केट फिट गेज (Sean Ellis 40% नियम)",
+      "sprint": "साप्ताहिक स्प्रिंट, प्रयोग और प्रभाव iKPI",
+      "exo": "एक्सपोनेंशियल थिंकिंग और सिंगुलैरिटी (ExO / 6Ds)",
+      "assumptions": "सबसे जोखिम भरी धारणाएँ"
+    },
+    "hero": {
+      "title": "Google Antigravity के लिए एथिकल वेंचर OS",
+      "ctaDemo": "स्टार्टअप कमांड सेंटर डेमो खोलें",
+      "ctaGitHub": "GitHub पर देखें"
+    }
+  },
+  "ar": {
+    "name": "Arabic",
+    "nativeName": "العربية",
+    "rtl": true,
+    "appTitle": "مركز قيادة الشركات الناشئة",
+    "studioTitle": "استوديو STARTUP ANTIGRAVITY",
+    "nav": {
+      "dashboard": "مركز القيادة",
+      "deck": "العرض التقديمي",
+      "dataroom": "غرفة البيانات",
+      "landing": "صفحة الهبوط",
+      "voice": "مدرب الإلقاء الصوتي",
+      "warroom": "غرفة العمليات",
+      "x402": "متجر x402",
+      "board": "مراجعة المجلس",
+      "resources": "+54 مورد",
+      "editMetrics": "تعديل المؤشرات",
+      "switchWorkspace": "تبديل المشروع"
+    },
+    "kpi": {
+      "mrr": "الإيرادات الشهرية المتكررة (MRR)",
+      "grossMargin": "هامش الربح الإجمالي (الهدف >=75%)",
+      "runway": "المدرج النقدي",
+      "interviews": "مقابلات العملاء",
+      "x402Rev": "إيرادات وكلاء x402 (USDC)"
+    },
+    "sections": {
+      "pmf": "مقياس ملاءمة المنتج للسوق (قاعدة 40%)",
+      "sprint": "سباق الأسبوع والتجارب ومؤشر الأثر iKPI",
+      "exo": "التفكير الأسي والاستعداد للتفرد (ExO / 6Ds)",
+      "assumptions": "لوحة الافتراضات الأعلى مخاطرة"
+    },
+    "hero": {
+      "title": "نظام التشغيل الأخلاقي للشركات الناشئة على Google Antigravity",
+      "ctaDemo": "تشغيل العرض المباشر لمركز القيادة",
+      "ctaGitHub": "عرض على GitHub"
+    }
+  },
+  "pt": {
+    "name": "Portuguese",
+    "nativeName": "Português",
+    "rtl": false,
+    "appTitle": "Centro de Comando Startup",
+    "studioTitle": "ESTÚDIO STARTUP ANTIGRAVITY",
+    "nav": {
+      "dashboard": "Centro de Comando",
+      "deck": "Pitch Deck",
+      "dataroom": "Data Room",
+      "landing": "Landing Page",
+      "voice": "Coach de Voz",
+      "warroom": "Sala de Guerra",
+      "x402": "Loja x402",
+      "board": "Conselho",
+      "resources": "54+ Recursos",
+      "editMetrics": "Editar Métricas",
+      "switchWorkspace": "Trocar Projeto"
+    },
+    "kpi": {
+      "mrr": "Receita Mensal Recorrente (MRR)",
+      "grossMargin": "Margem Bruta (Meta >=75%)",
+      "runway": "Fôlego de Caixa (Runway)",
+      "interviews": "Entrevistas de Descoberta",
+      "x402Rev": "Receita de Agentes x402 (USDC)"
+    },
+    "sections": {
+      "pmf": "Medidor Product-Market Fit (Regra Sean Ellis 40%)",
+      "sprint": "Sprint Semanal, Experimentos e iKPI de Impacto",
+      "exo": "Pensamento Exponencial e Singularidade (ExO / 6Ds)",
+      "assumptions": "Quadro de Premissas Mais Arriscadas"
+    },
+    "hero": {
+      "title": "O Sistema Operacional Ético de Startups para Google Antigravity",
+      "ctaDemo": "Abrir Demo do Centro de Comando",
+      "ctaGitHub": "Ver no GitHub"
+    }
+  },
+  "fr": {
+    "name": "French",
+    "nativeName": "Français",
+    "rtl": false,
+    "appTitle": "Centre de Commande Startup",
+    "studioTitle": "STUDIO STARTUP ANTIGRAVITY",
+    "nav": {
+      "dashboard": "Centre de Commande",
+      "deck": "Pitch Deck",
+      "dataroom": "Data Room",
+      "landing": "Page d'Accueil",
+      "voice": "Coach Vocal",
+      "warroom": "War Room",
+      "x402": "Boutique x402",
+      "board": "Comité Conseil",
+      "resources": "54+ Ressources",
+      "editMetrics": "Modifier Métriques",
+      "switchWorkspace": "Changer de Projet"
+    },
+    "kpi": {
+      "mrr": "Revenu Mensuel Récurrent (MRR)",
+      "grossMargin": "Marge Brute (Objectif >=75%)",
+      "runway": "Trésorerie (Runway)",
+      "interviews": "Entretiens Clients",
+      "x402Rev": "Revenus Agents x402 (USDC)"
+    },
+    "sections": {
+      "pmf": "Jauge Product-Market Fit (Règle Sean Ellis 40%)",
+      "sprint": "Sprint Hebdomadaire, Expériences & iKPI d'Impact",
+      "exo": "Pensée Exponentielle & Singularité (ExO / 6Ds)",
+      "assumptions": "Tableau des Hypothèses les Plus Risquées"
+    },
+    "hero": {
+      "title": "L'OS Éthique des Startups pour Google Antigravity",
+      "ctaDemo": "Lancer la Démo du Centre de Commande",
+      "ctaGitHub": "Voir sur GitHub"
+    }
+  },
+  "de": {
+    "name": "German",
+    "nativeName": "Deutsch",
+    "rtl": false,
+    "appTitle": "Startup Command Center",
+    "studioTitle": "STARTUP ANTIGRAVITY STUDIO",
+    "nav": {
+      "dashboard": "Command Center",
+      "deck": "Pitch Deck",
+      "dataroom": "Datenraum",
+      "landing": "Landingpage",
+      "voice": "Stimm-Coach",
+      "warroom": "War Room",
+      "x402": "x402 Storefront",
+      "board": "Beirat-Check",
+      "resources": "54+ Ressourcen",
+      "editMetrics": "Metriken bearbeiten",
+      "switchWorkspace": "Projekt wechseln"
+    },
+    "kpi": {
+      "mrr": "Monatlich wiederkehrender Umsatz (MRR)",
+      "grossMargin": "Bruttomarge (Ziel >=75%)",
+      "runway": "Liquiditätsreichweite",
+      "interviews": "Kundeninterviews",
+      "x402Rev": "x402 Agenten-Umsatz (USDC)"
+    },
+    "sections": {
+      "pmf": "Product-Market-Fit-Anzeige (Sean Ellis 40%-Regel)",
+      "sprint": "Wochensprint, Experimente & Impact-iKPI",
+      "exo": "Exponentielles Denken & Singularität (ExO / 6Ds)",
+      "assumptions": "Board der riskantesten Annahmen"
+    },
+    "hero": {
+      "title": "Das ethische Startup-Betriebssystem für Google Antigravity",
+      "ctaDemo": "Startup Command Center Demo starten",
+      "ctaGitHub": "Auf GitHub ansehen"
+    }
+  },
+  "ja": {
+    "name": "Japanese",
+    "nativeName": "日本語",
+    "rtl": false,
+    "appTitle": "スタートアップ・コマンドセンター",
+    "studioTitle": "STARTUP ANTIGRAVITY スタジオ",
+    "nav": {
+      "dashboard": "コマンドセンター",
+      "deck": "ピッチデック",
+      "dataroom": "データルーム",
+      "landing": "ランディングページ",
+      "voice": "音声ピッチコーチ",
+      "warroom": "ウォームルーム",
+      "x402": "x402 ストア",
+      "board": "ボード審査",
+      "resources": "54+ リソース",
+      "editMetrics": "指標を編集",
+      "switchWorkspace": "プロジェクト切替"
+    },
+    "kpi": {
+      "mrr": "月次経常収益 (MRR)",
+      "grossMargin": "粗利率 (目標 >=75%)",
+      "runway": "資金ランウェイ",
+      "interviews": "顧客インタビュー数",
+      "x402Rev": "x402 エージェント収益 (USDC)"
+    },
+    "sections": {
+      "pmf": "PMF ゲージ (Sean Ellis 40% ルール)",
+      "sprint": "週間スプリント・実験・インパクト iKPI",
+      "exo": "指数関数的思考とシンギュラリティ (ExO / 6Ds)",
+      "assumptions": "最重要リスク仮説ボード"
+    },
+    "hero": {
+      "title": "Google Antigravity 向けオープンソース倫理的ベンチャーOS",
+      "ctaDemo": "コマンドセンターデモを開く",
+      "ctaGitHub": "GitHub で見る"
+    }
+  },
+  "ko": {
+    "name": "Korean",
+    "nativeName": "한국어",
+    "rtl": false,
+    "appTitle": "스타트업 커맨드 센터",
+    "studioTitle": "STARTUP ANTIGRAVITY 스튜디오",
+    "nav": {
+      "dashboard": "커맨드 센터",
+      "deck": "피치 덱",
+      "dataroom": "데이터 룸",
+      "landing": "랜딩 페이지",
+      "voice": "음성 피치 코치",
+      "warroom": "전략 워룸",
+      "x402": "x402 스토어",
+      "board": "이사회 리뷰",
+      "resources": "54+ 리소스",
+      "editMetrics": "지표 편집",
+      "switchWorkspace": "워크스페이스 전환"
+    },
+    "kpi": {
+      "mrr": "월간 반복 매출 (MRR)",
+      "grossMargin": "매출총이익률 (목표 >=75%)",
+      "runway": "현금 런웨이",
+      "interviews": "고객 인터뷰",
+      "x402Rev": "x402 에이전트 매출 (USDC)"
+    },
+    "sections": {
+      "pmf": "PMF 게이지 (Sean Ellis 40% 규칙)",
+      "sprint": "주간 스프린트, 실험 및 임팩트 iKPI",
+      "exo": "기하급수적 사고 및 특이점 준비도 (ExO / 6Ds)",
+      "assumptions": "최고 위험 가정 보드"
+    },
+    "hero": {
+      "title": "Google Antigravity를 위한 오픈소스 윤리적 벤처 OS",
+      "ctaDemo": "스타트업 커맨드 센터 데모 실행",
+      "ctaGitHub": "GitHub에서 보기"
+    }
+  }
+}

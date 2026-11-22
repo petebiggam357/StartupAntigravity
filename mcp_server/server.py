@@ -27,6 +27,7 @@ DATAROOM_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "vc-lab-fundraising-os" / "scrip
 AI_X402_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "ai-native-and-x402-finance" / "scripts"
 BOARD_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "weekly-sprint-review" / "scripts"
 EXO_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "exponential-thinking-and-singularity" / "scripts"
+I18N_DIR = PLUGIN_ROOT / "i18n"
 IKPI_CATALOG_PATH = Path(__file__).resolve().parent / "ikpi_catalog.json"
 FOUNDER_RESOURCES_PATH = Path(__file__).resolve().parent / "founder_resources.json"
 
@@ -39,6 +40,7 @@ for _p in (
     AI_X402_SCRIPTS_DIR,
     BOARD_SCRIPTS_DIR,
     EXO_SCRIPTS_DIR,
+    I18N_DIR,
 ):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
@@ -57,9 +59,12 @@ from build_deck import (  # noqa: E402
 )
 from build_landing_page import build_landing_page  # noqa: E402
 from exponential_audit import run_exponential_audit  # noqa: E402
+from i18n import list_supported_languages, set_workspace_locale  # noqa: E402
+from voice_pitch_coach import analyze_voice_pitch  # noqa: E402
+from war_room import run_war_room  # noqa: E402
 
 SERVER_NAME = "startup-antigravity-os"
-SERVER_VERSION = "0.2.1-beta"
+SERVER_VERSION = "0.3.0-beta"
 PROTOCOL_VERSION = "2024-11-05"
 
 FI_STAGE_BENCHMARKS: dict[str, dict[str, Any]] = {
@@ -1527,6 +1532,34 @@ def tool_exponential_audit(args: dict[str, Any]) -> dict[str, Any]:
     return run_exponential_audit(args, workspace=ws)
 
 
+def tool_voice_pitch_coach(args: dict[str, Any]) -> dict[str, Any]:
+    return analyze_voice_pitch(
+        transcript=str(args.get("transcript", "")),
+        duration_seconds=float(args.get("duration_seconds", 180.0)),
+        target_seconds=float(args.get("target_seconds", 180.0)),
+    )
+
+
+def tool_war_room_run(args: dict[str, Any]) -> dict[str, Any]:
+    ws = _resolve_workspace(args.get("workspace_path"))
+    return run_war_room(
+        workspace=ws,
+        question=str(args.get("question", "")),
+        write_memo=bool(args.get("write_memo", True)),
+    )
+
+
+def tool_i18n_locale_manage(args: dict[str, Any]) -> dict[str, Any]:
+    action = str(args.get("action", "list")).strip()
+    if action == "list":
+        langs = list_supported_languages()
+        return {"ok": True, "count": len(langs), "languages": langs}
+    if action == "set":
+        ws = _resolve_workspace(args.get("workspace_path"))
+        return set_workspace_locale(ws, str(args.get("locale", "en")))
+    raise ValueError("action must be 'list' or 'set'.")
+
+
 def tool_competitor_manage(args: dict[str, Any]) -> dict[str, Any]:
     """Track structured competitors in .startup/competitors.json and export battlecards."""
     ws = _resolve_workspace(args.get("workspace_path"))
@@ -2384,6 +2417,45 @@ TOOLS: list[dict[str, Any]] = [
             "required": ["action"],
         },
     },
+    {
+        "name": "voice_pitch_coach",
+        "description": "Analyze a spoken 3-minute FI pitch transcript for delivery pace (WPM), filler words, FI banned buzzwords, quantified proof, and clear Ask — returning a 0-100 clarity score and 5 tailored VC Lab / FI Partner grilling questions.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "transcript": {"type": "string"},
+                "duration_seconds": {"type": "number"},
+                "target_seconds": {"type": "number"},
+            },
+            "required": ["transcript"],
+        },
+    },
+    {
+        "name": "war_room_run",
+        "description": "Run an autonomous 4-Executive Startup War Room debate (Lean CTO, Fractional CFO, PMF Truth Auditor, Exponential Growth Strategist) on any strategic founder question using live .startup/*.json telemetry, writing docs/WAR_ROOM_DECISION_MEMO.md.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "question": {"type": "string"},
+                "workspace_path": {"type": "string"},
+                "write_memo": {"type": "boolean"},
+            },
+            "required": ["question"],
+        },
+    },
+    {
+        "name": "i18n_locale_manage",
+        "description": "List all 10 supported global founder languages (en, es, zh, hi, ar RTL, pt, fr, de, ja, ko) or set the startup workspace locale in .startup/state.json.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "action": {"type": "string", "enum": ["list", "set"]},
+                "locale": {"type": "string"},
+                "workspace_path": {"type": "string"},
+            },
+            "required": ["action"],
+        },
+    },
 ]
 
 TOOL_HANDLERS = {
@@ -2412,6 +2484,9 @@ TOOL_HANDLERS = {
     "board_review_run": tool_board_review_run,
     "competitor_manage": tool_competitor_manage,
     "exponential_audit": tool_exponential_audit,
+    "voice_pitch_coach": tool_voice_pitch_coach,
+    "war_room_run": tool_war_room_run,
+    "i18n_locale_manage": tool_i18n_locale_manage,
 }
 
 

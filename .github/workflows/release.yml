@@ -51,6 +51,7 @@ jobs:
             --name startup-antigravity \
             --paths launcher \
             --hidden-import studio_server \
+            --hidden-import x402_storefront \
             --add-data "dist/startup-antigravity-v${VERSION}.zip:." \
             launcher/app.py
 
@@ -99,6 +100,7 @@ jobs:
             --name "Startup Antigravity" \
             --paths launcher \
             --hidden-import studio_server \
+            --hidden-import x402_storefront \
             --icon dist/icons/startup-antigravity.icns \
             --add-data "dist/startup-antigravity-v${VERSION}.zip:." \
             launcher/app.py
@@ -148,6 +150,7 @@ jobs:
             --name "StartupAntigravity-v${VERSION}-win64" `
             --paths launcher `
             --hidden-import studio_server `
+            --hidden-import x402_storefront `
             --icon dist/icons/startup-antigravity.ico `
             --add-data "dist/startup-antigravity-v${VERSION}.zip;." `
             launcher/app.py
