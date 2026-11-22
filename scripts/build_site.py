@@ -130,8 +130,8 @@ def build_site(out_dir: Path) -> dict[str, str]:
           <span class="file">FI stage bar, MRR/runway KPIs, Sean Ellis 40% PMF SVG gauge, PACT pipeline &amp; iKPI bar</span>
         </a>
         <a class="dl-card" href="demo/pitch-deck/index.html">
-          <span class="os">2. Interactive 16:9 Pitch Deck</span>
-          <span class="file">Built-in 3-min FI pitch timer (T), speaker notes (S), slide grid (G) &amp; 1-click PDF export</span>
+          <span class="os">2. 13-Slide Interactive Pitch Deck</span>
+          <span class="file">Researched ClaimPulse Pre-Seed deck with inline SVG charts, 2×2 quadrant, 3-min timer (T) &amp; PDF export</span>
         </a>
         <a class="dl-card" href="demo/data-room/index.html">
           <span class="os">3. Investor Data Room Portal</span>

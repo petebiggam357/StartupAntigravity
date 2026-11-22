@@ -187,6 +187,8 @@ class TestNativeAppPackages(unittest.TestCase):
             )
             res = json.loads(proc.stdout)
             self.assertTrue(res["ok"])
+            self.assertEqual(res["slideCount"], 13)
+            self.assertTrue(res["deckLintPassed"], "Demo 13-slide pitch deck must pass FI linter cleanly")
             self.assertTrue(Path(res["dashboardHtml"]).exists())
             self.assertTrue(Path(res["pitchDeckHtml"]).exists())
             self.assertTrue(Path(res["landingHtml"]).exists())
@@ -229,7 +231,7 @@ class TestNativeAppPackages(unittest.TestCase):
                 base = f"http://127.0.0.1:{port}"
                 shell = urllib.request.urlopen(base + "/").read().decode("utf-8")
                 self.assertIn("STARTUP ANTIGRAVITY STUDIO", shell)
-                self.assertIn("SolarLedger", shell)
+                self.assertIn("ClaimPulse", shell)
 
                 health = json.loads(urllib.request.urlopen(base + "/api/health").read().decode("utf-8"))
                 self.assertTrue(health["ok"])
@@ -239,7 +241,8 @@ class TestNativeAppPackages(unittest.TestCase):
                 self.assertGreaterEqual(res["count"], 2)
 
                 dash = urllib.request.urlopen(base + "/workspace/dashboard/index.html").read().decode("utf-8")
-                self.assertIn("SolarLedger", dash)
+                self.assertIn("Startup <span>Command Center</span>", dash)
+                self.assertIn("ClaimPulse", dash)
 
                 # Path-traversal guard
                 with self.assertRaises(urllib.error.HTTPError) as ctx:
