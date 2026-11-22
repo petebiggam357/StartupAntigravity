@@ -2,7 +2,7 @@
 
 [![Cross-Platform CI](https://github.com/petebiggam357/StartupAntigravity/actions/workflows/ci.yml/badge.svg)](https://github.com/petebiggam357/StartupAntigravity/actions/workflows/ci.yml)
 [![Latest Release](https://img.shields.io/github/v/release/petebiggam357/StartupAntigravity?include_prereleases&color=10b981)](https://github.com/petebiggam357/StartupAntigravity/releases)
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-SolarLedger%20Studio-f59e0b)](https://petebiggam357.github.io/StartupAntigravity/)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Startup%20Command%20Center-f59e0b)](https://petebiggam357.github.io/StartupAntigravity/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-3b82f6.svg)](LICENSE)
 
 > **Install one Antigravity plugin, open an empty folder, and build a high-margin, ethically grounded, fundable company from scratch.**

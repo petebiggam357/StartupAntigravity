@@ -107,7 +107,7 @@ def build_site(out_dir: Path) -> dict[str, str]:
       </p>
       <div class="cta-row">
         <a id="smart-dl" class="btn primary" href="{REPO_URL}/releases/tag/{esc_tag}">Download {esc_tag}</a>
-        <a class="btn amber" href="demo/dashboard/index.html">Launch Live Demo Dashboard</a>
+        <a class="btn amber" href="demo/dashboard/index.html">Launch Startup Command Center Demo</a>
         <a class="btn" href="{REPO_URL}" target="_blank" rel="noopener">View on GitHub</a>
       </div>
     </section>
@@ -122,11 +122,11 @@ def build_site(out_dir: Path) -> dict[str, str]:
     </section>
 
     <section id="demo">
-      <h2>Explore the Live "SolarLedger" Demo (Zero Install)</h2>
+      <h2>Explore the Live Startup Command Center Demo (Zero Install)</h2>
       <p style="color:var(--muted);margin-top:0;">Every artifact below was compiled directly by Startup Antigravity's zero-dependency engines:</p>
       <div class="grid">
         <a class="dl-card" href="demo/dashboard/index.html">
-          <span class="os">1. Founder Command Center</span>
+          <span class="os">1. Startup Command Center</span>
           <span class="file">FI stage bar, MRR/runway KPIs, Sean Ellis 40% PMF SVG gauge, PACT pipeline &amp; iKPI bar</span>
         </a>
         <a class="dl-card" href="demo/pitch-deck/index.html">

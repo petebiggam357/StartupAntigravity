@@ -153,7 +153,7 @@ def render_dashboard_html(workspace: Path) -> str:
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>{company} — Startup Antigravity Command Center</title>
+  <title>Startup Command Center — {company}</title>
   <style>
     :root {{
       --bg: #070B14;
@@ -279,8 +279,8 @@ def render_dashboard_html(workspace: Path) -> str:
   <div class="wrap">
     <header class="top">
       <div>
-        <h1>{company} <span>Command Center</span></h1>
-        <p class="pitch">{pitch}</p>
+        <h1>Startup <span>Command Center</span></h1>
+        <p class="pitch"><strong>{company}</strong> — {pitch}</p>
       </div>
       <div class="top-actions">
         {deck_link}
