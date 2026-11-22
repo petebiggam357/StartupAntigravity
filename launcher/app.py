@@ -11,6 +11,7 @@ Works in three modes:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import platform
@@ -18,6 +19,7 @@ import shutil
 import stat
 import subprocess
 import sys
+import tempfile
 import threading
 import urllib.error
 import urllib.request
@@ -28,7 +30,7 @@ from typing import Any
 
 APP_NAME = "Startup Antigravity"
 PLUGIN_NAME = "startup-antigravity"
-APP_VERSION = "0.0.5-alpha"
+APP_VERSION = "0.1.0-beta"
 GITHUB_RELEASES_API = "https://api.github.com/repos/petebiggam357/StartupAntigravity/releases"
 
 STARTER_PROMPTS: list[tuple[str, str]] = [
@@ -374,6 +376,56 @@ def check_for_updates(plugin_dir: Path | None = None, timeout: float = 5.0) -> d
         }
 
 
+def verify_sha256_file(file_path: Path, expected_hex: str) -> bool:
+    """Verify SHA-256 hex digest of a downloaded release archive."""
+    h = hashlib.sha256()
+    with file_path.open("rb") as fh:
+        for chunk in iter(lambda: fh.read(65536), b""):
+            h.update(chunk)
+    return h.hexdigest().lower() == expected_hex.strip().lower()
+
+
+def self_update_plugin(plugin_dir: Path | None = None, timeout: float = 15.0) -> dict[str, Any]:
+    """Download latest public release ZIP, verify SHA-256 against SHA256SUMS.txt, and install."""
+    req = urllib.request.Request(
+        GITHUB_RELEASES_API,
+        headers={"Accept": "application/vnd.github+json", "User-Agent": f"{PLUGIN_NAME}/{APP_VERSION}"},
+    )
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        releases = json.loads(resp.read().decode("utf-8"))
+    if not releases:
+        raise RuntimeError("No GitHub Releases found.")
+
+    latest = releases[0]
+    assets = {a["name"]: a["browser_download_url"] for a in (latest.get("assets") or [])}
+    zip_name = next((n for n in assets if n.startswith(f"{PLUGIN_NAME}-v") and n.endswith(".zip")), None)
+    if not zip_name:
+        raise RuntimeError("Latest release does not contain a universal plugin .zip asset.")
+
+    with tempfile.TemporaryDirectory() as td:
+        tmp_zip = Path(td) / zip_name
+        urllib.request.urlretrieve(assets[zip_name], tmp_zip)
+
+        sha_verified = False
+        if "SHA256SUMS.txt" in assets:
+            sums_text = urllib.request.urlopen(assets["SHA256SUMS.txt"], timeout=timeout).read().decode("utf-8")
+            expected = None
+            for line in sums_text.splitlines():
+                parts = line.strip().split()
+                if len(parts) >= 2 and parts[-1].endswith(zip_name):
+                    expected = parts[0]
+                    break
+            if expected:
+                if not verify_sha256_file(tmp_zip, expected):
+                    raise RuntimeError(f"SHA-256 verification FAILED for {zip_name}! Aborting update.")
+                sha_verified = True
+
+        res = install_plugin(plugin_dir=plugin_dir, zip_path=tmp_zip)
+        res["sha256Verified"] = sha_verified
+        res["releaseTag"] = latest.get("tag_name")
+        return res
+
+
 def launch_local_studio(
     workspace: Path,
     plugin_dir: Path | None = None,
@@ -620,9 +672,16 @@ def launch_gui() -> int:
             if messagebox.askyesno(
                 APP_NAME,
                 f"Startup Antigravity v{res['latestVersion']} is available!\n"
-                f"Current version: v{res['currentVersion']}\n\nOpen the GitHub Releases page now?",
+                f"Current version: v{res['currentVersion']}\n\nDownload, SHA-256 verify, and install now?",
             ):
-                webbrowser.open(res["releaseUrl"])
+                try:
+                    up = self_update_plugin()
+                    log(f"[OK] Self-updated to v{up['installedVersion']} (sha256Verified={up['sha256Verified']})")
+                    refresh_status()
+                    messagebox.showinfo(APP_NAME, f"Updated to v{up['installedVersion']} cleanly!")
+                except Exception as exc:
+                    log(f"[ERROR] Self-update failed: {exc}")
+                    webbrowser.open(res["releaseUrl"])
         else:
             log(f"[OK] You are up to date (v{res['currentVersion']}).")
             messagebox.showinfo(APP_NAME, f"You are running the latest version (v{res['currentVersion']}).")
@@ -820,6 +879,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--port", type=int, default=4020, help="Port for --serve Web Studio (default: 4020)")
     parser.add_argument("--check-update", action="store_true", help="Check GitHub Releases for a newer version")
+    parser.add_argument("--update", action="store_true", help="Download, SHA-256 verify, and install latest GitHub Release")
     parser.add_argument(
         "--demo",
         nargs="?",
@@ -847,6 +907,10 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.check_update:
         print(json.dumps(check_for_updates(plugin_dir=plugin_dir), indent=2))
+        return 0
+
+    if args.update:
+        print(json.dumps(self_update_plugin(plugin_dir=plugin_dir), indent=2))
         return 0
 
     if args.serve is not None:

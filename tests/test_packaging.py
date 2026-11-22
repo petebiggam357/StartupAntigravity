@@ -245,9 +245,30 @@ class TestNativeAppPackages(unittest.TestCase):
                 with self.assertRaises(urllib.error.HTTPError) as ctx:
                     urllib.request.urlopen(base + "/workspace/../../etc/passwd")
                 self.assertEqual(ctx.exception.code, 403)
+
+                # Live metric update via POST /api/metrics
+                req_m = urllib.request.Request(
+                    base + "/api/metrics",
+                    data=json.dumps({"mrrUsd": 12500, "grossMarginPct": 86}).encode("utf-8"),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+                m_res = json.loads(urllib.request.urlopen(req_m).read().decode("utf-8"))
+                self.assertTrue(m_res["ok"])
+                self.assertEqual(m_res["state"]["metrics"]["mrrUsd"], 12500.0)
             finally:
                 server.shutdown()
                 server.server_close()
+
+            # Verify SHA-256 helper used by --update
+            from app import verify_sha256_file  # noqa: E402
+            import hashlib
+
+            sample_f = Path(tmp) / "sample.bin"
+            sample_f.write_bytes(b"startup-antigravity-beta")
+            good_hash = hashlib.sha256(b"startup-antigravity-beta").hexdigest()
+            self.assertTrue(verify_sha256_file(sample_f, good_hash))
+            self.assertFalse(verify_sha256_file(sample_f, "0" * 64))
 
             # Build public GitHub Pages site + live demo
             site_dir = Path(tmp) / "site_dist"

@@ -25,6 +25,7 @@ CONNECTOR_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "multi-ai-connectors" / "script
 DASHBOARD_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "unit-economics-and-profit-os" / "scripts"
 DATAROOM_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "vc-lab-fundraising-os" / "scripts"
 AI_X402_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "ai-native-and-x402-finance" / "scripts"
+BOARD_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "weekly-sprint-review" / "scripts"
 IKPI_CATALOG_PATH = Path(__file__).resolve().parent / "ikpi_catalog.json"
 FOUNDER_RESOURCES_PATH = Path(__file__).resolve().parent / "founder_resources.json"
 
@@ -35,12 +36,14 @@ for _p in (
     DASHBOARD_SCRIPTS_DIR,
     DATAROOM_SCRIPTS_DIR,
     AI_X402_SCRIPTS_DIR,
+    BOARD_SCRIPTS_DIR,
 ):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
 from ai_connector import detect_connectors, run_second_opinion, sync_ai_context  # noqa: E402
 from ai_x402_calc import run_ai_x402_calc  # noqa: E402
+from board_review import run_board_review  # noqa: E402
 from build_dashboard import build_dashboard  # noqa: E402
 from build_data_room import build_data_room  # noqa: E402
 from build_deck import (  # noqa: E402
@@ -53,7 +56,7 @@ from build_deck import (  # noqa: E402
 from build_landing_page import build_landing_page  # noqa: E402
 
 SERVER_NAME = "startup-antigravity-os"
-SERVER_VERSION = "0.0.5-alpha"
+SERVER_VERSION = "0.1.0-beta"
 PROTOCOL_VERSION = "2024-11-05"
 
 FI_STAGE_BENCHMARKS: dict[str, dict[str, Any]] = {
@@ -1509,6 +1512,77 @@ def tool_ai_x402_calc(args: dict[str, Any]) -> dict[str, Any]:
     return run_ai_x402_calc(args, workspace=ws)
 
 
+def tool_board_review_run(args: dict[str, Any]) -> dict[str, Any]:
+    ws = _resolve_workspace(args.get("workspace_path"))
+    write_memo = bool(args.get("write_memo", True))
+    return run_board_review(ws, write_memo=write_memo)
+
+
+def tool_competitor_manage(args: dict[str, Any]) -> dict[str, Any]:
+    """Track structured competitors in .startup/competitors.json and export battlecards."""
+    ws = _resolve_workspace(args.get("workspace_path"))
+    sdir = ws / ".startup"
+    sdir.mkdir(parents=True, exist_ok=True)
+    comp_file = sdir / "competitors.json"
+    items: list[dict[str, Any]] = []
+    if comp_file.exists():
+        try:
+            items = json.loads(comp_file.read_text(encoding="utf-8"))
+        except Exception:
+            items = []
+
+    action = str(args.get("action", "list")).strip()
+    if action == "list":
+        return {"count": len(items), "competitors": items}
+
+    if action == "add":
+        name = str(args.get("name", "")).strip()
+        if not name:
+            raise ValueError("'name' is required to add a competitor.")
+        entry = {
+            "id": f"COMP-{len(items) + 1:02d}",
+            "name": name,
+            "pricing": str(args.get("pricing", "Unknown")).strip(),
+            "icp": str(args.get("icp", "")).strip(),
+            "strengths": str(args.get("strengths", "")).strip(),
+            "weaknesses": str(args.get("weaknesses", "")).strip(),
+            "ourEdge": str(args.get("our_edge", "")).strip(),
+            "xScore": max(0, min(100, int(args.get("x_score", 40)))),
+            "yScore": max(0, min(100, int(args.get("y_score", 45)))),
+        }
+        items.append(entry)
+        comp_file.write_text(json.dumps(items, indent=2), encoding="utf-8")
+        return {"ok": True, "added": entry, "count": len(items)}
+
+    if action == "remove":
+        target_id = str(args.get("id", "")).strip()
+        before = len(items)
+        items = [c for c in items if c.get("id") != target_id and c.get("name") != target_id]
+        comp_file.write_text(json.dumps(items, indent=2), encoding="utf-8")
+        return {"ok": True, "removed": before - len(items), "count": len(items)}
+
+    if action == "export_battlecard":
+        docs_dir = ws / "docs"
+        docs_dir.mkdir(parents=True, exist_ok=True)
+        bc_file = docs_dir / "COMPETITOR_BATTLECARD.md"
+        lines = [
+            "# Competitive Landscape & FI Secret Sauce Battlecard",
+            "",
+            "| Competitor | Pricing | Target ICP | Weaknesses | Our Unfair Edge |",
+            "| :--- | :--- | :--- | :--- | :--- |",
+        ]
+        for c in items:
+            lines.append(
+                f"| **{c.get('name', '')}** | {c.get('pricing', '')} | {c.get('icp', '')} | {c.get('weaknesses', '')} | {c.get('ourEdge', '')} |"
+            )
+        if not items:
+            lines.append("| *(None logged yet)* | — | — | — | Run `competitor_manage(action='add')` |")
+        bc_file.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        return {"ok": True, "battlecardPath": str(bc_file), "count": len(items)}
+
+    raise ValueError(f"Unknown competitor_manage action '{action}'. Use 'list', 'add', 'remove', or 'export_battlecard'.")
+
+
 def tool_transcript_ingest(args: dict[str, Any]) -> dict[str, Any]:
     """Extract structured Mom Test discovery signals from raw call transcripts and optionally log into .startup/interviews.json."""
     text = str(args.get("transcript_text") or "").strip()
@@ -2240,6 +2314,38 @@ TOOLS: list[dict[str, Any]] = [
             "required": ["action"],
         },
     },
+    {
+        "name": "board_review_run",
+        "description": "Run a deterministic 3-lens Partner & Mentor Board Review (FI Mentor, VC Lab Partner, PMF Truth Auditor) across .startup/ telemetry & pitch-deck, scoring each 1-5 and writing docs/BOARD_REVIEW_MEMO.md with top 3 prioritized 7-day fixes.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "workspace_path": {"type": "string"},
+                "write_memo": {"type": "boolean"},
+            },
+        },
+    },
+    {
+        "name": "competitor_manage",
+        "description": "Track competitors, pricing, weaknesses, 2x2 coordinates, and your FI Secret Sauce in .startup/competitors.json and export docs/COMPETITOR_BATTLECARD.md.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "action": {"type": "string", "enum": ["list", "add", "remove", "export_battlecard"]},
+                "workspace_path": {"type": "string"},
+                "id": {"type": "string"},
+                "name": {"type": "string"},
+                "pricing": {"type": "string"},
+                "icp": {"type": "string"},
+                "strengths": {"type": "string"},
+                "weaknesses": {"type": "string"},
+                "our_edge": {"type": "string"},
+                "x_score": {"type": "integer"},
+                "y_score": {"type": "integer"},
+            },
+            "required": ["action"],
+        },
+    },
 ]
 
 TOOL_HANDLERS = {
@@ -2265,6 +2371,8 @@ TOOL_HANDLERS = {
     "transcript_ingest": tool_transcript_ingest,
     "data_room_build": tool_data_room_build,
     "ai_x402_calc": tool_ai_x402_calc,
+    "board_review_run": tool_board_review_run,
+    "competitor_manage": tool_competitor_manage,
 }
 
 

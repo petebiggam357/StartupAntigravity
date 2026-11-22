@@ -1,5 +1,10 @@
 # Startup Antigravity — Ethical Venture OS
 
+[![Cross-Platform CI](https://github.com/petebiggam357/StartupAntigravity/actions/workflows/ci.yml/badge.svg)](https://github.com/petebiggam357/StartupAntigravity/actions/workflows/ci.yml)
+[![Latest Release](https://img.shields.io/github/v/release/petebiggam357/StartupAntigravity?include_prereleases&color=10b981)](https://github.com/petebiggam357/StartupAntigravity/releases)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-SolarLedger%20Studio-f59e0b)](https://petebiggam357.github.io/StartupAntigravity/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-3b82f6.svg)](LICENSE)
+
 > **Install one Antigravity plugin, open an empty folder, and build a high-margin, ethically grounded, fundable company from scratch.**
 
 > **Independence & Attribution Notice:** **Startup Antigravity** is an **independent, community-built plugin** created by a **Previous Founder Institute Director, Current FI Mentor & Advisor, and Former Startup Grind Monterey Bay Chapter Director**. It is **not** an official product, endorsement, or release of Founder Institute (`fi.co`), VC Lab / Decile Group (`govclab.com`), Startup Grind (`startupgrind.com`), or Founders Guild (`foundersguild.org`). All referenced frameworks are independent educational adaptations inspired by those ecosystems.
@@ -58,16 +63,17 @@ Starting in **`v0.0.3-alpha`**, every GitHub Release includes **native compiled 
 
 | Platform | Package File | How to Run |
 | :--- | :--- | :--- |
-| **Linux (Portable)** | `StartupAntigravity-v0.0.5-alpha-x86_64.AppImage` | `chmod +x StartupAntigravity-*.AppImage && ./StartupAntigravity-*.AppImage` (or double-click in Files) |
-| **Ubuntu / Pop!_OS / Debian** | `startup-antigravity_0.0.5-alpha_all.deb` | `sudo apt install ./startup-antigravity_0.0.5-alpha_all.deb` — adds **Startup Antigravity** to your COSMIC / GNOME app launcher + `startup-antigravity` CLI |
-| **macOS (Apple Silicon / Intel)** | `StartupAntigravity-v0.0.5-alpha-macos-arm64.dmg` | Open `.dmg`, drag **Startup Antigravity.app** to **Applications**, and launch |
-| **Windows 10 & 11** | `StartupAntigravity-v0.0.5-alpha-win64.exe` | Double-click `.exe` (installs plugin offline & creates `python3.exe` shim if missing) |
-| **Universal Plugin Archive** | `startup-antigravity-v0.0.5-alpha.zip` | Unzip directly into your Antigravity plugins folder |
+| **Linux (Portable)** | `StartupAntigravity-v0.1.0-beta-x86_64.AppImage` | `chmod +x StartupAntigravity-*.AppImage && ./StartupAntigravity-*.AppImage` (or double-click in Files) |
+| **Ubuntu / Pop!_OS / Debian** | `startup-antigravity_0.1.0-beta_all.deb` | `sudo apt install ./startup-antigravity_0.1.0-beta_all.deb` — adds **Startup Antigravity** to your COSMIC / GNOME app launcher + `startup-antigravity` CLI |
+| **macOS (Apple Silicon / Intel)** | `StartupAntigravity-v0.1.0-beta-macos-arm64.dmg` | Open `.dmg`, drag **Startup Antigravity.app** to **Applications**, and launch |
+| **Windows 10 & 11** | `StartupAntigravity-v0.1.0-beta-win64.exe` | Double-click `.exe` (installs plugin offline & creates `python3.exe` shim if missing) |
+| **Universal Plugin Archive** | `startup-antigravity-v0.1.0-beta.zip` | Unzip directly into your Antigravity plugins folder |
 | **Integrity Checksums** | `SHA256SUMS.txt` | Verify with `sha256sum -c SHA256SUMS.txt` |
 
 **CLI mode** is also built into every native package:
 ```bash
 startup-antigravity --install          # Install or update plugin offline
+startup-antigravity --update           # Download, SHA-256 verify & install latest GitHub Release
 startup-antigravity --serve .          # Launch unified local Web Studio (http://127.0.0.1:4020)
 startup-antigravity --demo             # Generate & open the SolarLedger sample startup
 startup-antigravity --prompts          # List 1-click starter prompts for Antigravity

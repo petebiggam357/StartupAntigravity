@@ -15,6 +15,8 @@ from __future__ import annotations
 import html
 import json
 import mimetypes
+import subprocess
+import sys
 import threading
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -182,13 +184,22 @@ def render_studio_shell(workspace: Path) -> str:
 """
 
 
+def _rebuild_views(ws: Path, p_root: Path) -> None:
+    dash_script = p_root / "skills" / "unit-economics-and-profit-os" / "scripts" / "build_dashboard.py"
+    if dash_script.exists():
+        subprocess.run([sys.executable, str(dash_script), "--workspace", str(ws)], check=False, capture_output=True)
+    dr_script = p_root / "skills" / "vc-lab-fundraising-os" / "scripts" / "build_data_room.py"
+    if dr_script.exists() and (ws / "data-room" / "index.html").exists():
+        subprocess.run([sys.executable, str(dr_script), "--workspace", str(ws)], check=False, capture_output=True)
+
+
 def create_studio_server(
     workspace: Path,
     plugin_root: Path | None = None,
     host: str = "127.0.0.1",
     port: int = 4020,
 ) -> ThreadingHTTPServer:
-    ws = workspace.resolve()
+    ctx = {"workspace": workspace.resolve()}
     p_root = (plugin_root or ROOT).resolve()
     resources = _load_resources(p_root)
 
@@ -204,7 +215,67 @@ def create_studio_server(
             self.end_headers()
             self.wfile.write(data)
 
+        def _read_json_body(self) -> dict[str, Any]:
+            length = int(self.headers.get("Content-Length", "0"))
+            raw = self.rfile.read(length).decode("utf-8") if length > 0 else "{}"
+            return json.loads(raw)
+
+        def do_POST(self) -> None:  # noqa: N802
+            parsed = urlparse(self.path)
+            path = unquote(parsed.path)
+            try:
+                body = self._read_json_body()
+            except Exception as exc:
+                self._send_bytes(json.dumps({"ok": False, "error": str(exc)}).encode("utf-8"), "application/json", 400)
+                return
+
+            if path == "/api/workspace":
+                new_path = Path(str(body.get("workspace", ""))).expanduser().resolve()
+                if not new_path.exists() or not new_path.is_dir():
+                    self._send_bytes(
+                        json.dumps({"ok": False, "error": f"Directory not found: {new_path}"}).encode("utf-8"),
+                        "application/json",
+                        400,
+                    )
+                    return
+                ctx["workspace"] = new_path
+                self._send_bytes(
+                    json.dumps({"ok": True, "workspace": str(new_path)}).encode("utf-8"),
+                    "application/json",
+                )
+                return
+
+            if path == "/api/metrics":
+                ws = ctx["workspace"]
+                sdir = ws / ".startup"
+                sdir.mkdir(parents=True, exist_ok=True)
+                state_file = sdir / "state.json"
+                state: dict[str, Any] = {}
+                if state_file.exists():
+                    try:
+                        state = json.loads(state_file.read_text(encoding="utf-8"))
+                    except Exception:
+                        state = {}
+                if "stage" in body and body["stage"] in ("idea", "validation", "mvp", "pre_seed_traction", "seed_scale"):
+                    state["stage"] = body["stage"]
+                metrics = state.setdefault("metrics", {})
+                for key in ("mrrUsd", "grossMarginPct", "cashOnHandUsd", "monthlyBurnUsd"):
+                    if key in body and body[key] is not None:
+                        metrics[key] = float(body[key])
+                if "ikpiCurrent" in body and body["ikpiCurrent"] is not None:
+                    state.setdefault("ikpi", {})["current"] = float(body["ikpiCurrent"])
+                state_file.write_text(json.dumps(state, indent=2), encoding="utf-8")
+                _rebuild_views(ws, p_root)
+                self._send_bytes(
+                    json.dumps({"ok": True, "state": state}).encode("utf-8"),
+                    "application/json",
+                )
+                return
+
+            self._send_bytes(b"Not Found", "text/plain", 404)
+
         def do_GET(self) -> None:  # noqa: N802
+            ws = ctx["workspace"]
             parsed = urlparse(self.path)
             path = unquote(parsed.path)
 

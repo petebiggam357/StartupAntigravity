@@ -4,6 +4,17 @@ All notable changes to **Startup Antigravity — Ethical Venture OS** are docume
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.1.0-beta] - 2026-11-21
+
+First Public Beta milestone of **Startup Antigravity — Ethical Venture OS** (**19 skills, 8 advisory subagents, 24 zero-dependency local MCP tools, 48 curated resources, 4 hardened safety hooks, unified local Web Studio, and native Linux/macOS/Windows desktop packages**).
+
+### Added in 0.1.0-beta
+- **23rd MCP Tool — Partner & Mentor Board Review Simulator (`board_review_run`)**: Deterministically audits `.startup/*.json` & `pitch-deck/` across 3 lenses (**FI Mentor**, **VC Lab Partner**, **PMF Truth Auditor**), scores each `1.0–5.0`, and writes `docs/BOARD_REVIEW_MEMO.md` with your top 3 prioritized 7-day fixes.
+- **24th MCP Tool — Competitor Battlecard Engine (`competitor_manage`)**: Tracks structured competitors (pricing, ICP, strengths, weaknesses, 2x2 coordinates, FI Secret Sauce) in `.startup/competitors.json` and exports `docs/COMPETITOR_BATTLECARD.md`.
+- **Live Metric Editor & Workspace Switcher in Local Web Studio (`launcher/studio_server.py`)**: Added `POST /api/metrics` (live updates `.startup/state.json` and instantly rebuilds Dashboard & Data Room) and `POST /api/workspace` (switch between multiple startup workspaces cleanly for mentors & serial founders).
+- **1-Click SHA-256 Verified Self-Updater (`launcher/app.py --update`)**: Downloads the latest public GitHub Release `.zip`, verifies its SHA-256 digest against `SHA256SUMS.txt`, and installs in place.
+- **Public Live Showcase & Badges**: Enabled live GitHub Pages (`https://petebiggam357.github.io/StartupAntigravity/`) with the interactive **SolarLedger** demo and added CI / Release / Live Demo badges to `README.md`.
+
 ## [0.0.5-alpha] - 2026-11-21
 
 Public-launch & developer-experience milestone for **Startup Antigravity — Ethical Venture OS**, adding a unified local Web Studio, public GitHub Pages showcase + live interactive demo, runnable `x402` pay-per-call starter scaffolding, 1-click launcher update checks, and open-source community docs.

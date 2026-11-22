@@ -40,9 +40,11 @@ class TestMCPServer(unittest.TestCase):
         self.assertEqual(len(resps), 2)
         self.assertEqual(resps[0]["result"]["serverInfo"]["name"], "startup-antigravity-os")
         tool_names = {t["name"] for t in resps[1]["result"]["tools"]}
-        self.assertEqual(len(tool_names), 22)
+        self.assertEqual(len(tool_names), 24)
         self.assertIn("data_room_build", tool_names)
         self.assertIn("ai_x402_calc", tool_names)
+        self.assertIn("board_review_run", tool_names)
+        self.assertIn("competitor_manage", tool_names)
         self.assertIn("financial_calc", tool_names)
         self.assertIn("fi_pitch_lint", tool_names)
         self.assertIn("pact_pipeline_manage", tool_names)
@@ -865,6 +867,62 @@ class TestMCPServer(unittest.TestCase):
             self.assertTrue((Path(td) / "x402-starter" / "server.py").exists())
             self.assertTrue((Path(td) / "x402-starter" / ".env.example").exists())
             self.assertTrue((Path(td) / "x402-starter" / "test_agent_client.py").exists())
+
+    def test_board_review_and_competitor_manage(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            calls = [
+                {
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "competitor_manage",
+                        "arguments": {
+                            "action": "add",
+                            "workspace_path": td,
+                            "name": "LegacySolarERP",
+                            "pricing": "$3,500/mo",
+                            "weaknesses": "No inverter telemetry matching",
+                            "our_edge": "Direct telemetry-to-QuickBooks sync",
+                        },
+                    },
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 2,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "competitor_manage",
+                        "arguments": {"action": "export_battlecard", "workspace_path": td},
+                    },
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 3,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "board_review_run",
+                        "arguments": {"workspace_path": td, "write_memo": True},
+                    },
+                },
+            ]
+            resps = self._run_rpc(calls)
+            c_add = json.loads(resps[0]["result"]["content"][0]["text"])
+            self.assertEqual(c_add["count"], 1)
+
+            c_bc = json.loads(resps[1]["result"]["content"][0]["text"])
+            bc_path = Path(c_bc["battlecardPath"])
+            self.assertTrue(bc_path.exists())
+            self.assertIn("LegacySolarERP", bc_path.read_text(encoding="utf-8"))
+
+            br = json.loads(resps[2]["result"]["content"][0]["text"])
+            self.assertTrue(br["ok"])
+            self.assertIn("fiMentor", br["scores"])
+            self.assertIn("vcLabPartner", br["scores"])
+            self.assertIn("pmfTruthAuditor", br["scores"])
+            memo = Path(br["memoPath"])
+            self.assertTrue(memo.exists())
+            self.assertIn("Board Review Memo", memo.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":
