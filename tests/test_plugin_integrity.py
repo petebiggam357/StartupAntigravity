@@ -85,7 +85,7 @@ class TestPluginIntegrity(unittest.TestCase):
         self.assertIn("matcher", post[0])
         self.assertIn("hooks", post[0])
 
-    def test_all_nineteen_skills(self) -> None:
+    def test_all_twenty_skills(self) -> None:
         expected_skills = {
             "startup-kickstart",
             "pitch-deck-builder",
@@ -106,6 +106,7 @@ class TestPluginIntegrity(unittest.TestCase):
             "vc-lab-fundraising-os",
             "weekly-sprint-review",
             "ai-native-and-x402-finance",
+            "exponential-thinking-and-singularity",
         }
         skills_dir = ROOT / "skills"
         found = {p.name for p in skills_dir.iterdir() if p.is_dir()}
@@ -126,7 +127,7 @@ class TestPluginIntegrity(unittest.TestCase):
 
     def test_founder_resources_catalog_integrity(self) -> None:
         catalog = json.loads((ROOT / "mcp_server" / "founder_resources.json").read_text(encoding="utf-8"))
-        self.assertGreaterEqual(len(catalog), 48)
+        self.assertGreaterEqual(len(catalog), 54)
         categories = {item["category"] for item in catalog}
         for req_cat in (
             "accelerators",
@@ -138,6 +139,7 @@ class TestPluginIntegrity(unittest.TestCase):
             "finance-accounting",
             "ai-native",
             "blockchain-x402",
+            "exponential-singularity",
         ):
             self.assertIn(req_cat, categories)
         all_tags = {t for item in catalog for t in item.get("tags", [])}
@@ -145,8 +147,10 @@ class TestPluginIntegrity(unittest.TestCase):
         self.assertIn("founders-guild", all_tags)
         self.assertIn("x402", all_tags)
         self.assertIn("erc-3643", all_tags)
+        self.assertIn("singularity-university", all_tags)
+        self.assertIn("6ds", all_tags)
 
-    def test_all_eight_subagents(self) -> None:
+    def test_all_nine_subagents(self) -> None:
         expected_agents = {
             "fi-mentor-pitch-critic",
             "vc-lab-partner-skeptic",
@@ -156,6 +160,7 @@ class TestPluginIntegrity(unittest.TestCase):
             "lean-cto-margin-architect",
             "ethical-growth-strategist",
             "ai-x402-finance-architect",
+            "exponential-moonshot-strategist",
         }
         agents_dir = ROOT / "agents"
         found = {p.stem for p in agents_dir.glob("*.md")}

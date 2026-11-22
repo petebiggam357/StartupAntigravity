@@ -30,7 +30,7 @@ from typing import Any
 
 APP_NAME = "Startup Antigravity"
 PLUGIN_NAME = "startup-antigravity"
-APP_VERSION = "0.1.0-beta"
+APP_VERSION = "0.2.0-beta"
 GITHUB_RELEASES_API = "https://api.github.com/repos/petebiggam357/StartupAntigravity/releases"
 
 STARTER_PROMPTS: list[tuple[str, str]] = [
@@ -57,6 +57,10 @@ STARTER_PROMPTS: list[tuple[str, str]] = [
     (
         "Build Investor Data Room & Diligence Pack",
         "Compile our investor-ready Data Room (data-room/index.html) and run the VC Lab / FI diligence readiness checklist.",
+    ),
+    (
+        "Exponential Thinking & 6Ds ExO Blueprint",
+        "Score our Exponential Organization (MTP + SCALE + IDEAS) quotient, map our industry on the 6Ds of Exponentials, and model 36-month Accelerating Returns.",
     ),
 ]
 

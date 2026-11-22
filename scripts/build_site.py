@@ -113,10 +113,10 @@ def build_site(out_dir: Path) -> dict[str, str]:
     </section>
 
     <section class="stats">
-      <div class="stat"><strong>19</strong><span>Startup Skills</span></div>
-      <div class="stat"><strong>8</strong><span>Advisory Subagents</span></div>
-      <div class="stat"><strong>24</strong><span>Local MCP Tools</span></div>
-      <div class="stat"><strong>48+</strong><span>Curated Resources</span></div>
+      <div class="stat"><strong>20</strong><span>Startup Skills</span></div>
+      <div class="stat"><strong>9</strong><span>Advisory Subagents</span></div>
+      <div class="stat"><strong>25</strong><span>Local MCP Tools</span></div>
+      <div class="stat"><strong>54+</strong><span>Curated Resources</span></div>
       <div class="stat"><strong>4</strong><span>Safety Hooks</span></div>
       <div class="stat"><strong>$0</strong><span>Dependencies</span></div>
     </section>

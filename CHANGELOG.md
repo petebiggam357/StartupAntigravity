@@ -4,6 +4,17 @@ All notable changes to **Startup Antigravity — Ethical Venture OS** are docume
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.2.0-beta] - 2026-11-22
+
+Singularity & Exponential Thinking expansion for **Startup Antigravity — Ethical Venture OS** (**20 skills, 9 advisory subagents, 25 zero-dependency local MCP tools, 54 curated resources, 4 hardened safety hooks**, plus the researched **13-slide ClaimPulse Pre-Seed Demo Deck** scoring **100/100** on the FI linter and **Startup Command Center** branding).
+
+### Added in 0.2.0-beta
+- **20th Skill — `exponential-thinking-and-singularity`**: Adapts Singularity University (`su.org`) frameworks, Peter Diamandis's **6Ds of Exponentials**, Salim Ismail's **Exponential Organizations (ExO: MTP + SCALE + IDEAS)**, and Ray Kurzweil's **Law of Accelerating Returns** for revenue-first founders under Mensarius Oath ethics.
+- **9th Advisory Subagent — `exponential-moonshot-strategist`**: Helps founders turn linear ideas into 10x ExO blueprints, sharpen *Why Now* inflection timing, and spot converging exponential curves without skipping customer proof.
+- **25th MCP Tool — `exponential_audit`**: Deterministic engine supporting `exo_scorecard` (scores MTP + SCALE + IDEAS `0–100` and writes `docs/EXPONENTIAL_BLUEPRINT.md`), `six_ds_map` (maps industry on the 6Ds curve), and `accelerating_returns_sim` (models 12/24/36-month gross-margin expansion as AI inference costs fall).
+- **6 New Curated Resources (`48 -> 54` in `mcp_server/founder_resources.json`)**: New **`exponential-singularity`** category covering Singularity University, 6Ds of Exponentials, Exponential Organizations (OpenExO), Ray Kurzweil's Law of Accelerating Returns, Abundance & Bold, and Converging Technologies Matrix.
+- **Startup Command Center & Researched 13-Slide Demo Deck (`ClaimPulse`)**: Renamed dashboard branding to **Startup Command Center** and upgraded the live demo to a researched 13-slide Pre-Seed Traction deck with inline SVG line/bar charts, 2×2 competitive quadrant, and 100/100 FI linter readiness.
+
 ## [0.1.0-beta] - 2026-11-21
 
 First Public Beta milestone of **Startup Antigravity — Ethical Venture OS** (**19 skills, 8 advisory subagents, 24 zero-dependency local MCP tools, 48 curated resources, 4 hardened safety hooks, unified local Web Studio, and native Linux/macOS/Windows desktop packages**).

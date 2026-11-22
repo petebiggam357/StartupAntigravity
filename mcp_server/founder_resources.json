@@ -574,5 +574,77 @@
     "summary": "Clear ethical and practical decision rubric separating real programmable-finance utility (x402 micropayments, USDC settlement, compliant RWAs) from hype-driven vaporware coins and unregistered-security traps (Howey Test awareness).",
     "keyTakeaway": "Never launch a speculative token to substitute for product-market fit—run ai_x402_calc(action='tokenization_readiness') and always consult qualified securities counsel.",
     "tags": ["ethics", "howey-test", "regulation", "mensarius", "tokenomics", "blockchain", "x402"]
+  },
+  {
+    "id": "RES-049",
+    "title": "Singularity University (su.org) — Exponential Leadership & Global Grand Challenges",
+    "category": "exponential-singularity",
+    "stages": ["idea", "validation", "mvp", "pre_seed_traction", "seed_scale"],
+    "format": "accelerator",
+    "source": "Singularity Group / Singularity University",
+    "url": "https://www.su.org/",
+    "summary": "Global leadership and innovation community founded by Peter Diamandis and Ray Kurzweil focused on leveraging exponential technologies (AI, robotics, biotech, energy, computing) to solve humanity's Global Grand Challenges.",
+    "keyTakeaway": "Pair an ambitious Global Grand Challenge vision with Startup Antigravity's 14-day Paid-Pilot PACT discipline so your moonshot generates real cash from Week 2.",
+    "tags": ["singularity", "singularity-university", "exponential", "moonshots", "grand-challenges", "su"]
+  },
+  {
+    "id": "RES-050",
+    "title": "The 6Ds of Exponentials — Spotting the Deceptive-to-Disruptive Knee of the Curve",
+    "category": "exponential-singularity",
+    "stages": ["idea", "validation", "mvp", "pre_seed_traction"],
+    "format": "framework",
+    "source": "Peter Diamandis / Abundance Digital",
+    "url": "https://www.diamandis.com/",
+    "summary": "Six-stage roadmap of exponential disruption (Digitized, Deceptive, Disruptive, Demonetized, Dematerialized, Democratized) explaining why incumbents miss early doublings and how startups time their 'Why Now' wedge.",
+    "keyTakeaway": "Build during the Deceptive phase while incumbents laugh—run exponential_audit(action='six_ds_map') to sharpen your investor Why-Now slide.",
+    "tags": ["6ds", "exponential", "why-now", "disruption", "diamandis", "singularity"]
+  },
+  {
+    "id": "RES-051",
+    "title": "Exponential Organizations (ExO) — MTP, SCALE & IDEAS Architecture",
+    "category": "exponential-singularity",
+    "stages": ["mvp", "pre_seed_traction", "seed_scale"],
+    "format": "book",
+    "source": "Salim Ismail, Michael Malone & Yuri van Geest (OpenExO)",
+    "url": "https://www.openexo.com/",
+    "summary": "Operational blueprint for organizations whose impact or output is at least 10x larger than linear peers by uniting a Massive Transformative Purpose (MTP) with SCALE (Staff on Demand, Community, Algorithms, Leveraged Assets, Engagement) and IDEAS.",
+    "keyTakeaway": "Run exponential_audit(action='exo_scorecard', write_doc=true) to score your ExO Quotient (0-100) and scale revenue 10x without linear headcount.",
+    "tags": ["exo", "mtp", "scale", "ideas", "salim-ismail", "exponential", "singularity"]
+  },
+  {
+    "id": "RES-052",
+    "title": "The Law of Accelerating Returns & The Singularity Is Nearer",
+    "category": "exponential-singularity",
+    "stages": ["idea", "validation", "mvp", "pre_seed_traction", "seed_scale"],
+    "format": "book",
+    "source": "Ray Kurzweil",
+    "url": "https://www.kurzweilai.net/",
+    "summary": "Foundational thesis showing that information technologies improve exponentially in price-performance—explaining why AI capabilities and inference costs collapse by orders of magnitude every 18–36 months.",
+    "keyTakeaway": "Architect for where AI price-performance will be in 24 months using exponential_audit(action='accelerating_returns_sim') while keeping margins >=75% today.",
+    "tags": ["singularity", "kurzweil", "accelerating-returns", "ai-economics", "exponential", "futurism"]
+  },
+  {
+    "id": "RES-053",
+    "title": "Abundance & Bold — 10x Moonshot Thinking & Crowd-Leveraged Innovation",
+    "category": "exponential-singularity",
+    "stages": ["idea", "validation", "pre_seed_traction", "seed_scale"],
+    "format": "book",
+    "source": "Peter Diamandis & Steven Kotler",
+    "url": "https://www.abundancethebook.com/",
+    "summary": "Playbook for reframing scarcity into abundance using 10x moonshots, incentive prizes, crowd communities, and exponential tech—showing why going 10x bigger is often easier to recruit and fund than going 10% better.",
+    "keyTakeaway": "10% better competes head-on with incumbents; 10x better creates a new category—just validate your first wedge with real paying customers first.",
+    "tags": ["abundance", "bold", "moonshots", "10x", "diamandis", "kotler", "exponential"]
+  },
+  {
+    "id": "RES-054",
+    "title": "Converging Exponential Technologies Matrix (AI + x402 + Energy + Biotech + Robotics)",
+    "category": "exponential-singularity",
+    "stages": ["idea", "validation", "mvp", "pre_seed_traction", "seed_scale"],
+    "format": "playbook",
+    "source": "Startup Antigravity Exponential Strategy Playbook",
+    "url": "https://www.su.org/resources",
+    "summary": "Strategic lens for spotting breakout startup categories at the intersection of two or more exponential curves (e.g., Autonomous AI Agents + x402 USDC Settlement, AI + Healthcare RCM, AI + Distributed Clean Energy).",
+    "keyTakeaway": "The biggest moats emerge where two exponential curves converge—combine vertical domain insight with AI automation and programmable finance rails.",
+    "tags": ["convergence", "singularity", "exponential", "ai", "x402", "biotech", "energy", "robotics"]
   }
 ]

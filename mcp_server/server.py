@@ -26,6 +26,7 @@ DASHBOARD_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "unit-economics-and-profit-os" 
 DATAROOM_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "vc-lab-fundraising-os" / "scripts"
 AI_X402_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "ai-native-and-x402-finance" / "scripts"
 BOARD_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "weekly-sprint-review" / "scripts"
+EXO_SCRIPTS_DIR = PLUGIN_ROOT / "skills" / "exponential-thinking-and-singularity" / "scripts"
 IKPI_CATALOG_PATH = Path(__file__).resolve().parent / "ikpi_catalog.json"
 FOUNDER_RESOURCES_PATH = Path(__file__).resolve().parent / "founder_resources.json"
 
@@ -37,6 +38,7 @@ for _p in (
     DATAROOM_SCRIPTS_DIR,
     AI_X402_SCRIPTS_DIR,
     BOARD_SCRIPTS_DIR,
+    EXO_SCRIPTS_DIR,
 ):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
@@ -54,9 +56,10 @@ from build_deck import (  # noqa: E402
     lint_one_sentence_pitch,
 )
 from build_landing_page import build_landing_page  # noqa: E402
+from exponential_audit import run_exponential_audit  # noqa: E402
 
 SERVER_NAME = "startup-antigravity-os"
-SERVER_VERSION = "0.1.0-beta"
+SERVER_VERSION = "0.2.0-beta"
 PROTOCOL_VERSION = "2024-11-05"
 
 FI_STAGE_BENCHMARKS: dict[str, dict[str, Any]] = {
@@ -1518,6 +1521,12 @@ def tool_board_review_run(args: dict[str, Any]) -> dict[str, Any]:
     return run_board_review(ws, write_memo=write_memo)
 
 
+def tool_exponential_audit(args: dict[str, Any]) -> dict[str, Any]:
+    needs_ws = args.get("workspace_path") or args.get("write_doc")
+    ws = _resolve_workspace(args.get("workspace_path")) if needs_ws else None
+    return run_exponential_audit(args, workspace=ws)
+
+
 def tool_competitor_manage(args: dict[str, Any]) -> dict[str, Any]:
     """Track structured competitors in .startup/competitors.json and export battlecards."""
     ws = _resolve_workspace(args.get("workspace_path"))
@@ -2346,6 +2355,35 @@ TOOLS: list[dict[str, Any]] = [
             "required": ["action"],
         },
     },
+    {
+        "name": "exponential_audit",
+        "description": "Deterministic Singularity & Exponential Thinking engine: (1) 'exo_scorecard' scores Massive Transformative Purpose (MTP) + SCALE + IDEAS attributes (0-100 ExO Quotient) and optionally writes docs/EXPONENTIAL_BLUEPRINT.md; (2) 'six_ds_map' maps your industry on the 6Ds of Exponentials for Why-Now pitch strategy; (3) 'accelerating_returns_sim' models 12/24/36-month gross-margin expansion under Ray Kurzweil's Law of Accelerating Returns.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string",
+                    "enum": ["exo_scorecard", "six_ds_map", "accelerating_returns_sim"],
+                },
+                "workspace_path": {"type": "string"},
+                "company_name": {"type": "string"},
+                "mtp": {"type": "string"},
+                "scale": {"type": "object"},
+                "ideas": {"type": "object"},
+                "write_doc": {"type": "boolean"},
+                "industry": {"type": "string"},
+                "current_stage": {
+                    "type": "string",
+                    "enum": ["digitized", "deceptive", "disruptive", "demonetized", "dematerialized", "democratized"],
+                },
+                "monthly_arpu_usd": {"type": "number"},
+                "current_monthly_ai_cogs_usd": {"type": "number"},
+                "other_monthly_cogs_usd": {"type": "number"},
+                "annual_price_perf_multiplier": {"type": "number"},
+            },
+            "required": ["action"],
+        },
+    },
 ]
 
 TOOL_HANDLERS = {
@@ -2373,6 +2411,7 @@ TOOL_HANDLERS = {
     "ai_x402_calc": tool_ai_x402_calc,
     "board_review_run": tool_board_review_run,
     "competitor_manage": tool_competitor_manage,
+    "exponential_audit": tool_exponential_audit,
 }
 
 

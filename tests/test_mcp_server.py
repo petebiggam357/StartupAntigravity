@@ -40,11 +40,12 @@ class TestMCPServer(unittest.TestCase):
         self.assertEqual(len(resps), 2)
         self.assertEqual(resps[0]["result"]["serverInfo"]["name"], "startup-antigravity-os")
         tool_names = {t["name"] for t in resps[1]["result"]["tools"]}
-        self.assertEqual(len(tool_names), 24)
+        self.assertEqual(len(tool_names), 25)
         self.assertIn("data_room_build", tool_names)
         self.assertIn("ai_x402_calc", tool_names)
         self.assertIn("board_review_run", tool_names)
         self.assertIn("competitor_manage", tool_names)
+        self.assertIn("exponential_audit", tool_names)
         self.assertIn("financial_calc", tool_names)
         self.assertIn("fi_pitch_lint", tool_names)
         self.assertIn("pact_pipeline_manage", tool_names)
@@ -923,6 +924,65 @@ class TestMCPServer(unittest.TestCase):
             memo = Path(br["memoPath"])
             self.assertTrue(memo.exists())
             self.assertIn("Board Review Memo", memo.read_text(encoding="utf-8"))
+
+    def test_exponential_audit_all_three_actions(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            calls = [
+                {
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "exponential_audit",
+                        "arguments": {
+                            "action": "exo_scorecard",
+                            "workspace_path": td,
+                            "company_name": "ClaimPulse",
+                            "mtp": "Eliminate preventable healthcare billing waste for independent family clinics",
+                            "scale": {"algorithms": 9, "community_crowd": 8, "leveraged_assets": 9, "staff_on_demand": 7, "engagement": 8},
+                            "ideas": {"interfaces": 9, "dashboards": 9, "experimentation": 8, "autonomy": 8, "social_tech": 7},
+                            "write_doc": True,
+                        },
+                    },
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 2,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "exponential_audit",
+                        "arguments": {"action": "six_ds_map", "industry": "Dental RCM", "current_stage": "deceptive"},
+                    },
+                },
+                {
+                    "jsonrpc": "2.0",
+                    "id": 3,
+                    "method": "tools/call",
+                    "params": {
+                        "name": "exponential_audit",
+                        "arguments": {
+                            "action": "accelerating_returns_sim",
+                            "monthly_arpu_usd": 100,
+                            "current_monthly_ai_cogs_usd": 35,
+                            "annual_price_perf_multiplier": 2.5,
+                        },
+                    },
+                },
+            ]
+            resps = self._run_rpc(calls)
+            exo = json.loads(resps[0]["result"]["content"][0]["text"])
+            self.assertEqual(exo["tier"], "EXPONENTIAL_READY")
+            self.assertGreaterEqual(exo["exoQuotient"], 75.0)
+            bp = Path(exo["blueprintPath"])
+            self.assertTrue(bp.exists())
+            self.assertIn("Exponential Organization (ExO) Blueprint", bp.read_text(encoding="utf-8"))
+
+            six = json.loads(resps[1]["result"]["content"][0]["text"])
+            self.assertEqual(six["nextInflectionD"], "disruptive")
+
+            acc = json.loads(resps[2]["result"]["content"][0]["text"])
+            self.assertEqual(len(acc["projections"]), 4)
+            self.assertTrue(acc["projections"][2]["meets75PctFloor"])
 
 
 if __name__ == "__main__":
