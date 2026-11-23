@@ -62,9 +62,10 @@ from exponential_audit import run_exponential_audit  # noqa: E402
 from i18n import list_supported_languages, set_workspace_locale  # noqa: E402
 from voice_pitch_coach import analyze_voice_pitch  # noqa: E402
 from war_room import run_war_room  # noqa: E402
+from weekly_rhythm import build_publish_bundle, run_weekly_rhythm  # noqa: E402
 
 SERVER_NAME = "startup-antigravity-os"
-SERVER_VERSION = "0.3.1-beta"
+SERVER_VERSION = "0.4.0-beta"
 PROTOCOL_VERSION = "2024-11-05"
 
 FI_STAGE_BENCHMARKS: dict[str, dict[str, Any]] = {
@@ -1560,6 +1561,16 @@ def tool_i18n_locale_manage(args: dict[str, Any]) -> dict[str, Any]:
     raise ValueError("action must be 'list' or 'set'.")
 
 
+def tool_weekly_rhythm_run(args: dict[str, Any]) -> dict[str, Any]:
+    ws = _resolve_workspace(args.get("workspace_path"))
+    return run_weekly_rhythm(ws, action=str(args.get("action", "monday_focus")))
+
+
+def tool_publish_bundle_build(args: dict[str, Any]) -> dict[str, Any]:
+    ws = _resolve_workspace(args.get("workspace_path"))
+    return build_publish_bundle(ws, include_data_room=bool(args.get("include_data_room", False)))
+
+
 def tool_competitor_manage(args: dict[str, Any]) -> dict[str, Any]:
     """Track structured competitors in .startup/competitors.json and export battlecards."""
     ws = _resolve_workspace(args.get("workspace_path"))
@@ -2456,6 +2467,29 @@ TOOLS: list[dict[str, Any]] = [
             "required": ["action"],
         },
     },
+    {
+        "name": "weekly_rhythm_run",
+        "description": "Automated Weekly Founder Rhythm (pairs cleanly with /schedule): 'monday_focus' picks the Top 3 Revenue/PMF needle-movers into docs/MONDAY_FOCUS.md; 'friday_digest' compiles a crisp <150-word Founder Friday Update into docs/FRIDAY_DIGEST.md.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "action": {"type": "string", "enum": ["monday_focus", "friday_digest"]},
+                "workspace_path": {"type": "string"},
+            },
+            "required": ["action"],
+        },
+    },
+    {
+        "name": "publish_bundle_build",
+        "description": "Assemble a zero-config static deploy bundle (`publish/`) combining landing/index.html, pitch-deck/index.html (/deck/), optional data-room/, netlify.toml, Cloudflare _headers, and DEPLOY_NOW.md.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "workspace_path": {"type": "string"},
+                "include_data_room": {"type": "boolean"},
+            },
+        },
+    },
 ]
 
 TOOL_HANDLERS = {
@@ -2487,6 +2521,8 @@ TOOL_HANDLERS = {
     "voice_pitch_coach": tool_voice_pitch_coach,
     "war_room_run": tool_war_room_run,
     "i18n_locale_manage": tool_i18n_locale_manage,
+    "weekly_rhythm_run": tool_weekly_rhythm_run,
+    "publish_bundle_build": tool_publish_bundle_build,
 }
 
 

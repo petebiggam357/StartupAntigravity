@@ -22,6 +22,7 @@ EXCLUDE_DIRS = {
     "dashboard",
     "data-room",
     "x402-starter",
+    "publish",
     "tmp",
     ".venv",
     "venv",

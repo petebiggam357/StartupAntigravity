@@ -30,7 +30,7 @@ from typing import Any
 
 APP_NAME = "Startup Antigravity"
 PLUGIN_NAME = "startup-antigravity"
-APP_VERSION = "0.3.1-beta"
+APP_VERSION = "0.4.0-beta"
 GITHUB_RELEASES_API = "https://api.github.com/repos/petebiggam357/StartupAntigravity/releases"
 
 STARTER_PROMPTS: list[tuple[str, str]] = [
@@ -942,6 +942,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--check-update", action="store_true", help="Check GitHub Releases for a newer version")
     parser.add_argument("--update", action="store_true", help="Download, SHA-256 verify, and install latest GitHub Release")
     parser.add_argument("--doctor", action="store_true", help="Run preflight diagnostics (Python, manifest, live MCP handshake, CLIs)")
+    parser.add_argument("--portfolio", metavar="DIR", help="Build Mentor & Accelerator Cohort Command Center for all startup workspaces in DIR")
     parser.add_argument(
         "--demo",
         nargs="?",
@@ -979,6 +980,16 @@ def main(argv: list[str] | None = None) -> int:
         doc = run_doctor(plugin_dir=plugin_dir)
         print(json.dumps(doc, indent=2))
         return 0 if doc["ok"] else 1
+
+    if args.portfolio:
+        here = Path(__file__).resolve().parent
+        if str(here) not in sys.path:
+            sys.path.insert(0, str(here))
+        from portfolio import build_portfolio  # noqa: E402
+
+        res = build_portfolio(Path(args.portfolio), open_browser=not args.no_browser)
+        print(json.dumps(res, indent=2))
+        return 0
 
     if args.serve is not None:
         launch_local_studio(

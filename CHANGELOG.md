@@ -4,6 +4,16 @@ All notable changes to **Startup Antigravity — Ethical Venture OS** are docume
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.0-beta] - 2026-11-22
+
+Zero-JSON Founder Studio, Mentor Cohort Portfolio Mode, Automated Weekly Rhythm, and 1-Click Publish Live milestone for **Startup Antigravity — Ethical Venture OS** (**20 skills · 9 subagents · 30 zero-dependency local MCP tools · 54+ resources · 10 global languages · 4 safety hooks**).
+
+### Added in 0.4.0-beta
+- **90-Second Zero-JSON Onboarding Wizard & Visual Pitch Deck Slide Editor (`launcher/studio_server.py`)**: Added **Setup Wizard** (`POST /api/onboard`) to generate a complete company OS from 5 plain-English inputs, plus a **Slide Editor** tab (`GET/POST /api/deck`) to edit headlines, speaker notes, and themes (`obsidian-gold`, `emerald-slate`, `paper-light`) with live FI linter scoring and 1-click recompilation.
+- **Mentor & Accelerator Cohort Portfolio Mode (`launcher/portfolio.py` + `startup-antigravity --portfolio <DIR>`)**: Scans any folder of multiple startup workspaces, runs the 3-lens Board Review on each company, and compiles a single-file **Cohort Command Center (`cohort-portfolio.html`)** ranking every startup by FI stage, MRR, margin, PMF %, Board Score, ExO Quotient, and #1 bottleneck.
+- **Automated Weekly Founder Rhythm (`weekly_rhythm_run` — 29th MCP Tool)**: Generates `docs/MONDAY_FOCUS.md` (Top 3 Revenue/PMF needle-movers) and `docs/FRIDAY_DIGEST.md` (`<150-word` mentor/investor update) — built to pair cleanly with `/schedule`.
+- **1-Click Static Publish Live Packager (`publish_bundle_build` — 30th MCP Tool + Web Studio Button)**: Compiles a zero-config `publish/` bundle combining `landing/index.html`, `/deck/index.html`, optional `/data-room/`, `netlify.toml`, Cloudflare `_headers`, and `DEPLOY_NOW.md` for Netlify Drop, Cloudflare Pages, or GitHub Pages.
+
 ## [0.3.1-beta] - 2026-11-22
 
 Pre-launch UX polish & documentation sync release for **Startup Antigravity — Ethical Venture OS**.

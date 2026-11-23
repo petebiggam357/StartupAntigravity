@@ -122,7 +122,7 @@ def build_site(out_dir: Path) -> dict[str, str]:
     <section class="stats">
       <div class="stat"><strong>20</strong><span>Startup Skills</span></div>
       <div class="stat"><strong>9</strong><span>Advisory Subagents</span></div>
-      <div class="stat"><strong>28</strong><span>Local MCP Tools</span></div>
+      <div class="stat"><strong>30</strong><span>Local MCP Tools</span></div>
       <div class="stat"><strong>54+</strong><span>Curated Resources</span></div>
       <div class="stat"><strong>10</strong><span>Global Languages</span></div>
       <div class="stat"><strong>$0</strong><span>Dependencies</span></div>

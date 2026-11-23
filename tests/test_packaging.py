@@ -313,9 +313,36 @@ class TestNativeAppPackages(unittest.TestCase):
                 m_res = json.loads(urllib.request.urlopen(req_m).read().decode("utf-8"))
                 self.assertTrue(m_res["ok"])
                 self.assertEqual(m_res["state"]["metrics"]["mrrUsd"], 12500.0)
+
+                # Visual Slide Editor GET /api/deck + 1-Click Publish Live POST /api/publish
+                dk = json.loads(urllib.request.urlopen(base + "/api/deck").read().decode("utf-8"))
+                self.assertTrue(dk["ok"])
+                self.assertEqual(len(dk["deck"]["slides"]), 13)
+
+                req_pub = urllib.request.Request(
+                    base + "/api/publish",
+                    data=json.dumps({"include_data_room": False}).encode("utf-8"),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+                pub_res = json.loads(urllib.request.urlopen(req_pub).read().decode("utf-8"))
+                self.assertTrue(pub_res["ok"])
+                self.assertTrue((Path(pub_res["publishDir"]) / "deck" / "index.html").exists())
             finally:
                 server.shutdown()
                 server.server_close()
+
+            # Test Mentor & Accelerator Cohort Portfolio Mode (--portfolio)
+            port_proc = subprocess.run(
+                [sys.executable, str(ROOT / "launcher" / "app.py"), "--portfolio", str(Path(tmp)), "--no-browser"],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            port_res = json.loads(port_proc.stdout)
+            self.assertTrue(port_res["ok"])
+            self.assertGreaterEqual(port_res["startupCount"], 1)
+            self.assertTrue(Path(port_res["htmlPath"]).exists())
 
             # Verify SHA-256 helper used by --update
             from app import verify_sha256_file  # noqa: E402

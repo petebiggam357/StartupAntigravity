@@ -63,17 +63,18 @@ Starting in **`v0.0.3-alpha`**, every GitHub Release includes **native compiled 
 
 | Platform | Package File | How to Run |
 | :--- | :--- | :--- |
-| **Linux (Portable)** | `StartupAntigravity-v0.3.1-beta-x86_64.AppImage` | `chmod +x StartupAntigravity-*.AppImage && ./StartupAntigravity-*.AppImage` (or double-click in Files) |
-| **Ubuntu / Pop!_OS / Debian** | `startup-antigravity_0.3.1-beta_all.deb` | `sudo apt install ./startup-antigravity_0.3.1-beta_all.deb` — adds **Startup Antigravity** to your COSMIC / GNOME app launcher + `startup-antigravity` CLI |
-| **macOS (Apple Silicon / Intel)** | `StartupAntigravity-v0.3.1-beta-macos-arm64.dmg` | Open `.dmg`, drag **Startup Antigravity.app** to **Applications**, and launch |
-| **Windows 10 & 11** | `StartupAntigravity-v0.3.1-beta-win64.exe` | Double-click `.exe` (installs plugin offline & creates `python3.exe` shim if missing) |
-| **Universal Plugin Archive** | `startup-antigravity-v0.3.1-beta.zip` | Unzip directly into your Antigravity plugins folder |
+| **Linux (Portable)** | `StartupAntigravity-v0.4.0-beta-x86_64.AppImage` | `chmod +x StartupAntigravity-*.AppImage && ./StartupAntigravity-*.AppImage` (or double-click in Files) |
+| **Ubuntu / Pop!_OS / Debian** | `startup-antigravity_0.4.0-beta_all.deb` | `sudo apt install ./startup-antigravity_0.4.0-beta_all.deb` — adds **Startup Antigravity** to your COSMIC / GNOME app launcher + `startup-antigravity` CLI |
+| **macOS (Apple Silicon / Intel)** | `StartupAntigravity-v0.4.0-beta-macos-arm64.dmg` | Open `.dmg`, drag **Startup Antigravity.app** to **Applications**, and launch |
+| **Windows 10 & 11** | `StartupAntigravity-v0.4.0-beta-win64.exe` | Double-click `.exe` (installs plugin offline & creates `python3.exe` shim if missing) |
+| **Universal Plugin Archive** | `startup-antigravity-v0.4.0-beta.zip` | Unzip directly into your Antigravity plugins folder |
 | **Integrity Checksums** | `SHA256SUMS.txt` | Verify with `sha256sum -c SHA256SUMS.txt` |
 
 **CLI mode** is also built into every native package:
 ```bash
 startup-antigravity --install          # Install or update plugin offline
-startup-antigravity --doctor           # Run 3-second preflight check (Python, manifest, 25 MCP tools & CLIs)
+startup-antigravity --doctor           # Run 3-second preflight check (Python, manifest, 30 MCP tools & CLIs)
+startup-antigravity --portfolio ~/cohorts # Build Mentor & Accelerator Cohort Command Center across startups
 startup-antigravity --update           # Download, SHA-256 verify & install latest GitHub Release
 startup-antigravity --serve .          # Launch unified local Web Studio (http://127.0.0.1:4020)
 startup-antigravity --demo             # Generate & open the ClaimPulse sample startup

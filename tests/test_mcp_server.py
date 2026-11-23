@@ -40,7 +40,7 @@ class TestMCPServer(unittest.TestCase):
         self.assertEqual(len(resps), 2)
         self.assertEqual(resps[0]["result"]["serverInfo"]["name"], "startup-antigravity-os")
         tool_names = {t["name"] for t in resps[1]["result"]["tools"]}
-        self.assertEqual(len(tool_names), 28)
+        self.assertEqual(len(tool_names), 30)
         self.assertIn("data_room_build", tool_names)
         self.assertIn("ai_x402_calc", tool_names)
         self.assertIn("board_review_run", tool_names)
@@ -49,6 +49,8 @@ class TestMCPServer(unittest.TestCase):
         self.assertIn("voice_pitch_coach", tool_names)
         self.assertIn("war_room_run", tool_names)
         self.assertIn("i18n_locale_manage", tool_names)
+        self.assertIn("weekly_rhythm_run", tool_names)
+        self.assertIn("publish_bundle_build", tool_names)
         self.assertIn("financial_calc", tool_names)
         self.assertIn("fi_pitch_lint", tool_names)
         self.assertIn("pact_pipeline_manage", tool_names)
@@ -1048,6 +1050,28 @@ class TestMCPServer(unittest.TestCase):
             ar_set = json.loads(resps[3]["result"]["content"][0]["text"])
             self.assertTrue(ar_set["rtl"])
             self.assertEqual(ar_set["locale"], "ar")
+
+    def test_v040_weekly_rhythm_and_publish_bundle(self) -> None:
+        with tempfile.TemporaryDirectory() as td:
+            calls = [
+                {"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "weekly_rhythm_run", "arguments": {"action": "monday_focus", "workspace_path": td}}},
+                {"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "weekly_rhythm_run", "arguments": {"action": "friday_digest", "workspace_path": td}}},
+                {"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "publish_bundle_build", "arguments": {"workspace_path": td}}},
+            ]
+            resps = self._run_rpc(calls)
+            mon = json.loads(resps[0]["result"]["content"][0]["text"])
+            self.assertTrue(mon["ok"])
+            self.assertTrue(Path(mon["path"]).exists())
+
+            fri = json.loads(resps[1]["result"]["content"][0]["text"])
+            self.assertTrue(fri["ok"])
+            self.assertTrue(Path(fri["path"]).exists())
+
+            pub = json.loads(resps[2]["result"]["content"][0]["text"])
+            self.assertTrue(pub["ok"])
+            self.assertTrue((Path(pub["publishDir"]) / "netlify.toml").exists())
+            self.assertTrue((Path(pub["publishDir"]) / "_headers").exists())
+            self.assertTrue((Path(pub["publishDir"]) / "DEPLOY_NOW.md").exists())
 
 
 if __name__ == "__main__":

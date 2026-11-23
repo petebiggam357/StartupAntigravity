@@ -131,7 +131,10 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
       <button class="tab" data-tab="x402" data-i18n="nav.x402" onclick="selectTab('x402')">x402 Storefront</button>
       <button class="tab" data-tab="board" data-i18n="nav.board" onclick="selectTab('board')">Board Review</button>
       <button class="tab" data-tab="resources" data-i18n="nav.resources" onclick="selectTab('resources')">54+ Resources</button>
+      <button class="tab" data-tab="editor" onclick="selectTab('editor')" style="border-color:#a855f7;color:#d8b4fe;">Slide Editor</button>
+      <button class="tab" onclick="openOnboardModal()" style="border-color:#10b981;color:#6ee7b7;">Setup Wizard</button>
       <button class="tab" data-i18n="nav.editMetrics" onclick="openMetricsModal()" style="border-color:#f59e0b;color:#fbbf24;">Edit Metrics</button>
+      <button class="tab" onclick="publishLive()" style="border-color:#38bdf8;color:#7dd3fc;">Publish Live</button>
       <select id="studio-lang" class="lang" aria-label="Language" onchange="applyStudioLang(this.value)">{lang_opts}</select>
     </nav>
   </header>
@@ -190,7 +193,34 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
       <input id="res-search" class="search-bar" placeholder="Search 54+ founder resources (singularity, 6ds, x402, pmf, mom test, startup grind, ai)..." oninput="renderResources()" />
       <div id="res-grid" class="grid"></div>
     </div>
+
+    <div id="editor-panel" class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+        <h2 style="margin:0;">Visual Pitch Deck Slide Editor (Zero JSON)</h2>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <select id="ed-theme" class="lang"><option value="obsidian-gold">Obsidian Gold</option><option value="emerald-slate">Emerald Slate</option><option value="paper-light">Paper Light</option></select>
+          <span id="ed-score" class="pill">FI Score: —</span>
+          <button class="tab active" onclick="saveDeckEdits()">Save &amp; Recompile Deck</button>
+        </div>
+      </div>
+      <div id="ed-slides" style="display:grid;gap:12px;"></div>
+    </div>
   </main>
+
+  <div id="onboard-modal" class="modal-bg" onclick="if(event.target===this)closeOnboardModal()">
+    <div class="modal">
+      <h3 style="margin:0;">90-Second Zero-JSON Startup Wizard</h3>
+      <label>Company Name<input id="ob-name" placeholder="e.g. ClaimPulse" /></label>
+      <label>Defined Offering<input id="ob-offer" placeholder="e.g. automated pre-submission claim scrubbing software" /></label>
+      <label>Specific Target Audience<input id="ob-aud" placeholder="e.g. independent multi-chair dental practices" /></label>
+      <label>Specific Problem Solved<input id="ob-prob" placeholder="e.g. cut insurance claim denials below 3%" /></label>
+      <label>Secret Sauce<input id="ob-sauce" placeholder="e.g. payer-specific CDT rule checks" /></label>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px;">
+        <button class="tab" onclick="closeOnboardModal()">Cancel</button>
+        <button class="tab active" onclick="submitOnboard()">Generate My Startup OS</button>
+      </div>
+    </div>
+  </div>
 
   <div id="metrics-modal" class="modal-bg" onclick="if(event.target===this)closeMetricsModal()">
     <div class="modal">
@@ -265,7 +295,56 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
         if (tab === 'resources' && !allResources.length) loadResources();
         if (tab === 'board') loadBoardReview();
         if (tab === 'x402') loadX402();
+        if (tab === 'editor') loadDeckEditor();
       }}
+    }}
+
+    let currentDeckObj = null;
+    async function loadDeckEditor() {{
+      const r = await fetch('/api/deck');
+      const d = await r.json();
+      if (!d.ok) {{ document.getElementById('ed-slides').innerHTML = '<p>No pitch-deck/deck.json yet — click Setup Wizard first.</p>'; return; }}
+      currentDeckObj = d.deck;
+      document.getElementById('ed-score').textContent = 'FI Score: ' + d.lint.readinessScore + '/100';
+      if (currentDeckObj.theme && currentDeckObj.theme.preset) document.getElementById('ed-theme').value = currentDeckObj.theme.preset;
+      document.getElementById('ed-slides').innerHTML = (currentDeckObj.slides || []).map((s, i) => `
+        <div class="card">
+          <div class="cat">Slide ${{i+1}} • ${{s.type || 'bullets'}} • ${{s.kicker || ''}}</div>
+          <input class="box" style="margin:0;" value="${{(s.headline || '').replace(/"/g, '&quot;')}}" onchange="currentDeckObj.slides[${{i}}].headline = this.value" />
+          <textarea class="box" rows="2" style="margin:0;" placeholder="Speaker notes..." onchange="currentDeckObj.slides[${{i}}].notes = this.value">${{s.notes || ''}}</textarea>
+        </div>
+      `).join('');
+    }}
+
+    async function saveDeckEdits() {{
+      if (!currentDeckObj) return;
+      currentDeckObj.theme = currentDeckObj.theme || {{}};
+      currentDeckObj.theme.preset = document.getElementById('ed-theme').value;
+      const r = await fetch('/api/deck', {{ method:'POST', headers:{{'Content-Type':'application/json'}}, body:JSON.stringify({{deck: currentDeckObj}}) }});
+      const d = await r.json();
+      if (d.ok) {{ document.getElementById('ed-score').textContent = 'FI Score: ' + d.lint.readinessScore + '/100'; alert('Pitch deck recompiled!'); }}
+    }}
+
+    function openOnboardModal() {{ document.getElementById('onboard-modal').style.display = 'flex'; }}
+    function closeOnboardModal() {{ document.getElementById('onboard-modal').style.display = 'none'; }}
+
+    async function submitOnboard() {{
+      const payload = {{
+        companyName: document.getElementById('ob-name').value.trim(),
+        offering: document.getElementById('ob-offer').value.trim(),
+        audience: document.getElementById('ob-aud').value.trim(),
+        problem: document.getElementById('ob-prob').value.trim(),
+        secretSauce: document.getElementById('ob-sauce').value.trim(),
+      }};
+      const r = await fetch('/api/onboard', {{ method:'POST', headers:{{'Content-Type':'application/json'}}, body:JSON.stringify(payload) }});
+      const d = await r.json();
+      if (d.ok) {{ closeOnboardModal(); location.reload(); }} else {{ alert(d.error || 'Onboarding failed'); }}
+    }}
+
+    async function publishLive() {{
+      const r = await fetch('/api/publish', {{ method:'POST', headers:{{'Content-Type':'application/json'}}, body:JSON.stringify({{include_data_room: false}}) }});
+      const d = await r.json();
+      if (d.ok) alert('Static deploy bundle ready in:\\n' + d.publishDir + '\\n\\nDrag-and-drop publish/ onto Netlify Drop or run: npx wrangler pages deploy publish');
     }}
 
     function toggleVoiceMic() {{
@@ -430,8 +509,10 @@ def create_studio_server(
             sys.path.insert(0, str(sub))
 
     from board_review import run_board_review  # noqa: E402
+    from build_deck import build_deck, lint_deck  # noqa: E402
     from voice_pitch_coach import analyze_voice_pitch  # noqa: E402
     from war_room import run_war_room  # noqa: E402
+    from weekly_rhythm import build_publish_bundle  # noqa: E402
     from x402_storefront import build_402_challenge, load_x402_ledger, record_x402_payment  # noqa: E402
 
     class StudioHandler(BaseHTTPRequestHandler):
@@ -529,6 +610,58 @@ def create_studio_server(
                 self._send_bytes(json.dumps(rec).encode("utf-8"), "application/json", status=200)
                 return
 
+            if path == "/api/publish":
+                res = build_publish_bundle(ws, include_data_room=bool(body.get("include_data_room", False)))
+                self._send_bytes(json.dumps(res).encode("utf-8"), "application/json")
+                return
+
+            if path == "/api/deck":
+                deck_obj = body.get("deck")
+                if not isinstance(deck_obj, dict):
+                    self._send_bytes(json.dumps({"ok": False, "error": "'deck' object required"}).encode("utf-8"), "application/json", 400)
+                    return
+                pdir = ws / "pitch-deck"
+                pdir.mkdir(parents=True, exist_ok=True)
+                deck_file = pdir / "deck.json"
+                deck_file.write_text(json.dumps(deck_obj, indent=2), encoding="utf-8")
+                lint_res = lint_deck(deck_obj)
+                build_deck(deck_file)
+                self._send_bytes(json.dumps({"ok": True, "lint": lint_res}).encode("utf-8"), "application/json")
+                return
+
+            if path == "/api/onboard":
+                cname = str(body.get("companyName", "")).strip()
+                offer = str(body.get("offering", "")).strip()
+                aud = str(body.get("audience", "")).strip()
+                prob = str(body.get("problem", "")).strip()
+                sauce = str(body.get("secretSauce", "")).strip()
+                if not cname or not offer or not aud or not prob:
+                    self._send_bytes(json.dumps({"ok": False, "error": "Company, offering, audience, and problem are required."}).encode("utf-8"), "application/json", 400)
+                    return
+                fi_pitch = f"My company, {cname}, is developing {offer} to help {aud} {prob} with {sauce or 'our proprietary workflow'}."
+                sdir = ws / ".startup"
+                sdir.mkdir(parents=True, exist_ok=True)
+                state = _load_json(sdir / "state.json", {})
+                state.update({"companyName": cname, "stage": state.get("stage", "validation"), "fiOneSentencePitch": fi_pitch, "oneSentencePitch": fi_pitch, "secretSauce": sauce})
+                (sdir / "state.json").write_text(json.dumps(state, indent=2), encoding="utf-8")
+                # Seed starter deck if missing
+                deck_file = ws / "pitch-deck" / "deck.json"
+                if not deck_file.exists():
+                    tpl_path = p_root / "skills" / "pitch-deck-builder" / "resources" / "deck.problem-solution.json"
+                    if tpl_path.exists():
+                        deck_data = json.loads(tpl_path.read_text(encoding="utf-8"))
+                        deck_data.setdefault("meta", {})["companyName"] = cname
+                        deck_data["meta"]["fiOneSentencePitch"] = fi_pitch
+                        if deck_data.get("slides"):
+                            deck_data["slides"][0]["headline"] = f"{cname}: {prob[:55]}"
+                            deck_data["slides"][0]["subheadline"] = fi_pitch
+                        deck_file.parent.mkdir(parents=True, exist_ok=True)
+                        deck_file.write_text(json.dumps(deck_data, indent=2), encoding="utf-8")
+                        build_deck(deck_file)
+                _rebuild_views(ws, p_root)
+                self._send_bytes(json.dumps({"ok": True, "companyName": cname, "fiOneSentencePitch": fi_pitch}).encode("utf-8"), "application/json")
+                return
+
             self._send_bytes(b"Not Found", "text/plain", 404)
 
         def do_GET(self) -> None:  # noqa: N802
@@ -551,6 +684,15 @@ def create_studio_server(
 
             if path == "/api/x402/ledger":
                 self._send_bytes(json.dumps(load_x402_ledger(ws)).encode("utf-8"), "application/json")
+                return
+
+            if path == "/api/deck":
+                deck_file = ws / "pitch-deck" / "deck.json"
+                if not deck_file.exists():
+                    self._send_bytes(json.dumps({"ok": False, "error": "No pitch-deck/deck.json found"}).encode("utf-8"), "application/json", 404)
+                    return
+                deck_obj = json.loads(deck_file.read_text(encoding="utf-8"))
+                self._send_bytes(json.dumps({"ok": True, "deck": deck_obj, "lint": lint_deck(deck_obj)}).encode("utf-8"), "application/json")
                 return
 
             if path == "/api/resources":
