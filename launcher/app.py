@@ -30,7 +30,7 @@ from typing import Any
 
 APP_NAME = "Startup Antigravity"
 PLUGIN_NAME = "startup-antigravity"
-APP_VERSION = "0.4.0-beta"
+APP_VERSION = "0.4.1-beta"
 GITHUB_RELEASES_API = "https://api.github.com/repos/petebiggam357/StartupAntigravity/releases"
 
 STARTER_PROMPTS: list[tuple[str, str]] = [

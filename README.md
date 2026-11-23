@@ -34,7 +34,7 @@
   - [2. Companion Design, Cloud & Ops Stack (Canva, Figma, Replit, QuickBooks & Zapier)](#2-companion-design-cloud--ops-stack-canva-figma-replit-quickbooks--zapier)
   - [3. Twenty Progressive-Disclosure Startup Skills](#3-twenty-progressive-disclosure-startup-skills)
   - [4. Nine Founding Advisory Subagents](#4-nine-founding-advisory-subagents)
-  - [5. Twenty-Eight-Tool Local MCP Server (`startup-antigravity-os`)](#5-twenty-eight-tool-local-mcp-server-startup-antigravity-os)
+  - [5. Thirty-Tool Local MCP Server (`startup-antigravity-os`)](#5-thirty-tool-local-mcp-server-startup-antigravity-os)
   - [6. Optional BYO-AI Addon Connectors (Claude, OpenAI, xAI Grok, Gemini CLI & Ollama)](#6-optional-byo-ai-addon-connectors-claude-openai-xai-grok-gemini-cli--ollama)
   - [7. Always-On Guardrails & Four Lifecycle Hooks](#7-always-on-guardrails--four-lifecycle-hooks)
 - [Creator's Recommended Founder Stack (Personal Endorsements)](#creators-recommended-founder-stack-personal-endorsements)
@@ -63,11 +63,11 @@ Starting in **`v0.0.3-alpha`**, every GitHub Release includes **native compiled 
 
 | Platform | Package File | How to Run |
 | :--- | :--- | :--- |
-| **Linux (Portable)** | `StartupAntigravity-v0.4.0-beta-x86_64.AppImage` | `chmod +x StartupAntigravity-*.AppImage && ./StartupAntigravity-*.AppImage` (or double-click in Files) |
-| **Ubuntu / Pop!_OS / Debian** | `startup-antigravity_0.4.0-beta_all.deb` | `sudo apt install ./startup-antigravity_0.4.0-beta_all.deb` — adds **Startup Antigravity** to your COSMIC / GNOME app launcher + `startup-antigravity` CLI |
-| **macOS (Apple Silicon / Intel)** | `StartupAntigravity-v0.4.0-beta-macos-arm64.dmg` | Open `.dmg`, drag **Startup Antigravity.app** to **Applications**, and launch |
-| **Windows 10 & 11** | `StartupAntigravity-v0.4.0-beta-win64.exe` | Double-click `.exe` (installs plugin offline & creates `python3.exe` shim if missing) |
-| **Universal Plugin Archive** | `startup-antigravity-v0.4.0-beta.zip` | Unzip directly into your Antigravity plugins folder |
+| **Linux (Portable)** | `StartupAntigravity-v0.4.1-beta-x86_64.AppImage` | `chmod +x StartupAntigravity-*.AppImage && ./StartupAntigravity-*.AppImage` (or double-click in Files) |
+| **Ubuntu / Pop!_OS / Debian** | `startup-antigravity_0.4.1-beta_all.deb` | `sudo apt install ./startup-antigravity_0.4.1-beta_all.deb` — adds **Startup Antigravity** to your COSMIC / GNOME app launcher + `startup-antigravity` CLI |
+| **macOS (Apple Silicon / Intel)** | `StartupAntigravity-v0.4.1-beta-macos-arm64.dmg` | Open `.dmg`, drag **Startup Antigravity.app** to **Applications**, and launch |
+| **Windows 10 & 11** | `StartupAntigravity-v0.4.1-beta-win64.exe` | Double-click `.exe` (installs plugin offline & creates `python3.exe` shim if missing) |
+| **Universal Plugin Archive** | `startup-antigravity-v0.4.1-beta.zip` | Unzip directly into your Antigravity plugins folder |
 | **Integrity Checksums** | `SHA256SUMS.txt` | Verify with `sha256sum -c SHA256SUMS.txt` |
 
 **CLI mode** is also built into every native package:
@@ -308,8 +308,8 @@ python3 -m unittest discover -s tests -v
 Expected result: **`Ran 31 tests ... OK`** (under 1 second).
 
 ### 2. Verify Inside Antigravity
-1. **Customizations > Plugins:** You should see **Startup Antigravity — Ethical Venture OS (`v0.3.1-beta`)** enabled with **20 skills**, **9 agents**, **1 rule file**, **4 hooks**, **10 languages**, and **1 MCP server**.
-2. **Additional Options (`...`) > MCP Servers:** Confirm `startup-antigravity_startup-antigravity-os` shows as connected with **28 tools**.
+1. **Customizations > Plugins:** You should see **Startup Antigravity — Ethical Venture OS (`v0.4.1-beta`)** enabled with **20 skills**, **9 agents**, **1 rule file**, **4 hooks**, **10 languages**, and **1 MCP server**.
+2. **Additional Options (`...`) > MCP Servers:** Confirm `startup-antigravity_startup-antigravity-os` shows as connected with **30 tools**.
 3. **Antigravity CLI (optional):**
    ```bash
    agy plugin enable startup-antigravity
@@ -442,7 +442,7 @@ Startup Antigravity works 100% offline with zero dependencies, and pairs seamles
 - **`ai-x402-finance-architect`** — AI-native margin/evals & programmable-finance architect for `x402` USDC agent monetization, stablecoin rails, and ethical tokenization reviews.
 - **`exponential-moonshot-strategist`** — Exponential Thinking, 6Ds inflection timing, ExO (MTP + SCALE + IDEAS), and Law of Accelerating Returns strategist anchored in first-dollar revenue.
 
-### 5. Twenty-Eight-Tool Local MCP Server (`startup-antigravity-os`)
+### 5. Thirty-Tool Local MCP Server (`startup-antigravity-os`)
 Runs locally via Python 3 stdio (zero external API keys):
 1. `startup_get_state` — Live telemetry, FI stage benchmark, interviews, PACT totals, and deck score
 2. `startup_update_stage` — Persist stage, FI pitch, MRR, burn, cash, gross margin, and iKPI
@@ -472,6 +472,12 @@ Runs locally via Python 3 stdio (zero external API keys):
 26. `voice_pitch_coach` — Analyze spoken 3-minute FI pitches for WPM pace, filler words, banned buzzwords, quantified proof, and 5 tailored VC Lab / FI Partner grilling questions
 27. `war_room_run` — Convene 4 executive lenses (**Lean CTO**, **Fractional CFO**, **PMF Truth Auditor**, **Exponential Growth Strategist**) on any strategic dilemma and write `docs/WAR_ROOM_DECISION_MEMO.md`
 28. `i18n_locale_manage` — List all 10 global founder languages (`en`, `es`, `zh`, `hi`, `ar` RTL, `pt`, `fr`, `de`, `ja`, `ko`) or set the workspace `locale` in `.startup/state.json`
+29. `weekly_rhythm_run` — Automated Weekly Founder Rhythm: compiles Top 3 Monday Revenue/PMF Focus (`docs/MONDAY_FOCUS.md`) and `<150-word` Friday Mentor/Investor Digest (`docs/FRIDAY_DIGEST.md`)
+30. `publish_bundle_build` — Assemble a zero-config static `publish/` bundle (`index.html`, `/deck/`, optional `/data-room/`, `netlify.toml`, Cloudflare `_headers`, `DEPLOY_NOW.md`)
+
+> **Pro Tip — Automated Weekly Rhythm with `/schedule`:**
+> - **Every Monday 8:00 AM:** `/schedule` -> *"Run `weekly_rhythm_run(action='monday_focus')` and show me my Top 3 Revenue & PMF actions for the week."*
+> - **Every Friday 3:00 PM:** `/schedule` -> *"Run `weekly_rhythm_run(action='friday_digest')` and draft my 150-word Founder Friday Update."*
 
 ### 6. Optional BYO-AI Addon Connectors (Claude, OpenAI, xAI Grok, Gemini CLI & Ollama)
 **Startup Antigravity is built for Google Antigravity first** — zero external AI keys are required. However, if a novice or technical founder already loves another AI platform, the `multi-ai-connectors` skill lets them plug it in cleanly without losing company context:

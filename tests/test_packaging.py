@@ -250,6 +250,8 @@ class TestNativeAppPackages(unittest.TestCase):
                 dr_html = urllib.request.urlopen(base + "/workspace/data-room/index.html").read().decode("utf-8")
                 self.assertIn("DR_I18N", dr_html)
                 self.assertIn("downloadReport", shell)
+                self.assertIn("updateOnboardPreview", shell)
+                self.assertIn("addEditorSlide", shell)
 
                 # Live 3-Lens Board Review API
                 br = json.loads(urllib.request.urlopen(base + "/api/board-review").read().decode("utf-8"))

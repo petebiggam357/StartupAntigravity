@@ -200,6 +200,7 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
         <div style="display:flex;gap:8px;align-items:center;">
           <select id="ed-theme" class="lang"><option value="obsidian-gold">Obsidian Gold</option><option value="emerald-slate">Emerald Slate</option><option value="paper-light">Paper Light</option></select>
           <span id="ed-score" class="pill">FI Score: —</span>
+          <button class="tab" onclick="addEditorSlide()">+ Add Slide</button>
           <button class="tab active" onclick="saveDeckEdits()">Save &amp; Recompile Deck</button>
         </div>
       </div>
@@ -210,11 +211,14 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
   <div id="onboard-modal" class="modal-bg" onclick="if(event.target===this)closeOnboardModal()">
     <div class="modal">
       <h3 style="margin:0;">90-Second Zero-JSON Startup Wizard</h3>
-      <label>Company Name<input id="ob-name" placeholder="e.g. ClaimPulse" /></label>
-      <label>Defined Offering<input id="ob-offer" placeholder="e.g. automated pre-submission claim scrubbing software" /></label>
-      <label>Specific Target Audience<input id="ob-aud" placeholder="e.g. independent multi-chair dental practices" /></label>
-      <label>Specific Problem Solved<input id="ob-prob" placeholder="e.g. cut insurance claim denials below 3%" /></label>
-      <label>Secret Sauce<input id="ob-sauce" placeholder="e.g. payer-specific CDT rule checks" /></label>
+      <label>Company Name<input id="ob-name" placeholder="e.g. ClaimPulse" oninput="updateOnboardPreview()" /></label>
+      <label>Defined Offering<input id="ob-offer" placeholder="e.g. automated pre-submission claim scrubbing software" oninput="updateOnboardPreview()" /></label>
+      <label>Specific Target Audience<input id="ob-aud" placeholder="e.g. independent multi-chair dental practices" oninput="updateOnboardPreview()" /></label>
+      <label>Specific Problem Solved<input id="ob-prob" placeholder="e.g. cut insurance claim denials below 3%" oninput="updateOnboardPreview()" /></label>
+      <label>Secret Sauce<input id="ob-sauce" placeholder="e.g. payer-specific CDT rule checks" oninput="updateOnboardPreview()" /></label>
+      <div id="ob-preview" class="takeaway" style="border:1px solid var(--border);font-size:12px;">
+        <strong>Live FI One-Sentence Pitch Preview:</strong> Fill the 5 fields above to preview and buzzword-lint live.
+      </div>
       <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px;">
         <button class="tab" onclick="closeOnboardModal()">Cancel</button>
         <button class="tab active" onclick="submitOnboard()">Generate My Startup OS</button>
@@ -300,6 +304,54 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
     }}
 
     let currentDeckObj = null;
+    function renderDeckEditor() {{
+      if (!currentDeckObj) return;
+      document.getElementById('ed-slides').innerHTML = (currentDeckObj.slides || []).map((s, i) => {{
+        const bulletsHtml = Array.isArray(s.bullets) ? s.bullets.map((b, bi) => {{
+          const txt = typeof b === 'string' ? b : ((b.label ? b.label + ': ' : '') + (b.text || ''));
+          return `<input class="box" style="margin:0;font-size:12px;" value="${{txt.replace(/"/g, '&quot;')}}" onchange="updateSlideBullet(${{i}}, ${{bi}}, this.value)" />`;
+        }}).join('') : '';
+        return `
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div class="cat">Slide ${{i+1}} • ${{s.type || 'bullets'}} • ${{s.kicker || ''}}</div>
+              <button class="tab" style="padding:2px 8px;font-size:11px;border-color:#7f1d1d;color:#fca5a5;" onclick="removeEditorSlide(${{i}})">Remove</button>
+            </div>
+            <input class="box" style="margin:0;" value="${{(s.headline || '').replace(/"/g, '&quot;')}}" onchange="currentDeckObj.slides[${{i}}].headline = this.value" />
+            ${{bulletsHtml}}
+            <textarea class="box" rows="2" style="margin:0;" placeholder="Speaker notes..." onchange="currentDeckObj.slides[${{i}}].notes = this.value">${{s.notes || ''}}</textarea>
+          </div>`;
+      }}).join('');
+    }}
+
+    function updateSlideBullet(si, bi, val) {{
+      const s = currentDeckObj.slides[si];
+      if (!s || !Array.isArray(s.bullets)) return;
+      if (typeof s.bullets[bi] === 'object' && s.bullets[bi] !== null) {{
+        const idx = val.indexOf(':');
+        if (idx > 0 && idx < 32) {{ s.bullets[bi].label = val.slice(0, idx).trim(); s.bullets[bi].text = val.slice(idx + 1).trim(); }}
+        else {{ s.bullets[bi].text = val; }}
+      }} else {{ s.bullets[bi] = val; }}
+    }}
+
+    function addEditorSlide() {{
+      if (!currentDeckObj) return;
+      const n = (currentDeckObj.slides || []).length + 1;
+      currentDeckObj.slides.push({{
+        id: 'slide-' + n, type: 'bullets', kicker: String(n).padStart(2, '0') + ' / NEW SLIDE',
+        headline: 'Concise 10-Word Takeaway Headline [HYPOTHESIS]',
+        bullets: [{{ label: 'Key Point', text: 'Add verified proof or customer quote [HYPOTHESIS]' }}],
+        notes: '15 seconds. Deliver the core takeaway cleanly.'
+      }});
+      renderDeckEditor();
+    }}
+
+    function removeEditorSlide(idx) {{
+      if (!currentDeckObj || (currentDeckObj.slides || []).length <= 1) return;
+      currentDeckObj.slides.splice(idx, 1);
+      renderDeckEditor();
+    }}
+
     async function loadDeckEditor() {{
       const r = await fetch('/api/deck');
       const d = await r.json();
@@ -307,13 +359,26 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
       currentDeckObj = d.deck;
       document.getElementById('ed-score').textContent = 'FI Score: ' + d.lint.readinessScore + '/100';
       if (currentDeckObj.theme && currentDeckObj.theme.preset) document.getElementById('ed-theme').value = currentDeckObj.theme.preset;
-      document.getElementById('ed-slides').innerHTML = (currentDeckObj.slides || []).map((s, i) => `
-        <div class="card">
-          <div class="cat">Slide ${{i+1}} • ${{s.type || 'bullets'}} • ${{s.kicker || ''}}</div>
-          <input class="box" style="margin:0;" value="${{(s.headline || '').replace(/"/g, '&quot;')}}" onchange="currentDeckObj.slides[${{i}}].headline = this.value" />
-          <textarea class="box" rows="2" style="margin:0;" placeholder="Speaker notes..." onchange="currentDeckObj.slides[${{i}}].notes = this.value">${{s.notes || ''}}</textarea>
-        </div>
-      `).join('');
+      renderDeckEditor();
+    }}
+
+    const FI_BANNED = ['revolutionary','disruptive','world-class','game-changing','synergy','unprecedented','best-in-class'];
+    function updateOnboardPreview() {{
+      const c = document.getElementById('ob-name').value.trim() || '[Company]';
+      const o = document.getElementById('ob-offer').value.trim() || '[defined offering]';
+      const a = document.getElementById('ob-aud').value.trim() || '[target audience]';
+      const p = document.getElementById('ob-prob').value.trim() || '[solve specific problem]';
+      const s = document.getElementById('ob-sauce').value.trim() || '[secret sauce]';
+      const sentence = `My company, ${{c}}, is developing ${{o}} to help ${{a}} ${{p}} with ${{s}}.`;
+      const found = FI_BANNED.filter(b => new RegExp('\\\\b' + b + '\\\\b', 'i').test(sentence));
+      const box = document.getElementById('ob-preview');
+      if (found.length) {{
+        box.style.borderColor = '#f59e0b';
+        box.innerHTML = `<strong style="color:#fbbf24;">Buzzword Warning (${{found.join(', ')}}):</strong> ${{sentence}}`;
+      }} else {{
+        box.style.borderColor = '#10b981';
+        box.innerHTML = `<strong style="color:#34d399;">FI Pitch Lint Clean:</strong> ${{sentence}}`;
+      }}
     }}
 
     async function saveDeckEdits() {{

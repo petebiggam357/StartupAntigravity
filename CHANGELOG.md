@@ -4,6 +4,15 @@ All notable changes to **Startup Antigravity — Ethical Venture OS** are docume
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.1-beta] - 2026-11-22
+
+Studio Wizard & Visual Slide Editor polish release for **Startup Antigravity — Ethical Venture OS**.
+
+### Added & Improved in 0.4.1-beta
+- **Live FI Madlibs Pitch Preview & Buzzword Detector (`launcher/studio_server.py`)**: Real-time one-sentence pitch preview inside the 90-Second Setup Wizard highlighting banned buzzwords (`revolutionary`, `disruptive`, `world-class`, `synergy`, etc.) as you type.
+- **Inline Bullet Editing & + Add / Remove Slide (`launcher/studio_server.py`)**: Upgraded the Visual Pitch Deck Slide Editor so founders can edit bullets, add new slides, and remove slides right in the browser without touching JSON.
+- **Complete 30-Tool `README.md` Sync & `/schedule` Recipe**: Listed `#29 weekly_rhythm_run` and `#30 publish_bundle_build` plus a copy-paste `/schedule` recipe for automated Monday Focus & Friday Investor Digests.
+
 ## [0.4.0-beta] - 2026-11-22
 
 Zero-JSON Founder Studio, Mentor Cohort Portfolio Mode, Automated Weekly Rhythm, and 1-Click Publish Live milestone for **Startup Antigravity — Ethical Venture OS** (**20 skills · 9 subagents · 30 zero-dependency local MCP tools · 54+ resources · 10 global languages · 4 safety hooks**).
