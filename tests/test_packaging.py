@@ -252,6 +252,23 @@ class TestNativeAppPackages(unittest.TestCase):
                 self.assertIn("downloadReport", shell)
                 self.assertIn("updateOnboardPreview", shell)
                 self.assertIn("addEditorSlide", shell)
+                self.assertIn("moveEditorSlide", shell)
+
+                # Weekly Rhythm & Snapshot Export Studio APIs
+                req_ry = urllib.request.Request(
+                    base + "/api/weekly-rhythm",
+                    data=json.dumps({"action": "friday_digest"}).encode("utf-8"),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+                ry_res = json.loads(urllib.request.urlopen(req_ry).read().decode("utf-8"))
+                self.assertTrue(ry_res["ok"])
+                self.assertIn("Founder Friday Update", ry_res["markdown"])
+
+                snap = json.loads(urllib.request.urlopen(base + "/api/export-snapshot").read().decode("utf-8"))
+                self.assertTrue(snap["ok"])
+                self.assertIn("state.json", snap["startup"])
+                self.assertIsNotNone(snap["deck"])
 
                 # Live 3-Lens Board Review API
                 br = json.loads(urllib.request.urlopen(base + "/api/board-review").read().decode("utf-8"))

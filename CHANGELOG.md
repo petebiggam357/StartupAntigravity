@@ -4,6 +4,16 @@ All notable changes to **Startup Antigravity — Ethical Venture OS** are docume
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.4.2-beta] - 2026-11-22
+
+Founder Studio & Mentor Portfolio UX polish release for **Startup Antigravity — Ethical Venture OS**.
+
+### Added & Improved in 0.4.2-beta
+- **Slide Reordering (`↑`/`↓`) & Quick Live Preview (`launcher/studio_server.py`)**: Reorder slides directly in the browser Visual Slide Editor and jump straight to the compiled deck with **View Live Deck**.
+- **Weekly Rhythm Tab in Local Web Studio (`POST /api/weekly-rhythm`)**: Run **Monday Top-3 Focus** or **Friday Mentor Digest** right in the browser with 1-click **Copy Text** and **Download .md**.
+- **1-Click "Cohort Portfolio" Button in Desktop Launcher GUI (`launcher/app.py`)**: FI Mentors, Directors, and Startup Grind Chapter leaders can pick a folder of mentee startups in the desktop app to generate & open `cohort-portfolio.html` with zero CLI commands.
+- **1-Click Workspace Snapshot Export (`GET /api/export-snapshot`)**: Download a clean JSON backup of `.startup/*.json` + `pitch-deck/deck.json` straight from the Web Studio header.
+
 ## [0.4.1-beta] - 2026-11-22
 
 Studio Wizard & Visual Slide Editor polish release for **Startup Antigravity — Ethical Venture OS**.

@@ -130,10 +130,12 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
       <button class="tab" data-tab="warroom" data-i18n="nav.warroom" onclick="selectTab('warroom')">War Room</button>
       <button class="tab" data-tab="x402" data-i18n="nav.x402" onclick="selectTab('x402')">x402 Storefront</button>
       <button class="tab" data-tab="board" data-i18n="nav.board" onclick="selectTab('board')">Board Review</button>
+      <button class="tab" data-tab="rhythm" onclick="selectTab('rhythm')">Weekly Rhythm</button>
       <button class="tab" data-tab="resources" data-i18n="nav.resources" onclick="selectTab('resources')">54+ Resources</button>
       <button class="tab" data-tab="editor" onclick="selectTab('editor')" style="border-color:#a855f7;color:#d8b4fe;">Slide Editor</button>
       <button class="tab" onclick="openOnboardModal()" style="border-color:#10b981;color:#6ee7b7;">Setup Wizard</button>
       <button class="tab" data-i18n="nav.editMetrics" onclick="openMetricsModal()" style="border-color:#f59e0b;color:#fbbf24;">Edit Metrics</button>
+      <button class="tab" onclick="exportSnapshot()" style="border-color:#64748b;color:#cbd5e1;">Export Snapshot</button>
       <button class="tab" onclick="publishLive()" style="border-color:#38bdf8;color:#7dd3fc;">Publish Live</button>
       <select id="studio-lang" class="lang" aria-label="Language" onchange="applyStudioLang(this.value)">{lang_opts}</select>
     </nav>
@@ -194,13 +196,27 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
       <div id="res-grid" class="grid"></div>
     </div>
 
+    <div id="rhythm-panel" class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+        <h2 style="margin:0;">Weekly Founder Rhythm (Monday Focus &amp; Friday Digest)</h2>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="tab active" onclick="runRhythm('monday_focus')">Monday Top-3 Focus</button>
+          <button class="tab active" style="background:#f59e0b;border-color:#f59e0b;" onclick="runRhythm('friday_digest')">Friday Mentor Digest</button>
+          <button class="tab" onclick="copyRhythm()">Copy Text</button>
+          <button class="tab" onclick="downloadReport(lastRhythmFile, lastRhythmMd)">Download .md</button>
+        </div>
+      </div>
+      <pre id="rhythm-out" style="background:var(--nav);border:1px solid var(--border);border-radius:12px;padding:18px;white-space:pre-wrap;color:#e2e8f0;font-size:13px;line-height:1.55;">Click 'Monday Top-3 Focus' or 'Friday Mentor Digest' to generate your weekly report from live .startup/ telemetry.</pre>
+    </div>
+
     <div id="editor-panel" class="panel">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
         <h2 style="margin:0;">Visual Pitch Deck Slide Editor (Zero JSON)</h2>
-        <div style="display:flex;gap:8px;align-items:center;">
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
           <select id="ed-theme" class="lang"><option value="obsidian-gold">Obsidian Gold</option><option value="emerald-slate">Emerald Slate</option><option value="paper-light">Paper Light</option></select>
           <span id="ed-score" class="pill">FI Score: —</span>
           <button class="tab" onclick="addEditorSlide()">+ Add Slide</button>
+          <button class="tab" onclick="selectTab('deck')">View Live Deck</button>
           <button class="tab active" onclick="saveDeckEdits()">Save &amp; Recompile Deck</button>
         </div>
       </div>
@@ -313,9 +329,13 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
         }}).join('') : '';
         return `
           <div class="card">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
               <div class="cat">Slide ${{i+1}} • ${{s.type || 'bullets'}} • ${{s.kicker || ''}}</div>
-              <button class="tab" style="padding:2px 8px;font-size:11px;border-color:#7f1d1d;color:#fca5a5;" onclick="removeEditorSlide(${{i}})">Remove</button>
+              <div style="display:flex;gap:4px;">
+                <button class="tab" style="padding:2px 7px;font-size:11px;" onclick="moveEditorSlide(${{i}}, -1)" title="Move Up">↑</button>
+                <button class="tab" style="padding:2px 7px;font-size:11px;" onclick="moveEditorSlide(${{i}}, 1)" title="Move Down">↓</button>
+                <button class="tab" style="padding:2px 8px;font-size:11px;border-color:#7f1d1d;color:#fca5a5;" onclick="removeEditorSlide(${{i}})">Remove</button>
+              </div>
             </div>
             <input class="box" style="margin:0;" value="${{(s.headline || '').replace(/"/g, '&quot;')}}" onchange="currentDeckObj.slides[${{i}}].headline = this.value" />
             ${{bulletsHtml}}
@@ -350,6 +370,39 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
       if (!currentDeckObj || (currentDeckObj.slides || []).length <= 1) return;
       currentDeckObj.slides.splice(idx, 1);
       renderDeckEditor();
+    }}
+
+    function moveEditorSlide(idx, delta) {{
+      if (!currentDeckObj || !Array.isArray(currentDeckObj.slides)) return;
+      const target = idx + delta;
+      if (target < 0 || target >= currentDeckObj.slides.length) return;
+      const tmp = currentDeckObj.slides[idx];
+      currentDeckObj.slides[idx] = currentDeckObj.slides[target];
+      currentDeckObj.slides[target] = tmp;
+      renderDeckEditor();
+    }}
+
+    let lastRhythmMd = '', lastRhythmFile = 'MONDAY_FOCUS.md';
+    async function runRhythm(action) {{
+      const r = await fetch('/api/weekly-rhythm', {{ method:'POST', headers:{{'Content-Type':'application/json'}}, body:JSON.stringify({{action}}) }});
+      const d = await r.json();
+      if (!d.ok) {{ document.getElementById('rhythm-out').textContent = 'Error: ' + (d.error || 'failed'); return; }}
+      lastRhythmMd = d.markdown || '';
+      lastRhythmFile = action === 'friday_digest' ? 'FRIDAY_DIGEST.md' : 'MONDAY_FOCUS.md';
+      document.getElementById('rhythm-out').textContent = lastRhythmMd;
+    }}
+
+    async function copyRhythm() {{
+      if (!lastRhythmMd) {{ alert('Generate Monday Focus or Friday Digest first.'); return; }}
+      try {{ await navigator.clipboard.writeText(lastRhythmMd); alert('Copied to clipboard!'); }} catch (e) {{}}
+    }}
+
+    async function exportSnapshot() {{
+      const r = await fetch('/api/export-snapshot');
+      const d = await r.json();
+      const blob = new Blob([JSON.stringify(d, null, 2)], {{ type: 'application/json' }});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob); a.download = 'startup-antigravity-snapshot.json'; a.click();
     }}
 
     async function loadDeckEditor() {{
@@ -577,7 +630,7 @@ def create_studio_server(
     from build_deck import build_deck, lint_deck  # noqa: E402
     from voice_pitch_coach import analyze_voice_pitch  # noqa: E402
     from war_room import run_war_room  # noqa: E402
-    from weekly_rhythm import build_publish_bundle  # noqa: E402
+    from weekly_rhythm import build_publish_bundle, run_weekly_rhythm  # noqa: E402
     from x402_storefront import build_402_challenge, load_x402_ledger, record_x402_payment  # noqa: E402
 
     class StudioHandler(BaseHTTPRequestHandler):
@@ -680,6 +733,15 @@ def create_studio_server(
                 self._send_bytes(json.dumps(res).encode("utf-8"), "application/json")
                 return
 
+            if path == "/api/weekly-rhythm":
+                try:
+                    res = run_weekly_rhythm(ws, action=str(body.get("action", "monday_focus")))
+                    res["markdown"] = Path(res["path"]).read_text(encoding="utf-8")
+                    self._send_bytes(json.dumps(res).encode("utf-8"), "application/json")
+                except Exception as exc:
+                    self._send_bytes(json.dumps({"ok": False, "error": str(exc)}).encode("utf-8"), "application/json", 400)
+                return
+
             if path == "/api/deck":
                 deck_obj = body.get("deck")
                 if not isinstance(deck_obj, dict):
@@ -758,6 +820,18 @@ def create_studio_server(
                     return
                 deck_obj = json.loads(deck_file.read_text(encoding="utf-8"))
                 self._send_bytes(json.dumps({"ok": True, "deck": deck_obj, "lint": lint_deck(deck_obj)}).encode("utf-8"), "application/json")
+                return
+
+            if path == "/api/export-snapshot":
+                snap: dict[str, Any] = {"ok": True, "workspace": ws.name, "startup": {}, "deck": None}
+                sdir = ws / ".startup"
+                if sdir.exists():
+                    for jf in sorted(sdir.glob("*.json")):
+                        snap["startup"][jf.name] = _load_json(jf, {})
+                deck_file = ws / "pitch-deck" / "deck.json"
+                if deck_file.exists():
+                    snap["deck"] = _load_json(deck_file, None)
+                self._send_bytes(json.dumps(snap, indent=2).encode("utf-8"), "application/json")
                 return
 
             if path == "/api/resources":

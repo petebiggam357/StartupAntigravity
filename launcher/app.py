@@ -30,7 +30,7 @@ from typing import Any
 
 APP_NAME = "Startup Antigravity"
 PLUGIN_NAME = "startup-antigravity"
-APP_VERSION = "0.4.1-beta"
+APP_VERSION = "0.4.2-beta"
 GITHUB_RELEASES_API = "https://api.github.com/repos/petebiggam357/StartupAntigravity/releases"
 
 STARTER_PROMPTS: list[tuple[str, str]] = [
@@ -747,6 +747,22 @@ def launch_gui() -> int:
             log(f"[OK] You are up to date (v{res['currentVersion']}).")
             messagebox.showinfo(APP_NAME, f"You are running the latest version (v{res['currentVersion']}).")
 
+    def on_portfolio() -> None:
+        chosen = filedialog.askdirectory(title="Select Folder Containing Startup Workspaces", initialdir=workspace_var.get() or str(Path.home()))
+        if not chosen:
+            return
+        try:
+            here = Path(__file__).resolve().parent
+            if str(here) not in sys.path:
+                sys.path.insert(0, str(here))
+            from portfolio import build_portfolio  # noqa: E402
+
+            res = build_portfolio(Path(chosen), open_browser=True)
+            log(f"[OK] Built Cohort Portfolio ({res['startupCount']} startups, ${res['totalMrrUsd']:,.0f} MRR) -> {res['htmlPath']}")
+        except Exception as exc:
+            log(f"[ERROR] Cohort Portfolio failed: {exc}")
+            messagebox.showerror(APP_NAME, f"Cohort Portfolio failed:\n{exc}")
+
     # Action Buttons
     btn_frame = tk.Frame(root, bg=BG, padx=24)
     btn_frame.pack(fill="x", pady=(0, 12))
@@ -834,6 +850,20 @@ def launch_gui() -> int:
         command=on_data_room,
         bg=SLATE_BTN,
         fg=TEXT,
+        activebackground=BORDER,
+        activeforeground=TEXT,
+        relief="flat",
+        padx=8,
+        pady=8,
+        cursor="hand2",
+    ).pack(side="left", expand=True, fill="x", padx=(0, 5))
+
+    tk.Button(
+        row2,
+        text="Cohort Portfolio",
+        command=on_portfolio,
+        bg=SLATE_BTN,
+        fg="#38BDF8",
         activebackground=BORDER,
         activeforeground=TEXT,
         relief="flat",

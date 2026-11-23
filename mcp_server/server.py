@@ -65,7 +65,7 @@ from war_room import run_war_room  # noqa: E402
 from weekly_rhythm import build_publish_bundle, run_weekly_rhythm  # noqa: E402
 
 SERVER_NAME = "startup-antigravity-os"
-SERVER_VERSION = "0.4.1-beta"
+SERVER_VERSION = "0.4.2-beta"
 PROTOCOL_VERSION = "2024-11-05"
 
 FI_STAGE_BENCHMARKS: dict[str, dict[str, Any]] = {
