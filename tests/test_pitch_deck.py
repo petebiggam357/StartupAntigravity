@@ -147,6 +147,22 @@ class TestPitchDeckAndScaffolder(unittest.TestCase):
             self.assertEqual(tokens["meta"]["slideDimensions"]["width"], 1920)
             self.assertEqual(tokens["meta"]["slideDimensions"]["height"], 1080)
 
+    def test_v050_theme_presets_compile(self) -> None:
+        from build_deck import THEME_PRESETS  # noqa: E402
+
+        res_dir = ROOT / "skills" / "pitch-deck-builder" / "resources"
+        base_deck = json.loads((res_dir / "deck.problem-solution.json").read_text(encoding="utf-8"))
+        for preset in ("midnight", "ivory", "emerald", "crimson"):
+            self.assertIn(preset, THEME_PRESETS)
+            with tempfile.TemporaryDirectory() as td:
+                deck = json.loads(json.dumps(base_deck))
+                deck["theme"] = {"preset": preset}
+                src = Path(td) / "deck.json"
+                src.write_text(json.dumps(deck), encoding="utf-8")
+                res = build_deck(src)
+                html_out = Path(res["htmlPath"]).read_text(encoding="utf-8")
+                self.assertIn(THEME_PRESETS[preset]["bg"], html_out)
+
 
 if __name__ == "__main__":
     unittest.main()

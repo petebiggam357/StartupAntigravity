@@ -243,112 +243,500 @@ def build_data_room(workspace: Path) -> dict[str, Any]:
 """
     (dr / "DATA_ROOM_INDEX.md").write_text(index_md, encoding="utf-8")
 
-    # Sleek Zero-Dependency Local HTML Portal (data-room/index.html)
+    # Self-Contained Single-File Interactive HTML Investor Portal (data-room/index.html)
     locales_file = Path(__file__).resolve().parent.parent.parent.parent / "i18n" / "locales.json"
     all_locales = _load_json(locales_file, {})
     default_locale = str(state.get("locale") or "en")
     if default_locale not in all_locales:
         default_locale = "en"
-    locales_json_str = json.dumps(all_locales, ensure_ascii=False)
+    locales_json_str = json.dumps(all_locales, ensure_ascii=False).replace("</", "<\\/")
+    stage_json_str = json.dumps(str(stage), ensure_ascii=False).replace("</", "<\\/")
     lang_opts = "".join(
         f'<option value="{code}"{" selected" if code == default_locale else ""}>{html.escape(data.get("nativeName", code))}</option>'
         for code, data in all_locales.items()
     )
 
+    deck_data = _load_json(ws / "pitch-deck" / "deck.json", None)
+    embedded_slides = deck_data.get("slides", []) if isinstance(deck_data, dict) else []
+    embedded_slides_json = json.dumps(embedded_slides, ensure_ascii=False).replace("</", "<\\/")
+
     esc_company = html.escape(str(company))
     esc_pitch = html.escape(str(pitch))
-    deck_link = (
-        '<a class="btn primary" href="02_Pitch_Deck/index.html">Open Interactive Pitch Deck</a>'
-        if "index.html" in copied_deck
-        else '<span class="muted">Pitch deck not compiled yet</span>'
-    )
-    dash_link = (
-        '<a class="btn" href="03_Metrics_and_PMF/index.html">Open Live Metrics Dashboard</a>'
-        if "index.html" in copied_metrics
-        else '<span class="muted">Dashboard not compiled yet</span>'
-    )
+    esc_sauce = html.escape(str(secret_sauce))
+    esc_stage = html.escape(str(stage))
+
     check_items_html = "".join(
         f'<li class="{"ok" if ok else "todo"}">'
         f'<span>{"✓" if ok else "○"}</span> {html.escape(label)}</li>'
         for label, ok in checks
     )
 
+    # Financial Model values
+    mrr_f = float(mrr or 0)
+    arr_f = mrr_f * 12.0
+    gm_f = float(gm or 0)
+    cash_f = float(cash or 0)
+    burn_f = float(burn or 0)
+    net_burn_f = max(0.0, burn_f - mrr_f * (gm_f / 100.0 if gm_f else 0.8))
+    default_alive = (burn_f <= 0 and mrr_f >= 0) or ((mrr_f * (gm_f / 100.0 if gm_f else 0.8)) >= burn_f and burn_f > 0)
+
+    # PACT tables (PII-redacted)
+    cust_rows_html = "".join(
+        f"<tr><td>{idx}</td><td>{html.escape(str(p.get('segment') or p.get('company') or f'Customer #{idx}'))}</td>"
+        f"<td><span class='pill'>{html.escape(str(p.get('status', 'prospect')))}</span></td>"
+        f"<td>{html.escape(_fmt_money(p.get('amountUsd', 0)))}</td></tr>"
+        for idx, p in enumerate(customer_pacts, 1)
+    ) or "<tr><td colspan='4' class='muted'>No customer PACTs logged yet [HYPOTHESIS]</td></tr>"
+
+    inv_rows_html = "".join(
+        f"<tr><td>{idx}</td><td>{html.escape(str(p.get('investor') or p.get('firm') or p.get('segment') or f'Investor #{idx}'))}</td>"
+        f"<td><span class='pill'>{html.escape(str(p.get('status', 'prospect')))}</span></td>"
+        f"<td>{html.escape(_fmt_money(p.get('amountUsd', 0)))}</td></tr>"
+        for idx, p in enumerate(investor_pacts, 1)
+    ) or "<tr><td colspan='4' class='muted'>No investor soft-circle PACTs logged yet [HYPOTHESIS]</td></tr>"
+
+    validated_list_html = "".join(
+        f"<li><strong>[VALIDATED]</strong> {html.escape(str(a.get('statement', '')))} "
+        f"<span class='muted'>({html.escape(str(a.get('evidence', 'Logged')))})</span></li>"
+        for a in validated_assumptions
+    ) or "<li class='muted'>No assumptions marked [VALIDATED] yet.</li>"
+
+    # iKPI & Sprint ledger
+    ikpi_sdg = html.escape(str(ikpi.get("sdg", "Not specified")))
+    ikpi_metric = html.escape(str(ikpi.get("metric", "Not specified")))
+    ikpi_current = ikpi.get("current", 0)
+    ikpi_target = ikpi.get("target", "TBD")
+    try:
+        ikpi_pct = min(100, max(0, round((float(ikpi_current) / float(ikpi_target)) * 100))) if float(ikpi_target) > 0 else 0
+    except (TypeError, ValueError, ZeroDivisionError):
+        ikpi_pct = 0
+
+    sprint_rows_html = "".join(
+        f"<tr><td>{html.escape(str(sp.get('week') or sp.get('id') or f'Sprint #{idx}'))}</td>"
+        f"<td>{html.escape(str(sp.get('goal') or sp.get('focus') or 'Weekly execution'))}</td>"
+        f"<td>{html.escape(str(sp.get('velocityScore', sp.get('score', '—'))))}</td>"
+        f"<td>{html.escape(str(sp.get('status', 'logged')))}</td></tr>"
+        for idx, sp in enumerate(sprints[-8:], 1)
+    ) or "<tr><td colspan='4' class='muted'>No weekly sprints logged yet.</td></tr>"
+
+    # Due-Diligence Q&A Accordion (pre-filled from live workspace telemetry)
+    qa_items = [
+        (
+            "1. What is the exact ICP problem and verified willingness-to-pay?",
+            f"{pitch} Backed by {len(interviews)} Mom Test discovery interviews, {len(validated_assumptions)}/{len(assumptions)} validated assumptions, and {_fmt_money(signed_customer_val)} in signed/paid Customer PACTs ({'[VALIDATED]' if signed_customer_val > 0 else '[HYPOTHESIS]'}).",
+        ),
+        (
+            "2. What is your Secret Sauce / Unfair Advantage?",
+            f"{secret_sauce} — paired with transparent Mensarius Oath governance and zero-dark-pattern retention.",
+        ),
+        (
+            "3. How healthy are unit economics, gross margins, and runway?",
+            f"Current MRR is {_fmt_money(mrr_f)} ({_fmt_money(arr_f)} ARR) at {gm_f:.0f}% gross margin (target >=75%). Cash on hand is {_fmt_money(cash_f)} against {_fmt_money(burn_f)}/mo gross burn ({f'{runway} months runway' if runway is not None else 'Default-Alive / N/A'}).",
+        ),
+        (
+            "4. Is Product-Market Fit verified before scaling spend?",
+            f"Sean Ellis PMF score is {f'{sean_ellis_pct}% Very Disappointed (n={len(pmf_responses)})' if sean_ellis_pct is not None else 'not yet measured [HYPOTHESIS]'}. Growth spend is gated strictly on >=40% PMF in the core High-Expectation Customer (HXC) segment.",
+        ),
+        (
+            "5. How does the company measure For-Progress impact (iKPI) and legal hygiene?",
+            f"Aligned with {ikpi.get('sdg', 'UN SDG TBD')}: tracking '{ikpi.get('metric', 'iKPI TBD')}' ({ikpi_current} / {ikpi_target}). Automated Data Room readiness is {readiness_pct}% ({passed_count}/{len(checks)}); corporate/83(b)/FAST counsel checks are tracked in 05_Governance_and_Diligence/DILIGENCE_CHECKLIST.md.",
+        ),
+    ]
+    qa_html = "".join(
+        f"<details class='qa' {'open' if idx == 0 else ''}><summary>{html.escape(q)}</summary><p>{html.escape(a)}</p></details>"
+        for idx, (q, a) in enumerate(qa_items)
+    )
+
     portal_html = f"""<!doctype html>
-<html lang="en">
+<html lang="{html.escape(default_locale)}">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>{esc_company} — Investor Data Room</title>
+  <title>{esc_company} — Interactive Investor Data Room Portal</title>
   <style>
-    :root {{ --bg:#0b1120; --card:#111c33; --border:#1e293b; --text:#f8fafc; --muted:#94a3b8; --accent:#10b981; --amber:#f59e0b; }}
+    :root {{ --bg:#0b1120; --card:#111c33; --surface:#0f172a; --border:#1e293b; --text:#f8fafc; --muted:#94a3b8; --accent:#10b981; --amber:#f59e0b; }}
     * {{ box-sizing:border-box; }}
-    body {{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.5; }}
-    .wrap {{ max-width:980px; margin:0 auto; padding:32px 20px 64px; }}
+    body {{ margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--text); line-height:1.55; }}
+    .wrap {{ max-width:1060px; margin:0 auto; padding:28px 20px 64px; }}
+    .topbar {{ display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:10px; }}
     .badge {{ display:inline-block; padding:4px 10px; border-radius:999px; background:#064e3b; color:#6ee7b7; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; }}
-    h1 {{ margin:12px 0 6px; font-size:32px; }}
-    .pitch {{ color:var(--muted); font-size:16px; margin:0 0 24px; }}
-    .grid {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-bottom:24px; }}
-    .card {{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px; }}
+    .pill {{ display:inline-block; padding:2px 8px; border-radius:999px; background:#064e3b; color:#6ee7b7; font-size:11px; font-weight:700; text-transform:uppercase; }}
+    h1 {{ margin:8px 0 6px; font-size:32px; }}
+    .pitch {{ color:var(--muted); font-size:16px; margin:0 0 18px; }}
+    .tabs {{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:12px; }}
+    .tab-btn {{ background:var(--surface); border:1px solid #334155; color:var(--muted); padding:8px 14px; border-radius:10px; font-weight:700; font-size:13px; cursor:pointer; }}
+    .tab-btn.active {{ background:var(--accent); color:#022c22; border-color:var(--accent); }}
+    .section {{ display:none; }}
+    .section.active {{ display:block; }}
+    .grid {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; margin-bottom:20px; }}
+    .card {{ background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px; margin-bottom:16px; }}
     .kpi-label {{ font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }}
-    .kpi-val {{ font-size:26px; font-weight:800; margin-top:4px; }}
-    .actions {{ display:flex; flex-wrap:wrap; gap:12px; margin-bottom:24px; }}
-    .btn {{ display:inline-block; padding:10px 16px; border-radius:10px; text-decoration:none; font-weight:700; background:#1e293b; color:var(--text); border:1px solid #334155; }}
+    .kpi-val {{ font-size:26px; font-weight:800; margin-top:4px; color:var(--accent); }}
+    .btn {{ display:inline-block; padding:8px 14px; border-radius:10px; text-decoration:none; font-weight:700; font-size:13px; background:#1e293b; color:var(--text); border:1px solid #334155; cursor:pointer; }}
     .btn.primary {{ background:var(--accent); color:#022c22; border-color:var(--accent); }}
     ul.checks {{ list-style:none; padding:0; margin:12px 0 0; display:grid; gap:8px; }}
-    ul.checks li {{ padding:8px 12px; border-radius:8px; background:#0f172a; border:1px solid var(--border); font-size:14px; }}
+    ul.checks li {{ padding:8px 12px; border-radius:8px; background:var(--surface); border:1px solid var(--border); font-size:14px; }}
     ul.checks li.ok span {{ color:var(--accent); font-weight:800; margin-right:8px; }}
     ul.checks li.todo span {{ color:var(--amber); font-weight:800; margin-right:8px; }}
+    .slide-stage {{ aspect-ratio:16/9; background:linear-gradient(135deg,#0f172a,#111c33); border:1px solid #334155; border-radius:16px; padding:32px; display:flex; flex-direction:column; justify-content:space-between; overflow:auto; }}
+    .slide-kicker {{ font-size:12px; font-weight:800; letter-spacing:.08em; color:var(--amber); text-transform:uppercase; }}
+    .slide-h {{ font-size:clamp(22px,3vw,34px); font-weight:800; margin:8px 0 10px; line-height:1.18; }}
+    .slide-bullets {{ margin:10px 0 0 18px; padding:0; display:grid; gap:8px; font-size:16px; color:#e2e8f0; }}
+    .ps-grid {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:12px; margin-top:12px; }}
+    .ps-card {{ background:rgba(15,23,42,.85); border:1px solid #334155; border-radius:10px; padding:12px 14px; }}
+    .ps-val {{ font-size:22px; font-weight:800; color:var(--accent); }}
+    .ps-callout {{ margin-top:14px; padding:10px 12px; border-radius:10px; background:rgba(16,185,129,.12); border:1px solid rgba(16,185,129,.35); color:#a7f3d0; font-size:13px; }}
+    .ps-bar-row {{ display:grid; grid-template-columns:110px 1fr 78px; align-items:center; gap:10px; margin-top:8px; font-size:13px; }}
+    .ps-bar-track {{ height:10px; background:#0f172a; border-radius:999px; overflow:hidden; border:1px solid #334155; }}
+    .ps-bar-fill {{ height:100%; background:linear-gradient(90deg,var(--accent),#38bdf8); }}
+    .slide-controls {{ display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:14px; flex-wrap:wrap; }}
+    table {{ width:100%; border-collapse:collapse; font-size:14px; }}
+    th, td {{ padding:10px 12px; text-align:left; border-bottom:1px solid var(--border); }}
+    th {{ color:var(--muted); font-size:12px; text-transform:uppercase; background:var(--surface); }}
+    .bar-bg {{ width:100%; height:12px; background:var(--surface); border-radius:999px; overflow:hidden; border:1px solid var(--border); margin:10px 0; }}
+    .bar-fill {{ height:100%; background:linear-gradient(90deg,var(--accent),#38bdf8); }}
+    details.qa {{ background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 14px; margin-bottom:10px; }}
+    details.qa summary {{ cursor:pointer; font-weight:700; color:var(--text); }}
+    details.qa p {{ margin:8px 0 0; color:#cbd5e1; font-size:14px; }}
+    .slider-row {{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; margin:14px 0; }}
+    .slider-row label {{ display:grid; gap:6px; font-size:13px; color:var(--muted); font-weight:700; }}
     .muted {{ color:var(--muted); font-size:13px; }}
     footer {{ margin-top:32px; color:var(--muted); font-size:12px; text-align:center; }}
+    @media print {{ .tabs, .slide-controls, #dr-lang, .no-print {{ display:none !important; }} .section {{ display:block !important; page-break-inside:avoid; }} }}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
-      <span class="badge" id="dr-badge">Investor Data Room • {html.escape(str(stage))}</span>
-      <select id="dr-lang" aria-label="Language" onchange="applyDrLang(this.value)" style="background:#0f172a;color:#f8fafc;border:1px solid #334155;border-radius:8px;padding:6px 10px;font-weight:700;font-size:12px;">{lang_opts}</select>
+    <div class="topbar">
+      <span class="badge" id="dr-badge">Investor Data Room • {esc_stage}</span>
+      <div style="display:flex;gap:8px;align-items:center;" class="no-print">
+        <button class="btn" onclick="window.print()">Print / Save PDF</button>
+        <select id="dr-lang" aria-label="Language" onchange="applyDrLang(this.value)" style="background:#0f172a;color:#f8fafc;border:1px solid #334155;border-radius:8px;padding:6px 10px;font-weight:700;font-size:12px;">{lang_opts}</select>
+      </div>
     </div>
     <h1>{esc_company}</h1>
     <p class="pitch">{esc_pitch}</p>
 
-    <div class="actions">
-      {deck_link}
-      {dash_link}
-      <a class="btn" href="01_Executive_Summary/ONE_PAGER.md">Executive One-Pager</a>
-      <a class="btn" href="04_Pipeline_and_Proof/CUSTOMER_PROOF.md">Customer Proof (PII-Redacted)</a>
-      <a class="btn" href="05_Governance_and_Diligence/DILIGENCE_CHECKLIST.md">Diligence Checklist</a>
+    <div class="tabs no-print" role="tablist">
+      <button class="tab-btn active" data-sec="overview" onclick="openPortalTab('overview')">1. Overview &amp; Readiness</button>
+      <button class="tab-btn" data-sec="deck" onclick="openPortalTab('deck')">2. 16:9 Pitch Deck ({len(embedded_slides)})</button>
+      <button class="tab-btn" data-sec="financials" onclick="openPortalTab('financials')">3. Financial Model</button>
+      <button class="tab-btn" data-sec="pacts" onclick="openPortalTab('pacts')">4. PACT Pipeline &amp; Proof</button>
+      <button class="tab-btn" data-sec="diligence" onclick="openPortalTab('diligence')">5. iKPI Ledger &amp; Diligence Q&amp;A</button>
     </div>
 
-    <div class="grid">
-      <div class="card"><div class="kpi-label">Monthly Recurring Revenue</div><div class="kpi-val">{html.escape(_fmt_money(mrr))}</div></div>
-      <div class="card"><div class="kpi-label">Gross Margin</div><div class="kpi-val">{html.escape(str(gm))}%</div></div>
-      <div class="card"><div class="kpi-label">Sean Ellis PMF</div><div class="kpi-val">{html.escape(f"{sean_ellis_pct}%" if sean_ellis_pct is not None else "N/A")}</div></div>
-      <div class="card"><div class="kpi-label">Data Room Readiness</div><div class="kpi-val">{readiness_pct}%</div></div>
-    </div>
+    <!-- TAB 1: OVERVIEW -->
+    <section id="sec-overview" class="section active">
+      <div class="grid">
+        <div class="card"><div class="kpi-label">Monthly Recurring Revenue</div><div class="kpi-val">{html.escape(_fmt_money(mrr_f))}</div></div>
+        <div class="card"><div class="kpi-label">Gross Margin</div><div class="kpi-val">{gm_f:.0f}%</div></div>
+        <div class="card"><div class="kpi-label">Sean Ellis PMF</div><div class="kpi-val">{html.escape(f"{sean_ellis_pct}%" if sean_ellis_pct is not None else "N/A")}</div></div>
+        <div class="card"><div class="kpi-label">Data Room Readiness</div><div class="kpi-val">{readiness_pct}%</div></div>
+      </div>
+      <div class="card">
+        <h2 style="margin:0 0 6px;font-size:18px;">Secret Sauce &amp; Mensarius Oath Governance</h2>
+        <p style="margin:0 0 8px;color:#cbd5e1;"><strong>Unfair Advantage:</strong> {esc_sauce}</p>
+        <p class="muted" style="margin:0;">Single-file standalone Investor Portal — ready to share privately or publish to GitHub Pages. All raw customer PII is redacted by default.</p>
+      </div>
+      <div class="card">
+        <h2 style="margin:0 0 4px;font-size:18px;">VC Lab &amp; Founder Institute Diligence Readiness ({passed_count}/{len(checks)})</h2>
+        <div class="muted">Updated {html.escape(now_iso)} • All claims tagged [VALIDATED] or [HYPOTHESIS].</div>
+        <ul class="checks">{check_items_html}</ul>
+      </div>
+    </section>
 
-    <div class="card">
-      <h2 style="margin:0 0 4px;font-size:18px;">VC Lab & Founder Institute Diligence Readiness ({passed_count}/{len(checks)})</h2>
-      <div class="muted">Updated {html.escape(now_iso)} • All raw customer PII excluded by default.</div>
-      <ul class="checks">{check_items_html}</ul>
-    </div>
+    <!-- TAB 2: EMBEDDED 16:9 PITCH DECK -->
+    <section id="sec-deck" class="section">
+      <div class="card">
+        <div id="portal-slide-stage" class="slide-stage">
+          <div>
+            <div id="ps-kicker" class="slide-kicker">PITCH DECK</div>
+            <div id="ps-headline" class="slide-h">Loading slides...</div>
+            <div id="ps-sub" class="muted"></div>
+            <ul id="ps-bullets" class="slide-bullets"></ul>
+            <div id="ps-body"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border);padding-top:12px;margin-top:16px;">
+            <span class="muted">{esc_company} • Single-File Investor Portal</span>
+            <span id="ps-counter" class="pill">0 / 0</span>
+          </div>
+        </div>
+        <div class="slide-controls">
+          <div style="display:flex;gap:8px;">
+            <button class="btn" onclick="stepPortalSlide(-1)">← Previous</button>
+            <button class="btn primary" onclick="stepPortalSlide(1)">Next →</button>
+          </div>
+          <button class="btn" onclick="togglePortalNotes()">Toggle Speaker Notes</button>
+        </div>
+        <div id="ps-notes" style="display:none;margin-top:12px;padding:12px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:#cbd5e1;font-size:13px;"></div>
+      </div>
+    </section>
 
-    <footer>Built with Startup Antigravity — Ethical Venture OS • Mensarius Oath Compliant • 10 Languages</footer>
+    <!-- TAB 3: INTERACTIVE FINANCIAL MODEL -->
+    <section id="sec-financials" class="section">
+      <div class="grid">
+        <div class="card"><div class="kpi-label">Annualized ARR</div><div class="kpi-val">{html.escape(_fmt_money(arr_f))}</div></div>
+        <div class="card"><div class="kpi-label">Cash on Hand</div><div class="kpi-val">{html.escape(_fmt_money(cash_f))}</div></div>
+        <div class="card"><div class="kpi-label">Monthly Gross Burn</div><div class="kpi-val">{html.escape(_fmt_money(burn_f))}</div></div>
+        <div class="card"><div class="kpi-label">Runway / Status</div><div class="kpi-val" style="font-size:20px;">{html.escape("Default-Alive" if default_alive else (f"{runway} mos" if runway is not None else "N/A"))}</div></div>
+      </div>
+      <div class="card">
+        <h2 style="margin:0 0 6px;font-size:18px;">Interactive 12-Month Scenario Model (What-If Sensitivity)</h2>
+        <div class="slider-row">
+          <label>Monthly MRR Growth Rate: <strong id="fm-g-lbl">12%</strong>
+            <input id="fm-growth" type="range" min="0" max="40" value="12" oninput="renderFinancialModel()" />
+          </label>
+          <label>Monthly Burn Adjustment: <strong id="fm-b-lbl">0%</strong>
+            <input id="fm-burn-adj" type="range" min="-40" max="60" value="0" oninput="renderFinancialModel()" />
+          </label>
+        </div>
+        <div id="fm-summary" class="muted" style="margin-bottom:12px;"></div>
+        <table>
+          <thead><tr><th>Month</th><th>Projected MRR</th><th>Gross Profit</th><th>Monthly Burn</th><th>Ending Cash</th></tr></thead>
+          <tbody id="fm-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 4: PACT PIPELINE & PROOF -->
+    <section id="sec-pacts" class="section">
+      <div class="grid">
+        <div class="card"><div class="kpi-label">Signed / Paid Customer PACTs</div><div class="kpi-val">{html.escape(_fmt_money(signed_customer_val))}</div><div class="muted">{len(customer_pacts)} total logged</div></div>
+        <div class="card"><div class="kpi-label">Investor Soft-Circle PACTs</div><div class="kpi-val">{html.escape(_fmt_money(soft_circle_val))}</div><div class="muted">{len(investor_pacts)} total logged</div></div>
+        <div class="card"><div class="kpi-label">Mom Test Interviews</div><div class="kpi-val">{len(interviews)}</div><div class="muted">{len(validated_assumptions)}/{len(assumptions)} assumptions validated</div></div>
+      </div>
+      <div class="card">
+        <h2 style="margin:0 0 10px;font-size:18px;">Customer Paid-Pilot PACT Pipeline (PII-Redacted)</h2>
+        <table><thead><tr><th>#</th><th>Segment / Archetype</th><th>Status</th><th>Value</th></tr></thead><tbody>{cust_rows_html}</tbody></table>
+      </div>
+      <div class="card">
+        <h2 style="margin:0 0 10px;font-size:18px;">Investor Soft-Circle PACT Pipeline</h2>
+        <table><thead><tr><th>#</th><th>Investor / Archetype</th><th>Status</th><th>Soft-Circle</th></tr></thead><tbody>{inv_rows_html}</tbody></table>
+      </div>
+      <div class="card">
+        <h2 style="margin:0 0 10px;font-size:18px;">Validated Riskiest Assumptions</h2>
+        <ul style="margin:0;padding-left:18px;display:grid;gap:6px;">{validated_list_html}</ul>
+      </div>
+    </section>
+
+    <!-- TAB 5: iKPI LEDGER & DILIGENCE Q&A -->
+    <section id="sec-diligence" class="section">
+      <div class="card">
+        <h2 style="margin:0 0 6px;font-size:18px;">For-Progress Impact Ledger (iKPI)</h2>
+        <div class="muted">UN SDG Alignment: <strong>{ikpi_sdg}</strong> • Metric: <strong>{ikpi_metric}</strong></div>
+        <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:13px;">
+          <span>Current: <strong>{html.escape(str(ikpi_current))}</strong></span>
+          <span>Target: <strong>{html.escape(str(ikpi_target))}</strong> ({ikpi_pct}%)</span>
+        </div>
+        <div class="bar-bg"><div class="bar-fill" style="width:{ikpi_pct}%;"></div></div>
+      </div>
+      <div class="card">
+        <h2 style="margin:0 0 10px;font-size:18px;">Weekly Sprint Execution Ledger ({len(sprints)} logged)</h2>
+        <table><thead><tr><th>Sprint</th><th>Primary Focus</th><th>FI Velocity</th><th>Status</th></tr></thead><tbody>{sprint_rows_html}</tbody></table>
+      </div>
+      <div class="card">
+        <h2 style="margin:0 0 10px;font-size:18px;">Investor Due-Diligence Q&amp;A</h2>
+        {qa_html}
+      </div>
+    </section>
+
+    <footer>Built with Startup Antigravity — Single-File Investor Portal • Mensarius Oath Compliant • 10 Languages</footer>
   </div>
   <script>
     const DR_I18N = {locales_json_str};
+    const PORTAL_SLIDES = {embedded_slides_json};
+    const STAGE_LABEL = {stage_json_str};
+    const BASE_FIN = {{ mrr: {mrr_f}, gm: {gm_f or 80.0}, cash: {cash_f}, burn: {burn_f} }};
+    let portalSlideIdx = 0;
+
+    function escHtml(v) {{
+      return String(v === null || v === undefined ? '' : v)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }}
+
+    function openPortalTab(sec) {{
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.sec === sec));
+      document.querySelectorAll('.section').forEach(s => s.classList.toggle('active', s.id === 'sec-' + sec));
+      if (sec === 'deck') renderPortalSlide();
+      if (sec === 'financials') renderFinancialModel();
+    }}
+
+    function _renderListItems(items) {{
+      return (Array.isArray(items) ? items : []).map(item => {{
+        if (typeof item === 'string') return '<li>' + escHtml(item) + '</li>';
+        if (item && typeof item === 'object') {{
+          const lbl = item.label ? '<strong>' + escHtml(item.label) + ': </strong>' : '';
+          return '<li>' + lbl + escHtml(item.text || item.value || '') + '</li>';
+        }}
+        return '';
+      }}).join('');
+    }}
+
+    function renderPortalSlide() {{
+      const bulletsEl = document.getElementById('ps-bullets');
+      const bodyEl = document.getElementById('ps-body');
+      if (!PORTAL_SLIDES.length) {{
+        document.getElementById('ps-headline').textContent = 'No pitch-deck/deck.json embedded yet.';
+        bulletsEl.innerHTML = '';
+        if (bodyEl) bodyEl.innerHTML = '';
+        document.getElementById('ps-counter').textContent = '0 / 0';
+        return;
+      }}
+      const s = PORTAL_SLIDES[portalSlideIdx] || {{}};
+      document.getElementById('ps-kicker').textContent = s.kicker || ('SLIDE ' + (portalSlideIdx + 1));
+      document.getElementById('ps-headline').textContent = s.headline || '';
+      document.getElementById('ps-sub').textContent = s.subheadline || s.caption || '';
+
+      const bullets = Array.isArray(s.bullets) ? s.bullets : [];
+      bulletsEl.innerHTML = _renderListItems(bullets);
+      bulletsEl.style.display = bullets.length ? 'grid' : 'none';
+
+      const parts = [];
+      if (s.footer) {{
+        parts.push('<p class="muted" style="margin-top:14px;">' + escHtml(s.footer) + '</p>');
+      }}
+      if (Array.isArray(s.metrics) && s.metrics.length) {{
+        parts.push('<div class="ps-grid">' + s.metrics.map(m =>
+          '<div class="ps-card"><div class="kpi-label">' + escHtml(m.label || '') + '</div>' +
+          '<div class="ps-val">' + escHtml(m.value || '') + '</div>' +
+          (m.note ? '<div class="muted">' + escHtml(m.note) + '</div>' : '') + '</div>'
+        ).join('') + '</div>');
+      }}
+      if (Array.isArray(s.series) && s.series.length) {{
+        const maxVal = Math.max(1, ...s.series.map(pt => Math.abs(Number(pt.value) || 0)));
+        const prefix = s.unitPrefix || '';
+        const suffix = s.unitSuffix || '';
+        parts.push(
+          '<div style="margin-top:12px;">' +
+          (s.chartTitle ? '<div class="kpi-label" style="margin-bottom:6px;">' + escHtml(s.chartTitle) + '</div>' : '') +
+          s.series.map(pt => {{
+            const v = Number(pt.value) || 0;
+            const pct = Math.min(100, Math.max(4, Math.round((Math.abs(v) / maxVal) * 100)));
+            return '<div class="ps-bar-row"><span>' + escHtml(pt.label || '') + '</span>' +
+              '<div class="ps-bar-track"><div class="ps-bar-fill" style="width:' + pct + '%;"></div></div>' +
+              '<strong style="text-align:right;">' + escHtml(prefix + v.toLocaleString() + suffix) + '</strong></div>';
+          }}).join('') + '</div>'
+        );
+      }}
+      if ((Array.isArray(s.highlights) && s.highlights.length) || (Array.isArray(s.mockupSteps) && s.mockupSteps.length)) {{
+        const cols = [];
+        if (Array.isArray(s.highlights) && s.highlights.length) {{
+          cols.push('<div class="ps-card"><div class="kpi-label">' + escHtml(s.highlightsTitle || 'Product Highlights') + '</div><ul class="slide-bullets" style="font-size:14px;">' + _renderListItems(s.highlights) + '</ul></div>');
+        }}
+        if (Array.isArray(s.mockupSteps) && s.mockupSteps.length) {{
+          cols.push('<div class="ps-card"><div class="kpi-label">Workflow Steps</div><ol style="margin:8px 0 0 18px;padding:0;display:grid;gap:6px;font-size:14px;color:#e2e8f0;">' + _renderListItems(s.mockupSteps) + '</ol></div>');
+        }}
+        parts.push('<div class="ps-grid">' + cols.join('') + '</div>');
+      }}
+      if (Array.isArray(s.points) && s.points.length) {{
+        const axes = (s.xAxisLeft || s.xAxisRight || s.yAxisBottom || s.yAxisTop)
+          ? '<div class="muted" style="margin-top:8px;">X: ' + escHtml(s.xAxisLeft || '') + ' → ' + escHtml(s.xAxisRight || '') + ' • Y: ' + escHtml(s.yAxisBottom || '') + ' → ' + escHtml(s.yAxisTop || '') + '</div>'
+          : '';
+        parts.push(axes + '<div class="ps-grid">' + s.points.map(pt =>
+          '<div class="ps-card" style="' + (pt.highlight ? 'border-color:var(--accent);' : '') + '"><strong>' + escHtml(pt.label || '') + '</strong>' +
+          '<div class="muted">X: ' + escHtml(pt.x) + ' • Y: ' + escHtml(pt.y) + (pt.highlight ? ' • Our Position' : '') + '</div></div>'
+        ).join('') + '</div>');
+      }}
+      if ((Array.isArray(s.leftItems) && s.leftItems.length) || (Array.isArray(s.rightItems) && s.rightItems.length)) {{
+        parts.push(
+          '<div class="ps-grid">' +
+          '<div class="ps-card"><div class="kpi-label">' + escHtml(s.leftTitle || 'Column A') + '</div><ul class="slide-bullets" style="font-size:14px;">' + _renderListItems(s.leftItems) + '</ul></div>' +
+          '<div class="ps-card"><div class="kpi-label">' + escHtml(s.rightTitle || 'Column B') + '</div><ul class="slide-bullets" style="font-size:14px;">' + _renderListItems(s.rightItems) + '</ul></div>' +
+          '</div>'
+        );
+      }}
+      if (s.askAmount || (Array.isArray(s.allocations) && s.allocations.length) || (Array.isArray(s.milestones) && s.milestones.length)) {{
+        const allocHtml = (Array.isArray(s.allocations) ? s.allocations : []).map(a =>
+          typeof a === 'string'
+            ? '<li>' + escHtml(a) + '</li>'
+            : '<li><strong>' + escHtml(a.label || '') + '</strong>: ' + escHtml(a.pct !== undefined ? a.pct + '%' : (a.value || '')) + '</li>'
+        ).join('');
+        parts.push(
+          '<div class="ps-grid">' +
+          '<div class="ps-card"><div class="kpi-label">Fundraising Ask</div><div class="ps-val">' + escHtml(s.askAmount || '') + '</div><div class="muted">' + escHtml(s.instrument || '') + '</div>' +
+          (allocHtml ? '<ul class="slide-bullets" style="font-size:13px;">' + allocHtml + '</ul>' : '') + '</div>' +
+          '<div class="ps-card"><div class="kpi-label">18-Month Milestones</div><ul class="slide-bullets" style="font-size:13px;">' + _renderListItems(s.milestones) + '</ul>' +
+          (s.impactMetric ? '<div class="muted" style="margin-top:8px;"><strong>iKPI:</strong> ' + escHtml(s.impactMetric) + '</div>' : '') + '</div>' +
+          '</div>'
+        );
+      }}
+      if (s.callout) {{
+        parts.push('<div class="ps-callout">' + escHtml(s.callout) + '</div>');
+      }}
+      if (bodyEl) bodyEl.innerHTML = parts.join('');
+      document.getElementById('ps-counter').textContent = (portalSlideIdx + 1) + ' / ' + PORTAL_SLIDES.length;
+      document.getElementById('ps-notes').textContent = 'Speaker Notes: ' + (s.notes || 'No speaker notes for this slide.');
+    }}
+
+    function stepPortalSlide(delta) {{
+      if (!PORTAL_SLIDES.length) return;
+      portalSlideIdx = (portalSlideIdx + delta + PORTAL_SLIDES.length) % PORTAL_SLIDES.length;
+      renderPortalSlide();
+    }}
+
+    function togglePortalNotes() {{
+      const el = document.getElementById('ps-notes');
+      el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }}
+
+    function fmtUsd(n) {{
+      const sign = n < 0 ? '-' : '';
+      return sign + '$' + Math.round(Math.abs(n)).toLocaleString();
+    }}
+
+    function renderFinancialModel() {{
+      const g = Number(document.getElementById('fm-growth').value) / 100.0;
+      const bAdj = Number(document.getElementById('fm-burn-adj').value) / 100.0;
+      document.getElementById('fm-g-lbl').textContent = Math.round(g * 100) + '%';
+      document.getElementById('fm-b-lbl').textContent = (bAdj >= 0 ? '+' : '') + Math.round(bAdj * 100) + '%';
+      let mrr = BASE_FIN.mrr;
+      let cash = BASE_FIN.cash;
+      const burn = Math.max(0, BASE_FIN.burn * (1 + bAdj));
+      const gmRatio = Math.min(1, Math.max(0, BASE_FIN.gm / 100.0));
+      const rows = [];
+      let defaultAliveMonth = burn === 0 ? 1 : null;
+      for (let m = 1; m <= 12; m++) {{
+        mrr = mrr * (1 + g);
+        const gp = mrr * gmRatio;
+        cash = cash + gp - burn;
+        if (defaultAliveMonth === null && gp >= burn && burn > 0) defaultAliveMonth = m;
+        rows.push(`<tr><td>Month ${{m}}</td><td>${{fmtUsd(mrr)}}</td><td>${{fmtUsd(gp)}}</td><td>${{fmtUsd(burn)}}</td><td style="color:${{cash >= 0 ? 'var(--accent)' : '#f43f5e'}};font-weight:700;">${{fmtUsd(cash)}}</td></tr>`);
+      }}
+      document.getElementById('fm-tbody').innerHTML = rows.join('');
+      const statusText = burn === 0
+        ? ' • Default-Alive ($0 monthly burn)'
+        : (defaultAliveMonth ? ' • Reaches Default-Alive in Month ' + defaultAliveMonth : ' • Requires burn reduction or growth acceleration to reach Default-Alive.');
+      document.getElementById('fm-summary').textContent =
+        'Month-12 Projected ARR: ' + fmtUsd(mrr * 12) + ' • Ending Cash: ' + fmtUsd(cash) + statusText;
+    }}
+
     function applyDrLang(code) {{
       const L = DR_I18N[code] || DR_I18N.en;
       if (!L) return;
       document.documentElement.lang = code;
       document.documentElement.dir = L.rtl ? 'rtl' : 'ltr';
-      if (L.nav && L.nav.dataroom) document.getElementById('dr-badge').textContent = L.nav.dataroom + ' • {html.escape(str(stage))}';
+      if (L.nav && L.nav.dataroom) document.getElementById('dr-badge').textContent = L.nav.dataroom + ' • ' + STAGE_LABEL;
       try {{ localStorage.setItem('sa_lang', code); }} catch (e) {{}}
     }}
+
+    document.addEventListener('keydown', (e) => {{
+      if (document.getElementById('sec-deck').classList.contains('active')) {{
+        if (e.key === 'ArrowRight') stepPortalSlide(1);
+        if (e.key === 'ArrowLeft') stepPortalSlide(-1);
+      }}
+    }});
+
     (function () {{
       let saved = "{default_locale}";
       try {{ saved = localStorage.getItem('sa_lang') || saved; }} catch (e) {{}}
       const sel = document.getElementById('dr-lang');
       if (sel && DR_I18N[saved]) {{ sel.value = saved; applyDrLang(saved); }}
+      renderPortalSlide();
+      renderFinancialModel();
     }})();
   </script>
 </body>
@@ -360,6 +748,9 @@ def build_data_room(workspace: Path) -> dict[str, Any]:
         "ok": True,
         "dataRoomDir": str(dr),
         "portalHtml": str(dr / "index.html"),
+        "singleFilePortal": True,
+        "portalTabs": ["overview", "deck", "financials", "pacts", "diligence"],
+        "embeddedSlideCount": len(embedded_slides),
         "indexMarkdown": str(dr / "DATA_ROOM_INDEX.md"),
         "readinessPct": readiness_pct,
         "checksPassed": passed_count,

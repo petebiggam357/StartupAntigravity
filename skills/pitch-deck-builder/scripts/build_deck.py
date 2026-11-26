@@ -63,6 +63,42 @@ VAGUE_AUDIENCES = [
 ]
 
 THEME_PRESETS: dict[str, dict[str, str]] = {
+    "midnight": {
+        "bg": "#0B1120",
+        "surface": "#111C33",
+        "text": "#F8FAFC",
+        "muted": "#94A3B8",
+        "accent": "#38BDF8",
+        "accent2": "#10B981",
+        "border": "#1E293B",
+    },
+    "ivory": {
+        "bg": "#FAF8F5",
+        "surface": "#FFFFFF",
+        "text": "#1C1917",
+        "muted": "#57534E",
+        "accent": "#0F766E",
+        "accent2": "#B45309",
+        "border": "#E7E5E4",
+    },
+    "emerald": {
+        "bg": "#041410",
+        "surface": "#0A241E",
+        "text": "#ECFDF5",
+        "muted": "#94A3B8",
+        "accent": "#10B981",
+        "accent2": "#F59E0B",
+        "border": "#134E4A",
+    },
+    "crimson": {
+        "bg": "#14080C",
+        "surface": "#220E15",
+        "text": "#FFF1F2",
+        "muted": "#FDA4AF",
+        "accent": "#F43F5E",
+        "accent2": "#F59E0B",
+        "border": "#3F1724",
+    },
     "midnight-emerald": {
         "bg": "#0B1120",
         "surface": "#111C33",

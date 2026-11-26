@@ -54,9 +54,12 @@ def run_war_room(
     paid_pacts = sum(1 for p in pacts if p.get("type", "customer") == "customer" and p.get("status") in ("signed", "paid", "closed"))
 
     q_lower = q.lower()
-    is_fundraising = any(k in q_lower for k in ("raise", "fundrais", "seed", "investor", "safe", "vc"))
+    is_fundraising = any(k in q_lower for k in ("raise", "fundrais", "seed", "investor", "safe", "vc", "bridge"))
     is_hiring = any(k in q_lower for k in ("hire", "hiring", "engineer", "team", "sales rep"))
     is_x402 = any(k in q_lower for k in ("x402", "token", "usdc", "crypto", "blockchain", "agent"))
+    is_pricing = any(k in q_lower for k in ("price", "pricing", "acv", "discount", "undercut", "margin"))
+    is_runway = any(k in q_lower for k in ("runway", "crunch", "burn", "cash", "prepay", "default-alive"))
+    is_pivot = any(k in q_lower for k in ("pivot", "icp", "segment", "niche", "reposition"))
 
     # 4 Executive Perspectives
     cto_view = {
@@ -67,20 +70,36 @@ def run_war_room(
             + (
                 "If exploring x402 or agent endpoints, start on Base Sepolia testnet via `x402_starter_scaffold` with zero custom token overhead."
                 if is_x402
-                else "Ship a 7-day vertical slice with boring low-ops tech and automated evals; defer heavy infra or premature headcount."
+                else (
+                    "Cut non-essential cloud/model COGS immediately via tiered model routing and prompt caching before touching core product velocity."
+                    if is_runway
+                    else (
+                        "Before rebuilding for a pivot, isolate the reusable 20% core workflow and test the new ICP with a 7-day concierge slice."
+                        if is_pivot
+                        else "Ship a 7-day vertical slice with boring low-ops tech and automated evals; defer heavy infra or premature headcount."
+                    )
+                )
             )
         ),
     }
 
     cfo_view = {
         "role": "Fractional CFO & Profit OS",
-        "stance": "DEFEND_RUNWAY" if (runway is not None and runway < 12) else "COMPOUND_DEFAULT_ALIVE",
+        "stance": "DEFEND_RUNWAY" if (is_runway or (runway is not None and runway < 12)) else "COMPOUND_DEFAULT_ALIVE",
         "argument": (
             f"MRR is ${mrr:,.0f}/mo with {'Default-Alive / N/A' if runway is None else f'{runway} months'} runway. "
             + (
-                "Before raising external dilution, lock 30–50% soft-circle via VC Lab Investor PACTs and verify <3-mo CAC payback."
-                if is_fundraising
-                else "Every new dollar of fixed burn (hiring or ads) must map to verified payback under 3 months."
+                "Runway defense first: trim 20–30% discretionary burn, offer 15% annual-prepay Customer PACTs to pull cash forward, and freeze non-revenue spend."
+                if is_runway
+                else (
+                    "Never fight a race-to-the-bottom price war—test a 25–40% ACV lift anchored to quantified ROI and protect >=75% gross margins."
+                    if is_pricing
+                    else (
+                        "Before raising external dilution, lock 30–50% soft-circle via VC Lab Investor PACTs and verify <3-mo CAC payback."
+                        if is_fundraising
+                        else "Every new dollar of fixed burn (hiring or ads) must map to verified payback under 3 months."
+                    )
+                )
             )
         ),
     }
@@ -91,9 +110,17 @@ def run_war_room(
         "argument": (
             f"Sean Ellis score is {f'{pmf_pct}%' if pmf_pct is not None else 'unmeasured'} with {paid_pacts} signed/paid Customer PACTs. "
             + (
-                "PMF >=40% gives permission to pour fuel strictly into your High-Expectation Customer (HXC) segment."
-                if (pmf_pct is not None and pmf_pct >= 40.0)
-                else "Never scale hiring or paid ads before hitting >=40% Very Disappointed in a focused HXC niche."
+                "Segment Sean Ellis responses by persona before pivoting—often 1 narrow HXC sub-segment is already >=40% while the broad list dilutes it."
+                if is_pivot
+                else (
+                    "Test the new price point on 5 fresh ICP prospects via 48-hour Customer PACTs; real willingness-to-pay beats hypothetical objections."
+                    if is_pricing
+                    else (
+                        "PMF >=40% gives permission to pour fuel strictly into your High-Expectation Customer (HXC) segment."
+                        if (pmf_pct is not None and pmf_pct >= 40.0)
+                        else "Never scale hiring or paid ads before hitting >=40% Very Disappointed in a focused HXC niche."
+                    )
+                )
             )
         ),
     }
@@ -106,7 +133,11 @@ def run_war_room(
             + (
                 "Before adding fixed salaries, ask how AI agents, Staff-on-Demand, and partner channels can deliver 10x output first."
                 if is_hiring
-                else "Pair 10x Moonshot positioning (6Ds Why-Now) with zero-dark-pattern audit-led onboarding and x402/MCP distribution."
+                else (
+                    "Reframe pricing around 10x outcome value (e.g. recovered revenue or hours saved) rather than seat-count parity with legacy incumbents."
+                    if is_pricing
+                    else "Pair 10x Moonshot positioning (6Ds Why-Now) with zero-dark-pattern audit-led onboarding and x402/MCP distribution."
+                )
             )
         ),
     }

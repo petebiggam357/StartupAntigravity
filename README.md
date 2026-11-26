@@ -63,11 +63,11 @@ Starting in **`v0.0.3-alpha`**, every GitHub Release includes **native compiled 
 
 | Platform | Package File | How to Run |
 | :--- | :--- | :--- |
-| **Linux (Portable)** | `StartupAntigravity-v0.4.2-beta-x86_64.AppImage` | `chmod +x StartupAntigravity-*.AppImage && ./StartupAntigravity-*.AppImage` (or double-click in Files) |
-| **Ubuntu / Pop!_OS / Debian** | `startup-antigravity_0.4.2-beta_all.deb` | `sudo apt install ./startup-antigravity_0.4.2-beta_all.deb` — adds **Startup Antigravity** to your COSMIC / GNOME app launcher + `startup-antigravity` CLI |
-| **macOS (Apple Silicon / Intel)** | `StartupAntigravity-v0.4.2-beta-macos-arm64.dmg` | Open `.dmg`, drag **Startup Antigravity.app** to **Applications**, and launch |
-| **Windows 10 & 11** | `StartupAntigravity-v0.4.2-beta-win64.exe` | Double-click `.exe` (installs plugin offline & creates `python3.exe` shim if missing) |
-| **Universal Plugin Archive** | `startup-antigravity-v0.4.2-beta.zip` | Unzip directly into your Antigravity plugins folder |
+| **Linux (Portable)** | `StartupAntigravity-v0.5.0-beta-x86_64.AppImage` | `chmod +x StartupAntigravity-*.AppImage && ./StartupAntigravity-*.AppImage` (or double-click in Files) |
+| **Ubuntu / Pop!_OS / Debian** | `startup-antigravity_0.5.0-beta_all.deb` | `sudo apt install ./startup-antigravity_0.5.0-beta_all.deb` — adds **Startup Antigravity** to your COSMIC / GNOME app launcher + `startup-antigravity` CLI |
+| **macOS (Apple Silicon / Intel)** | `StartupAntigravity-v0.5.0-beta-macos-arm64.dmg` | Open `.dmg`, drag **Startup Antigravity.app** to **Applications**, and launch |
+| **Windows 10 & 11** | `StartupAntigravity-v0.5.0-beta-win64.exe` | Double-click `.exe` (installs plugin offline & creates `python3.exe` shim if missing) |
+| **Universal Plugin Archive** | `startup-antigravity-v0.5.0-beta.zip` | Unzip directly into your Antigravity plugins folder |
 | **Integrity Checksums** | `SHA256SUMS.txt` | Verify with `sha256sum -c SHA256SUMS.txt` |
 
 **CLI mode** is also built into every native package:
@@ -305,10 +305,10 @@ cd "$env:USERPROFILE\.gemini\config\plugins\startup-antigravity"
 python3 -m unittest discover -s tests -v
 ```
 
-Expected result: **`Ran 31 tests ... OK`** (under 1 second).
+Expected result: **`Ran 46 tests ... OK`** (zero external dependencies). You can also smoke-test the GitHub Pages showcase locally via `python3 scripts/smoke_test_pages.py` (add `--playwright` if Playwright is installed).
 
 ### 2. Verify Inside Antigravity
-1. **Customizations > Plugins:** You should see **Startup Antigravity — Ethical Venture OS (`v0.4.1-beta`)** enabled with **20 skills**, **9 agents**, **1 rule file**, **4 hooks**, **10 languages**, and **1 MCP server**.
+1. **Customizations > Plugins:** You should see **Startup Antigravity — Ethical Venture OS (`v0.5.0-beta`)** enabled with **20 skills**, **9 agents**, **1 rule file**, **4 hooks**, **10 languages**, and **1 MCP server**.
 2. **Additional Options (`...`) > MCP Servers:** Confirm `startup-antigravity_startup-antigravity-os` shows as connected with **30 tools**.
 3. **Antigravity CLI (optional):**
    ```bash
@@ -464,7 +464,7 @@ Runs locally via Python 3 stdio (zero external API keys):
 18. `founder_resources_hub` — Search 54+ curated FI.co, VC Lab, Startup Grind, Founders Guild, Singularity/ExO, AI-native, x402, PMF, legal, and accounting resources, pull stage-matched Action Kits, or save custom bookmarks
 19. `founder_dashboard_build` — Compile all live `.startup/*.json` telemetry into the 10-language **Startup Command Center** (`dashboard/index.html`) with PMF 40% SVG gauge, ExO/6Ds card, x402 USDC revenue, and interactive What-If Runway Sliders
 20. `transcript_ingest` — Extract pain severity (1–5), dollar WTP, workarounds, pilot intent, verbatim quotes, and Mom Test bias warnings from raw Zoom/Loom/Otter call transcripts (auto-logging to `.startup/interviews.json`)
-21. `data_room_build` — Compile a 10-language investor-ready Data Room (`data-room/index.html`, `DATA_ROOM_INDEX.md`, Executive One-Pager, PII-redacted customer proof, and VC Lab / FI diligence checklist)
+21. `data_room_build` — Compile a 10-language, single-file interactive Investor Portal (`data-room/index.html` bundling the 16:9 deck, What-If financial model, PII-redacted PACT pipeline, iKPI ledger & Diligence Q&A) plus `DATA_ROOM_INDEX.md` and folder exports
 22. `ai_x402_calc` — Deterministic AI token COGS & `>=75%` margin modeler, `x402` USDC vs card comparator + spec generator, ethical tokenization scorecard, and runnable Base Sepolia `x402_starter_scaffold`
 23. `board_review_run` — Deterministic 3-lens Partner & Mentor Board Review (**FI Mentor**, **VC Lab Partner**, **PMF Truth Auditor**) writing `docs/BOARD_REVIEW_MEMO.md`
 24. `competitor_manage` — Track competitors, pricing, 2×2 coordinates, and Secret Sauce in `.startup/competitors.json` and export `docs/COMPETITOR_BATTLECARD.md`

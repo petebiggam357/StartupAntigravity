@@ -1,15 +1,17 @@
 #!/usr/bin/env python3
-"""Zero-dependency local HTTP Studio server for Startup Antigravity (v0.3.0-beta).
+"""Zero-dependency local HTTP Studio server for Startup Antigravity (v0.5.0-beta).
 
 Serves a unified, 10-language tabbed dark-mode web workspace on http://127.0.0.1:<port> combining:
   - Startup Command Center Dashboard  (/workspace/dashboard/index.html)
   - 13-Slide Interactive Pitch Deck   (/workspace/pitch-deck/index.html)
-  - Investor Data Room Portal         (/workspace/data-room/index.html)
-  - Smoke-Test Landing Page           (/workspace/landing/index.html)
-  - Live Voice Pitch Coach & VC Q&A   (POST /api/voice-coach + Web Speech API)
-  - Autonomous 4-Exec Startup War Room(POST /api/war-room)
+  - Single-File Investor Data Room    (/workspace/data-room/index.html)
+  - Browser Voice Pitch Rehearsal     (POST /api/voice-coach + live Web Speech API telemetry)
+  - 4-Exec War Room + Scenario Presets(POST /api/war-room)
   - Metered x402 Agent Storefront     (POST /api/x402/agent-call & GET /api/x402/ledger)
   - 3-Lens Board Review               (GET /api/board-review)
+  - Embedded Cohort Portfolio View    (GET /api/portfolio)
+  - Visual Slide Editor + Live Themes (GET/POST /api/deck)
+  - 1-Click Snapshot Export & Restore (GET /api/export-snapshot & POST /api/import-snapshot)
   - Live 54+ Resource Library Search  (GET /api/resources)
   - Live Metric Editor & Switcher     (POST /api/metrics & POST /api/workspace)
 """
@@ -19,16 +21,21 @@ from __future__ import annotations
 import html
 import json
 import mimetypes
+import re
 import subprocess
 import sys
 import threading
 import webbrowser
+from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, unquote, urlparse
 
 ROOT = Path(__file__).resolve().parent.parent
+MAX_JSON_BODY_BYTES = 10 * 1024 * 1024  # 10 MB safety limit for local Studio API requests
+THEME_PALETTE_KEYS = ("bg", "surface", "text", "muted", "accent", "accent2", "border")
+_SAFE_STARTUP_JSON_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*\.json$")
 
 
 def _workspace_fingerprint(workspace: Path) -> float:
@@ -56,6 +63,61 @@ def _load_json(path: Path, default: Any) -> Any:
         return default
 
 
+def _build_snapshot_dict(ws: Path) -> dict[str, Any]:
+    snap: dict[str, Any] = {
+        "ok": True,
+        "schemaVersion": "1.0",
+        "exportedAt": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "workspace": ws.name,
+        "startup": {},
+        "deck": None,
+    }
+    sdir = ws / ".startup"
+    if sdir.exists():
+        for jf in sorted(sdir.glob("*.json")):
+            snap["startup"][jf.name] = _load_json(jf, {})
+    deck_file = ws / "pitch-deck" / "deck.json"
+    if deck_file.exists():
+        snap["deck"] = _load_json(deck_file, None)
+    return snap
+
+
+def validate_snapshot_payload(body: Any) -> tuple[bool, str]:
+    """Validate an imported workspace snapshot JSON before restoring."""
+    if not isinstance(body, dict):
+        return False, "Snapshot payload must be a JSON object."
+
+    startup = body.get("startup")
+    deck = body.get("deck")
+
+    if startup is not None and not isinstance(startup, dict):
+        return False, "'startup' must be a JSON object mapping filenames to JSON data."
+
+    startup_map: dict[str, Any] = startup or {}
+    for fname, content in startup_map.items():
+        if not isinstance(fname, str) or not fname.endswith(".json"):
+            return False, f"Invalid startup filename: {fname!r} (must end with .json)."
+        if Path(fname).name != fname or ".." in fname or "/" in fname or "\\" in fname or not _SAFE_STARTUP_JSON_RE.match(fname):
+            return False, f"Unsafe startup filename rejected: {fname!r}."
+        if fname == "state.json" and not isinstance(content, dict):
+            return False, "'startup.state.json' must be a JSON object."
+        if not isinstance(content, (dict, list)):
+            return False, f"Startup file {fname!r} must contain a JSON object or array."
+
+    if deck is not None:
+        if not isinstance(deck, dict):
+            return False, "'deck' must be a JSON object or null."
+        if "slides" in deck:
+            slides = deck["slides"]
+            if not isinstance(slides, list) or not all(isinstance(s, dict) for s in slides):
+                return False, "'deck.slides' must be a list of slide objects."
+
+    if not startup_map and deck is None:
+        return False, "Snapshot must include at least one '.startup/*.json' file or a 'deck' object."
+
+    return True, ""
+
+
 def _rebuild_views(ws: Path, p_root: Path) -> None:
     dash_script = p_root / "skills" / "unit-economics-and-profit-os" / "scripts" / "build_dashboard.py"
     if dash_script.exists():
@@ -74,7 +136,7 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
     all_locales = _load_json(plugin_root / "i18n" / "locales.json", {})
     if default_locale not in all_locales:
         default_locale = "en"
-    locales_json = json.dumps(all_locales, ensure_ascii=False)
+    locales_json = json.dumps(all_locales, ensure_ascii=False).replace("</", "<\\/")
     lang_opts = "".join(
         f'<option value="{code}"{" selected" if code == default_locale else ""}>{html.escape(data.get("nativeName", code))}</option>'
         for code, data in all_locales.items()
@@ -130,12 +192,15 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
       <button class="tab" data-tab="warroom" data-i18n="nav.warroom" onclick="selectTab('warroom')">War Room</button>
       <button class="tab" data-tab="x402" data-i18n="nav.x402" onclick="selectTab('x402')">x402 Storefront</button>
       <button class="tab" data-tab="board" data-i18n="nav.board" onclick="selectTab('board')">Board Review</button>
+      <button class="tab" data-tab="portfolio" onclick="selectTab('portfolio')">Portfolio</button>
       <button class="tab" data-tab="rhythm" onclick="selectTab('rhythm')">Weekly Rhythm</button>
       <button class="tab" data-tab="resources" data-i18n="nav.resources" onclick="selectTab('resources')">54+ Resources</button>
       <button class="tab" data-tab="editor" onclick="selectTab('editor')" style="border-color:#a855f7;color:#d8b4fe;">Slide Editor</button>
       <button class="tab" onclick="openOnboardModal()" style="border-color:#10b981;color:#6ee7b7;">Setup Wizard</button>
       <button class="tab" data-i18n="nav.editMetrics" onclick="openMetricsModal()" style="border-color:#f59e0b;color:#fbbf24;">Edit Metrics</button>
       <button class="tab" onclick="exportSnapshot()" style="border-color:#64748b;color:#cbd5e1;">Export Snapshot</button>
+      <button class="tab" onclick="triggerImportSnapshot()" style="border-color:#64748b;color:#cbd5e1;">Import Snapshot</button>
+      <input id="import-snap-file" type="file" accept=".json,application/json" style="display:none" onchange="importSnapshotFile(this)" />
       <button class="tab" onclick="publishLive()" style="border-color:#38bdf8;color:#7dd3fc;">Publish Live</button>
       <select id="studio-lang" class="lang" aria-label="Language" onchange="applyStudioLang(this.value)">{lang_opts}</select>
     </nav>
@@ -145,25 +210,40 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
 
     <div id="voice-panel" class="panel">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
-        <h2 style="margin:0;">Live Voice Pitch Coach &amp; VC Lab Partner Q&amp;A</h2>
-        <div style="display:flex;gap:8px;align-items:center;">
+        <h2 style="margin:0;">Browser Voice Pitch Rehearsal Studio &amp; VC Lab Partner Q&amp;A</h2>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <span id="vc-status" class="pill" style="background:#1e293b;color:#94a3b8;">READY</span>
           <span id="vc-timer" class="pill" style="font-size:14px;padding:6px 12px;">03:00</span>
           <button id="vc-mic-btn" class="tab active" onclick="toggleVoiceMic()">Start 3-Min Mic Pitch</button>
           <button class="tab" onclick="scoreVoicePitch()">Analyze Transcript</button>
+          <button class="tab" onclick="resetVoiceRehearsal()">Reset</button>
           <button class="tab" onclick="downloadReport('voice-coach-scorecard.md', lastVoiceMd)">Download .md</button>
         </div>
       </div>
-      <textarea id="vc-transcript" class="box" rows="5" placeholder="Click 'Start 3-Min Mic Pitch' (Web Speech API) or paste your 3-minute FI pitch transcript here..."></textarea>
-      <div id="vc-results" style="color:var(--muted);">Speak or paste your pitch to get live WPM pace, filler-word count, FI buzzword check, and 5 Partner grilling questions.</div>
+      <div class="grid" style="margin-bottom:14px;">
+        <div class="card"><div class="cat">Live Pace (Target 125–165 WPM)</div><div id="vc-live-wpm" class="score-val">0 WPM</div><div id="vc-live-words" style="color:var(--muted);font-size:12px;">0 words • 0s elapsed</div></div>
+        <div class="card"><div class="cat">Live Filler Words</div><div id="vc-live-fillers" class="score-val" style="color:var(--amber);">0</div><div id="vc-live-filler-list" style="color:var(--muted);font-size:12px;">um, uh, like, you know, basically...</div></div>
+        <div class="card"><div class="cat">Live FI Buzzwords</div><div id="vc-live-buzz" class="score-val" style="color:#f43f5e;">0</div><div id="vc-live-buzz-list" style="color:var(--muted);font-size:12px;">Clean — zero empty superlatives</div></div>
+      </div>
+      <textarea id="vc-transcript" class="box" rows="5" oninput="updateLiveVoiceTelemetry()" placeholder="Click 'Start 3-Min Mic Pitch' (Web Speech API) or paste your 3-minute FI pitch transcript here..."></textarea>
+      <div id="vc-results" style="color:var(--muted);">Speak or paste your pitch to track live WPM + filler words in real time, then pipe straight into <code>voice_pitch_coach</code> for Partner Q&amp;A.</div>
     </div>
 
     <div id="warroom-panel" class="panel">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px;">
         <h2 style="margin:0;">Autonomous 4-Executive Startup War Room</h2>
-        <button class="tab" onclick="downloadReport('WAR_ROOM_DECISION_MEMO.md', lastWarRoomMd)">Download .md</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="tab" onclick="selectTab('board')">Open 3-Lens Board Review</button>
+          <button class="tab" onclick="downloadReport('WAR_ROOM_DECISION_MEMO.md', lastWarRoomMd)">Download .md</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+        <button class="tab" style="border-color:#f59e0b;color:#fbbf24;" onclick="runWarRoomPreset('pricing_shock')">Scenario: Pricing Shock</button>
+        <button class="tab" style="border-color:#f43f5e;color:#fda4af;" onclick="runWarRoomPreset('runway_crunch')">Scenario: Runway Crunch</button>
+        <button class="tab" style="border-color:#38bdf8;color:#7dd3fc;" onclick="runWarRoomPreset('pivot_audit')">Scenario: Pivot Audit</button>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:14px;">
-        <input id="wr-question" class="box" style="margin:0;" placeholder="Ask a hard strategic question (e.g. Should we raise $750K Pre-Seed now or bootstrap to $30K MRR?)" />
+        <input id="wr-question" class="box" style="margin:0;" placeholder="Ask a hard strategic question or pick a scenario preset above..." />
         <button class="tab active" style="white-space:nowrap;" onclick="runWarRoom()">Convene War Room</button>
       </div>
       <div id="wr-results" style="color:var(--muted);">Convene Lean CTO, Fractional CFO, PMF Truth Auditor, and Exponential Growth Strategist on live workspace telemetry.</div>
@@ -184,11 +264,24 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;">
         <h2 style="margin:0;">3-Lens Partner &amp; Mentor Board Review</h2>
         <div style="display:flex;gap:8px;">
+          <button class="tab" onclick="selectTab('warroom')">Open War Room</button>
           <button class="tab" onclick="downloadReport('BOARD_REVIEW_MEMO.md', lastBoardMd)">Download .md</button>
           <button class="tab active" onclick="loadBoardReview()">Re-Run Audit</button>
         </div>
       </div>
       <div id="board-content" style="margin-top:14px;color:var(--muted);">Loading live audit...</div>
+    </div>
+
+    <div id="portfolio-panel" class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px;">
+        <h2 style="margin:0;">Mentor &amp; Accelerator Cohort Portfolio</h2>
+        <button class="tab active" onclick="loadPortfolio(true)">Scan Cohort Folder</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <input id="pf-dir" class="box" style="margin:0;" placeholder="Parent directory containing startup workspaces (leave blank to auto-scan parent folder)..." onkeydown="if(event.key==='Enter')loadPortfolio(true)" />
+      </div>
+      <div id="pf-kpis" class="grid" style="margin-bottom:14px;"></div>
+      <div id="pf-table" style="color:var(--muted);">Loading Cohort Portfolio...</div>
     </div>
 
     <div id="resources-panel" class="panel">
@@ -213,8 +306,18 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
       <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
         <h2 style="margin:0;">Visual Pitch Deck Slide Editor (Zero JSON)</h2>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <select id="ed-theme" class="lang"><option value="obsidian-gold">Obsidian Gold</option><option value="emerald-slate">Emerald Slate</option><option value="paper-light">Paper Light</option></select>
+          <select id="ed-theme" class="lang" aria-label="Deck Theme" onchange="switchDeckTheme(this.value)">
+            <option value="midnight">Theme: Midnight</option>
+            <option value="ivory">Theme: Ivory</option>
+            <option value="emerald">Theme: Emerald</option>
+            <option value="crimson">Theme: Crimson</option>
+            <option value="obsidian-gold">Theme: Obsidian Gold</option>
+            <option value="midnight-emerald">Theme: Midnight Emerald</option>
+            <option value="editorial-light">Theme: Editorial Light</option>
+            <option value="cobalt-velocity">Theme: Cobalt Velocity</option>
+          </select>
           <span id="ed-score" class="pill">FI Score: —</span>
+          <span id="ed-status" style="font-size:12px;color:var(--muted);"></span>
           <button class="tab" onclick="addEditorSlide()">+ Add Slide</button>
           <button class="tab" onclick="selectTab('deck')">View Live Deck</button>
           <button class="tab active" onclick="saveDeckEdits()">Save &amp; Recompile Deck</button>
@@ -274,8 +377,22 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
     let currentTab = 'dashboard';
     let allResources = [];
     let lastFp = null;
-    let recognition = null, vcStart = null, vcTimerId = null;
+    let recognition = null, vcStart = null, vcElapsedSec = null, vcTimerId = null;
     let lastVoiceMd = '', lastWarRoomMd = '', lastBoardMd = '';
+    const THEME_PALETTE_KEYS = ['bg', 'surface', 'text', 'muted', 'accent', 'accent2', 'border'];
+    const SPEECH_LOCALES = {{
+      en: 'en-US', es: 'es-ES', zh: 'zh-CN', hi: 'hi-IN', ar: 'ar-SA',
+      pt: 'pt-BR', fr: 'fr-FR', de: 'de-DE', ja: 'ja-JP', ko: 'ko-KR'
+    }};
+
+    function escHtml(v) {{
+      return String(v === null || v === undefined ? '' : v)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }}
 
     function downloadReport(filename, content) {{
       if (!content) {{ alert('Run the report first before downloading.'); return; }}
@@ -316,6 +433,7 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
         if (tab === 'board') loadBoardReview();
         if (tab === 'x402') loadX402();
         if (tab === 'editor') loadDeckEditor();
+        if (tab === 'portfolio') loadPortfolio(false);
       }}
     }}
 
@@ -325,21 +443,22 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
       document.getElementById('ed-slides').innerHTML = (currentDeckObj.slides || []).map((s, i) => {{
         const bulletsHtml = Array.isArray(s.bullets) ? s.bullets.map((b, bi) => {{
           const txt = typeof b === 'string' ? b : ((b.label ? b.label + ': ' : '') + (b.text || ''));
-          return `<input class="box" style="margin:0;font-size:12px;" value="${{txt.replace(/"/g, '&quot;')}}" onchange="updateSlideBullet(${{i}}, ${{bi}}, this.value)" />`;
+          return `<div style="display:flex;gap:6px;align-items:center;"><input class="box" style="margin:0;font-size:12px;flex:1;" value="${{escHtml(txt)}}" onchange="updateSlideBullet(${{i}}, ${{bi}}, this.value)" /><button class="tab" style="padding:3px 8px;font-size:11px;border-color:#7f1d1d;color:#fca5a5;" onclick="removeSlideBullet(${{i}}, ${{bi}})" title="Remove bullet">×</button></div>`;
         }}).join('') : '';
         return `
           <div class="card">
             <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
-              <div class="cat">Slide ${{i+1}} • ${{s.type || 'bullets'}} • ${{s.kicker || ''}}</div>
+              <div class="cat">Slide ${{i+1}} • ${{escHtml(s.type || 'bullets')}} • ${{escHtml(s.kicker || '')}}</div>
               <div style="display:flex;gap:4px;">
+                <button class="tab" style="padding:2px 7px;font-size:11px;" onclick="addSlideBullet(${{i}})" title="Add Bullet">+ Bullet</button>
                 <button class="tab" style="padding:2px 7px;font-size:11px;" onclick="moveEditorSlide(${{i}}, -1)" title="Move Up">↑</button>
                 <button class="tab" style="padding:2px 7px;font-size:11px;" onclick="moveEditorSlide(${{i}}, 1)" title="Move Down">↓</button>
                 <button class="tab" style="padding:2px 8px;font-size:11px;border-color:#7f1d1d;color:#fca5a5;" onclick="removeEditorSlide(${{i}})">Remove</button>
               </div>
             </div>
-            <input class="box" style="margin:0;" value="${{(s.headline || '').replace(/"/g, '&quot;')}}" onchange="currentDeckObj.slides[${{i}}].headline = this.value" />
+            <input class="box" style="margin:0;" value="${{escHtml(s.headline || '')}}" onchange="currentDeckObj.slides[${{i}}].headline = this.value" />
             ${{bulletsHtml}}
-            <textarea class="box" rows="2" style="margin:0;" placeholder="Speaker notes..." onchange="currentDeckObj.slides[${{i}}].notes = this.value">${{s.notes || ''}}</textarea>
+            <textarea class="box" rows="2" style="margin:0;" placeholder="Speaker notes..." onchange="currentDeckObj.slides[${{i}}].notes = this.value">${{escHtml(s.notes || '')}}</textarea>
           </div>`;
       }}).join('');
     }}
@@ -354,9 +473,25 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
       }} else {{ s.bullets[bi] = val; }}
     }}
 
+    function addSlideBullet(si) {{
+      const s = currentDeckObj && currentDeckObj.slides && currentDeckObj.slides[si];
+      if (!s) return;
+      if (!Array.isArray(s.bullets)) s.bullets = [];
+      s.bullets.push({{ label: 'Proof', text: 'Add concise verified evidence [HYPOTHESIS]' }});
+      renderDeckEditor();
+    }}
+
+    function removeSlideBullet(si, bi) {{
+      const s = currentDeckObj && currentDeckObj.slides && currentDeckObj.slides[si];
+      if (!s || !Array.isArray(s.bullets)) return;
+      s.bullets.splice(bi, 1);
+      renderDeckEditor();
+    }}
+
     function addEditorSlide() {{
       if (!currentDeckObj) return;
-      const n = (currentDeckObj.slides || []).length + 1;
+      if (!Array.isArray(currentDeckObj.slides)) currentDeckObj.slides = [];
+      const n = currentDeckObj.slides.length + 1;
       currentDeckObj.slides.push({{
         id: 'slide-' + n, type: 'bullets', kicker: String(n).padStart(2, '0') + ' / NEW SLIDE',
         headline: 'Concise 10-Word Takeaway Headline [HYPOTHESIS]',
@@ -382,6 +517,31 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
       renderDeckEditor();
     }}
 
+    function _applyThemePresetToDeck(preset) {{
+      if (!currentDeckObj) return;
+      const prevPreset = currentDeckObj.theme && currentDeckObj.theme.preset;
+      currentDeckObj.theme = currentDeckObj.theme || {{}};
+      if (prevPreset !== preset) {{
+        for (const k of THEME_PALETTE_KEYS) delete currentDeckObj.theme[k];
+      }}
+      currentDeckObj.theme.preset = preset;
+    }}
+
+    async function switchDeckTheme(preset) {{
+      if (!currentDeckObj) return;
+      _applyThemePresetToDeck(preset);
+      const st = document.getElementById('ed-status');
+      if (st) st.textContent = 'Applying ' + preset + '...';
+      const r = await fetch('/api/deck', {{ method:'POST', headers:{{'Content-Type':'application/json'}}, body:JSON.stringify({{deck: currentDeckObj}}) }});
+      const d = await r.json();
+      if (d.ok) {{
+        document.getElementById('ed-score').textContent = 'FI Score: ' + d.lint.readinessScore + '/100';
+        if (st) st.textContent = 'Theme live: ' + preset;
+      }} else if (st) {{
+        st.textContent = 'Error: ' + (d.error || 'Theme update failed');
+      }}
+    }}
+
     let lastRhythmMd = '', lastRhythmFile = 'MONDAY_FOCUS.md';
     async function runRhythm(action) {{
       const r = await fetch('/api/weekly-rhythm', {{ method:'POST', headers:{{'Content-Type':'application/json'}}, body:JSON.stringify({{action}}) }});
@@ -405,17 +565,42 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
       a.href = URL.createObjectURL(blob); a.download = 'startup-antigravity-snapshot.json'; a.click();
     }}
 
+    function triggerImportSnapshot() {{
+      const inp = document.getElementById('import-snap-file');
+      if (inp) {{ inp.value = ''; inp.click(); }}
+    }}
+
+    async function importSnapshotFile(input) {{
+      const file = input && input.files && input.files[0];
+      if (!file) return;
+      try {{
+        const text = await file.text();
+        const payload = JSON.parse(text);
+        const r = await fetch('/api/import-snapshot', {{ method:'POST', headers:{{'Content-Type':'application/json'}}, body:JSON.stringify(payload) }});
+        const d = await r.json();
+        if (!d.ok) {{ alert('Snapshot import rejected: ' + (d.error || 'Invalid schema')); return; }}
+        alert('Workspace restored (' + (d.restoredStartupFiles || []).length + ' state files' + (d.deckRestored ? ' + pitch deck' : '') + ').\\nPre-restore backup saved to:\\n' + d.backupPath);
+        location.reload();
+      }} catch (e) {{
+        alert('Could not import snapshot: ' + e.message);
+      }}
+    }}
+
     async function loadDeckEditor() {{
       const r = await fetch('/api/deck');
       const d = await r.json();
       if (!d.ok) {{ document.getElementById('ed-slides').innerHTML = '<p>No pitch-deck/deck.json yet — click Setup Wizard first.</p>'; return; }}
       currentDeckObj = d.deck;
       document.getElementById('ed-score').textContent = 'FI Score: ' + d.lint.readinessScore + '/100';
-      if (currentDeckObj.theme && currentDeckObj.theme.preset) document.getElementById('ed-theme').value = currentDeckObj.theme.preset;
+      const sel = document.getElementById('ed-theme');
+      if (currentDeckObj.theme && currentDeckObj.theme.preset && Array.from(sel.options).some(o => o.value === currentDeckObj.theme.preset)) {{
+        sel.value = currentDeckObj.theme.preset;
+      }}
       renderDeckEditor();
     }}
 
     const FI_BANNED = ['revolutionary','disruptive','world-class','game-changing','synergy','unprecedented','best-in-class'];
+    const VOICE_FILLERS = ['um','uh','like','you know','basically','actually','literally','sort of','kind of','so yeah'];
     function updateOnboardPreview() {{
       const c = document.getElementById('ob-name').value.trim() || '[Company]';
       const o = document.getElementById('ob-offer').value.trim() || '[defined offering]';
@@ -427,20 +612,26 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
       const box = document.getElementById('ob-preview');
       if (found.length) {{
         box.style.borderColor = '#f59e0b';
-        box.innerHTML = `<strong style="color:#fbbf24;">Buzzword Warning (${{found.join(', ')}}):</strong> ${{sentence}}`;
+        box.innerHTML = `<strong style="color:#fbbf24;">Buzzword Warning (${{escHtml(found.join(', '))}}):</strong> ${{escHtml(sentence)}}`;
       }} else {{
         box.style.borderColor = '#10b981';
-        box.innerHTML = `<strong style="color:#34d399;">FI Pitch Lint Clean:</strong> ${{sentence}}`;
+        box.innerHTML = `<strong style="color:#34d399;">FI Pitch Lint Clean:</strong> ${{escHtml(sentence)}}`;
       }}
     }}
 
     async function saveDeckEdits() {{
       if (!currentDeckObj) return;
-      currentDeckObj.theme = currentDeckObj.theme || {{}};
-      currentDeckObj.theme.preset = document.getElementById('ed-theme').value;
+      _applyThemePresetToDeck(document.getElementById('ed-theme').value);
       const r = await fetch('/api/deck', {{ method:'POST', headers:{{'Content-Type':'application/json'}}, body:JSON.stringify({{deck: currentDeckObj}}) }});
       const d = await r.json();
-      if (d.ok) {{ document.getElementById('ed-score').textContent = 'FI Score: ' + d.lint.readinessScore + '/100'; alert('Pitch deck recompiled!'); }}
+      if (d.ok) {{
+        document.getElementById('ed-score').textContent = 'FI Score: ' + d.lint.readinessScore + '/100';
+        const st = document.getElementById('ed-status');
+        if (st) st.textContent = 'Saved & recompiled';
+        alert('Pitch deck recompiled!');
+      }} else {{
+        alert('Could not save deck: ' + (d.error || 'Unknown error'));
+      }}
     }}
 
     function openOnboardModal() {{ document.getElementById('onboard-modal').style.display = 'flex'; }}
@@ -465,45 +656,145 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
       if (d.ok) alert('Static deploy bundle ready in:\\n' + d.publishDir + '\\n\\nDrag-and-drop publish/ onto Netlify Drop or run: npx wrangler pages deploy publish');
     }}
 
+    function updateLiveVoiceTelemetry() {{
+      const txt = (document.getElementById('vc-transcript').value || '').trim();
+      const words = txt ? txt.split(/\\s+/).filter(Boolean).length : 0;
+      const elapsedSec = vcStart
+        ? Math.max(1, Math.round((Date.now() - vcStart) / 1000))
+        : (vcElapsedSec !== null ? Math.max(1, vcElapsedSec) : Math.max(1, Math.round(words / 2.4)));
+      const wpm = words ? Math.round((words / elapsedSec) * 60) : 0;
+      const wpmEl = document.getElementById('vc-live-wpm');
+      if (wpmEl) {{
+        wpmEl.textContent = wpm + ' WPM';
+        wpmEl.style.color = (wpm >= 125 && wpm <= 165) ? 'var(--accent)' : (wpm === 0 ? 'var(--muted)' : 'var(--amber)');
+      }}
+      const wEl = document.getElementById('vc-live-words');
+      if (wEl) wEl.textContent = words + ' words • ' + (vcStart ? elapsedSec + 's live' : (vcElapsedSec !== null ? elapsedSec + 's recorded' : 'est. ' + elapsedSec + 's'));
+
+      let fillerTotal = 0;
+      const fillerHits = [];
+      for (const f of VOICE_FILLERS) {{
+        const m = txt.match(new RegExp('\\\\b' + f.replace(/ /g, '\\\\s+') + '\\\\b', 'gi'));
+        if (m && m.length) {{ fillerTotal += m.length; fillerHits.push(f + '×' + m.length); }}
+      }}
+      const fEl = document.getElementById('vc-live-fillers');
+      if (fEl) fEl.textContent = String(fillerTotal);
+      const flEl = document.getElementById('vc-live-filler-list');
+      if (flEl) flEl.textContent = fillerHits.length ? fillerHits.join(', ') : 'Clean — zero filler words detected';
+
+      const buzzHits = FI_BANNED.filter(b => new RegExp('\\\\b' + b + '\\\\b', 'i').test(txt));
+      const bEl = document.getElementById('vc-live-buzz');
+      if (bEl) bEl.textContent = String(buzzHits.length);
+      const blEl = document.getElementById('vc-live-buzz-list');
+      if (blEl) blEl.textContent = buzzHits.length ? buzzHits.join(', ') : 'Clean — zero empty superlatives';
+    }}
+
+    function _stopVoiceMic(shouldScore, statusText) {{
+      if (vcStart) {{
+        vcElapsedSec = Math.max(1, Math.round((Date.now() - vcStart) / 1000));
+        vcStart = null;
+      }}
+      if (vcTimerId) {{ clearInterval(vcTimerId); vcTimerId = null; }}
+      if (recognition) {{
+        const activeRec = recognition;
+        recognition = null;
+        try {{ activeRec.stop(); }} catch (e) {{}}
+      }}
+      const btn = document.getElementById('vc-mic-btn');
+      if (btn) btn.textContent = 'Start 3-Min Mic Pitch';
+      const st = document.getElementById('vc-status');
+      if (st) {{
+        st.textContent = statusText || (shouldScore ? 'SCORING' : 'READY');
+        st.style.background = shouldScore ? '#064e3b' : '#1e293b';
+        st.style.color = shouldScore ? '#6ee7b7' : '#94a3b8';
+      }}
+      updateLiveVoiceTelemetry();
+      if (shouldScore) scoreVoicePitch();
+    }}
+
+    function resetVoiceRehearsal() {{
+      _stopVoiceMic(false, 'READY');
+      vcElapsedSec = null;
+      document.getElementById('vc-transcript').value = '';
+      const tEl = document.getElementById('vc-timer');
+      if (tEl) {{ tEl.textContent = '03:00'; tEl.style.background = '#064e3b'; }}
+      updateLiveVoiceTelemetry();
+    }}
+
     function toggleVoiceMic() {{
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
       const btn = document.getElementById('vc-mic-btn');
+      const st = document.getElementById('vc-status');
       if (!SR) {{ alert('Web Speech API not supported in this browser — paste your transcript and click Analyze Transcript.'); return; }}
       if (recognition) {{
-        recognition.stop(); recognition = null; clearInterval(vcTimerId);
-        btn.textContent = 'Start 3-Min Mic Pitch'; scoreVoicePitch(); return;
+        _stopVoiceMic(true, 'SCORING');
+        return;
       }}
-      recognition = new SR(); recognition.continuous = true; recognition.interimResults = true;
-      recognition.lang = document.getElementById('studio-lang').value || 'en-US';
+      const rec = new SR();
+      rec.continuous = true;
+      rec.interimResults = true;
+      const langCode = document.getElementById('studio-lang').value || 'en';
+      rec.lang = SPEECH_LOCALES[langCode] || langCode || 'en-US';
+      recognition = rec;
       vcStart = Date.now();
+      vcElapsedSec = null;
       btn.textContent = 'Stop & Score Pitch';
+      if (st) {{ st.textContent = 'LIVE REC'; st.style.background = '#7f1d1d'; st.style.color = '#fecaca'; }}
       vcTimerId = setInterval(() => {{
+        if (!vcStart) return;
         const rem = Math.max(0, 180 - Math.floor((Date.now() - vcStart) / 1000));
-        document.getElementById('vc-timer').textContent = String(Math.floor(rem/60)).padStart(2,'0') + ':' + String(rem%60).padStart(2,'0');
+        const tEl = document.getElementById('vc-timer');
+        tEl.textContent = String(Math.floor(rem/60)).padStart(2,'0') + ':' + String(rem%60).padStart(2,'0');
+        tEl.style.background = rem <= 15 ? '#7f1d1d' : (rem <= 30 ? '#78350f' : '#064e3b');
+        updateLiveVoiceTelemetry();
+        if (rem === 0) _stopVoiceMic(true, 'TIME UP');
       }}, 500);
-      recognition.onresult = (ev) => {{
+      rec.onresult = (ev) => {{
         let txt = ''; for (let i = 0; i < ev.results.length; i++) txt += ev.results[i][0].transcript + ' ';
         document.getElementById('vc-transcript').value = txt.trim();
+        updateLiveVoiceTelemetry();
       }};
-      recognition.start();
+      rec.onerror = (ev) => {{
+        _stopVoiceMic(false, 'MIC ERROR: ' + (ev && ev.error ? ev.error : 'unavailable'));
+      }};
+      rec.onend = () => {{
+        if (recognition === rec) _stopVoiceMic(false, 'STOPPED');
+      }};
+      rec.start();
     }}
 
     async function scoreVoicePitch() {{
       const transcript = document.getElementById('vc-transcript').value.trim();
       if (!transcript) return;
-      const dur = vcStart ? Math.max(10, (Date.now() - vcStart) / 1000) : 150;
+      updateLiveVoiceTelemetry();
+      const dur = vcStart
+        ? Math.max(10, (Date.now() - vcStart) / 1000)
+        : (vcElapsedSec !== null ? Math.max(10, vcElapsedSec) : 150);
       const r = await fetch('/api/voice-coach', {{ method:'POST', headers:{{'Content-Type':'application/json'}}, body:JSON.stringify({{transcript, duration_seconds: dur}}) }});
       const d = await r.json();
-      if (!d.ok) {{ document.getElementById('vc-results').innerHTML = d.error; return; }}
-      lastVoiceMd = `# Voice Pitch Coach Scorecard\\n\\n- **Clarity Score:** ${{d.clarityScore}}/100 (${{d.verdict}})\\n- **Pace:** ${{d.wordsPerMinute}} WPM (${{d.wordCount}} words)\\n- **Fillers:** ${{d.totalFillers}} • **Buzzwords:** ${{d.buzzwordsFound.join(', ') || 'None'}}\\n\\n## Feedback\\n` + d.coachingFeedback.map(f => '- ' + f).join('\\n');
+      if (!d.ok) {{ document.getElementById('vc-results').innerHTML = '<div class="card"><p style="color:#fca5a5;">' + escHtml(d.error || 'Voice scoring failed') + '</p></div>'; return; }}
+      lastVoiceMd = `# Voice Pitch Coach Scorecard\\n\\n- **Clarity Score:** ${{d.clarityScore}}/100 (${{d.verdict}})\\n- **Pace:** ${{d.wordsPerMinute}} WPM (${{d.wordCount}} words)\\n- **Fillers:** ${{d.totalFillers}} • **Buzzwords:** ${{(d.buzzwordsFound || []).join(', ') || 'None'}}\\n\\n## Feedback\\n` + (d.coachingFeedback || []).map(f => '- ' + f).join('\\n');
       document.getElementById('vc-results').innerHTML = `
         <div class="grid" style="margin-bottom:14px;">
-          <div class="card"><div class="cat">Clarity Score</div><div class="score-val">${{d.clarityScore}} / 100</div><div>${{d.verdict}}</div></div>
-          <div class="card"><div class="cat">Pace (WPM)</div><div class="score-val">${{d.wordsPerMinute}}</div><div>${{d.wordCount}} words</div></div>
-          <div class="card"><div class="cat">Fillers &amp; Buzzwords</div><div class="score-val">${{d.totalFillers + d.buzzwordsFound.length}}</div><div>Fillers: ${{d.totalFillers}} • Buzz: ${{d.buzzwordsFound.length}}</div></div>
+          <div class="card"><div class="cat">Clarity Score</div><div class="score-val">${{escHtml(d.clarityScore)}} / 100</div><div>${{escHtml(d.verdict)}}</div></div>
+          <div class="card"><div class="cat">Pace (WPM)</div><div class="score-val">${{escHtml(d.wordsPerMinute)}}</div><div>${{escHtml(d.wordCount)}} words</div></div>
+          <div class="card"><div class="cat">Fillers &amp; Buzzwords</div><div class="score-val">${{escHtml((d.totalFillers || 0) + (d.buzzwordsFound || []).length)}}</div><div>Fillers: ${{escHtml(d.totalFillers)}} • Buzz: ${{escHtml((d.buzzwordsFound || []).length)}}</div></div>
         </div>
-        <div class="card" style="margin-bottom:14px;"><div class="cat">Coaching Feedback</div>${{d.coachingFeedback.map(f => '<p>• '+f+'</p>').join('')}}</div>
-        <div class="grid">${{d.partnerGrillingQuestions.map(q => '<div class="card"><div class="cat">'+q.role+' Q&amp;A</div><p style="color:#e2e8f0;">'+q.question+'</p></div>').join('')}}</div>`;
+        <div class="card" style="margin-bottom:14px;"><div class="cat">Coaching Feedback</div>${{(d.coachingFeedback || []).map(f => '<p>• ' + escHtml(f) + '</p>').join('')}}</div>
+        <div class="grid">${{(d.partnerGrillingQuestions || []).map(q => '<div class="card"><div class="cat">' + escHtml(q.role) + ' Q&amp;A</div><p style="color:#e2e8f0;">' + escHtml(q.question) + '</p></div>').join('')}}</div>`;
+    }}
+
+    const WAR_ROOM_PRESETS = {{
+      pricing_shock: 'Pricing Shock: Should we raise ACV by 35% to protect >=80% gross margin, or respond to a competitor undercutting us by 30%?',
+      runway_crunch: 'Runway Crunch: Cash runway drops below 9 months — should we trim 25% burn, push annual-prepay Customer PACTs, or raise a bridge SAFE?',
+      pivot_audit: 'Pivot Audit: Should we narrow strictly to our highest-PMF HXC niche segment or pivot toward an adjacent ICP?'
+    }};
+
+    function runWarRoomPreset(key) {{
+      const prompt = WAR_ROOM_PRESETS[key];
+      if (!prompt) return;
+      document.getElementById('wr-question').value = prompt;
+      runWarRoom();
     }}
 
     async function runWarRoom() {{
@@ -513,11 +804,57 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
       box.innerHTML = 'Convening 4 executive lenses...';
       const r = await fetch('/api/war-room', {{ method:'POST', headers:{{'Content-Type':'application/json'}}, body:JSON.stringify({{question:q}}) }});
       const d = await r.json();
+      if (!d.ok) {{
+        box.innerHTML = '<div class="card"><p style="color:#fca5a5;">' + escHtml(d.error || 'War Room failed') + '</p></div>';
+        return;
+      }}
       lastWarRoomMd = `# Startup War Room Decision Memo\\n\\n- **Question:** ${{d.question}}\\n- **Decision:** ${{d.decision}}\\n\\n` + (d.perspectives||[]).map(p => `## ${{p.role}} (${{p.stance}})\\n${{p.argument}}\\n`).join('\\n');
       box.innerHTML = `
-        <div class="card" style="margin-bottom:14px;"><div class="cat">Unified Decision</div><div class="score-val" style="font-size:20px;">${{d.decision}}</div><p>Saved to docs/WAR_ROOM_DECISION_MEMO.md</p></div>
-        <div class="grid" style="margin-bottom:14px;">${{d.perspectives.map(p => '<div class="card"><div class="cat">'+p.role+' • '+p.stance+'</div><p style="color:#e2e8f0;">'+p.argument+'</p></div>').join('')}}</div>
-        <div class="card"><div class="cat">Immediate 7-Day Action Plan</div><ol style="margin:4px 0 0 18px;padding:0;color:#e2e8f0;">${{d.nextSteps.map(s => '<li>'+s+'</li>').join('')}}</ol></div>`;
+        <div class="card" style="margin-bottom:14px;"><div class="cat">Unified Decision</div><div class="score-val" style="font-size:20px;">${{escHtml(d.decision)}}</div><p>Saved to docs/WAR_ROOM_DECISION_MEMO.md</p></div>
+        <div class="grid" style="margin-bottom:14px;">${{(d.perspectives || []).map(p => '<div class="card"><div class="cat">' + escHtml(p.role) + ' • ' + escHtml(p.stance) + '</div><p style="color:#e2e8f0;">' + escHtml(p.argument) + '</p></div>').join('')}}</div>
+        <div class="card"><div class="cat">Immediate 7-Day Action Plan</div><ol style="margin:4px 0 0 18px;padding:0;color:#e2e8f0;">${{(d.nextSteps || []).map(s => '<li>' + escHtml(s) + '</li>').join('')}}</ol></div>`;
+    }}
+
+    async function loadPortfolio(useInput) {{
+      const inp = document.getElementById('pf-dir');
+      const dir = (useInput && inp && inp.value.trim()) ? ('?dir=' + encodeURIComponent(inp.value.trim())) : '';
+      const r = await fetch('/api/portfolio' + dir);
+      const d = await r.json();
+      if (!d.ok) {{
+        document.getElementById('pf-kpis').innerHTML = '';
+        document.getElementById('pf-table').innerHTML = '<div class="card"><p style="color:#fca5a5;">' + escHtml(d.error || 'Could not scan portfolio folder') + '</p></div>';
+        return;
+      }}
+      if (inp && !inp.value.trim()) inp.value = d.portfolioDir || '';
+      document.getElementById('pf-kpis').innerHTML = `
+        <div class="card"><div class="cat">Tracked Startups</div><div class="score-val">${{escHtml(d.startupCount)}}</div><p>${{escHtml(d.portfolioDir)}}</p></div>
+        <div class="card"><div class="cat">Combined Cohort MRR</div><div class="score-val">$${{Number(d.totalMrrUsd || 0).toLocaleString()}}</div></div>
+        <div class="card"><div class="cat">Avg 3-Lens Board Score</div><div class="score-val">${{escHtml(d.avgBoardScore)}} / 5.0</div></div>`;
+      const rows = (d.companies || []).map(c => `
+        <tr>
+          <td style="padding:10px;border-bottom:1px solid var(--border);"><strong>${{escHtml(c.name)}}</strong></td>
+          <td style="padding:10px;border-bottom:1px solid var(--border);"><span class="pill">${{escHtml(c.stage)}}</span></td>
+          <td style="padding:10px;border-bottom:1px solid var(--border);">$${{Number(c.mrrUsd || 0).toLocaleString()}}</td>
+          <td style="padding:10px;border-bottom:1px solid var(--border);">${{Number(c.grossMarginPct || 0).toFixed(0)}}%</td>
+          <td style="padding:10px;border-bottom:1px solid var(--border);">${{c.pmfPct !== null && c.pmfPct !== undefined ? escHtml(c.pmfPct) + '%' : '—'}}</td>
+          <td style="padding:10px;border-bottom:1px solid var(--border);"><strong>${{escHtml(c.boardScore)}} / 5.0</strong></td>
+          <td style="padding:10px;border-bottom:1px solid var(--border);color:var(--muted);font-size:12px;">${{escHtml(c.topAction)}}</td>
+          <td style="padding:10px;border-bottom:1px solid var(--border);"><button class="tab" style="padding:3px 9px;font-size:11px;" data-ws="${{escHtml(c.path || '')}}" onclick="switchWorkspace(this.dataset.ws)">Open</button></td>
+        </tr>`).join('');
+      document.getElementById('pf-table').innerHTML = `
+        <table style="width:100%;border-collapse:collapse;background:var(--nav);border:1px solid var(--border);border-radius:12px;overflow:hidden;font-size:13px;">
+          <thead><tr style="background:#111c33;color:var(--muted);text-align:left;">
+            <th style="padding:10px;">Startup</th><th style="padding:10px;">Stage</th><th style="padding:10px;">MRR</th><th style="padding:10px;">Margin</th><th style="padding:10px;">PMF</th><th style="padding:10px;">Board</th><th style="padding:10px;">#1 Bottleneck</th><th style="padding:10px;">Studio</th>
+          </tr></thead>
+          <tbody>${{rows || '<tr><td colspan="8" style="padding:18px;text-align:center;color:var(--muted);">No .startup/state.json workspaces found in this folder.</td></tr>'}}</tbody>
+        </table>`;
+    }}
+
+    async function switchWorkspace(wsPath) {{
+      if (!wsPath) return;
+      const r = await fetch('/api/workspace', {{ method:'POST', headers:{{'Content-Type':'application/json'}}, body:JSON.stringify({{workspace: wsPath}}) }});
+      const d = await r.json();
+      if (d.ok) location.reload(); else alert(d.error || 'Could not switch workspace');
     }}
 
     async function loadX402() {{
@@ -525,11 +862,11 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
       const d = await r.json();
       document.getElementById('x402-results').innerHTML = `
         <div class="grid" style="margin-bottom:14px;">
-          <div class="card"><div class="cat">Network</div><div class="score-val" style="font-size:20px;">${{d.network}}</div></div>
-          <div class="card"><div class="cat">Paid Agent Calls</div><div class="score-val">${{d.totalCalls}}</div></div>
+          <div class="card"><div class="cat">Network</div><div class="score-val" style="font-size:20px;">${{escHtml(d.network)}}</div></div>
+          <div class="card"><div class="cat">Paid Agent Calls</div><div class="score-val">${{escHtml(d.totalCalls)}}</div></div>
           <div class="card"><div class="cat">Total USDC Revenue</div><div class="score-val">$${{Number(d.totalRevenueUsdc).toFixed(2)}}</div></div>
         </div>
-        <div class="card"><div class="cat">Recent Metered Agent Calls</div>${{(d.events||[]).slice(-6).reverse().map(e => '<p>'+e.timestamp+' — <strong>'+e.agentId+'</strong> paid $'+e.amountUsdc+' USDC on '+e.network+'</p>').join('') || '<p>No paid calls yet.</p>'}}</div>`;
+        <div class="card"><div class="cat">Recent Metered Agent Calls</div>${{(d.events||[]).slice(-6).reverse().map(e => '<p>' + escHtml(e.timestamp) + ' — <strong>' + escHtml(e.agentId) + '</strong> paid $' + escHtml(e.amountUsdc) + ' USDC on ' + escHtml(e.network) + '</p>').join('') || '<p>No paid calls yet.</p>'}}</div>`;
     }}
 
     async function testUnpaid402() {{
@@ -549,12 +886,12 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
       lastBoardMd = `# Board Review Memo\\n\\n- **Overall:** ${{d.overallScore}}/5.0 (${{d.verdict}})\\n- **FI Mentor:** ${{d.scores.fiMentor}} • **VC Lab:** ${{d.scores.vcLabPartner}} • **PMF:** ${{d.scores.pmfTruthAuditor}}\\n\\n## Top 3 Actions\\n` + (d.topActions||[]).map((a,i) => (i+1)+'. '+a).join('\\n');
       box.innerHTML = `
         <div class="grid" style="margin-bottom:14px;">
-          <div class="card"><div class="cat">Overall Readiness</div><div class="score-val">${{d.overallScore}} / 5.0</div><div>${{d.verdict}}</div></div>
-          <div class="card"><div class="cat">FI Mentor</div><div class="score-val">${{d.scores.fiMentor}} / 5.0</div></div>
-          <div class="card"><div class="cat">VC Lab Partner</div><div class="score-val">${{d.scores.vcLabPartner}} / 5.0</div></div>
-          <div class="card"><div class="cat">PMF Truth Auditor</div><div class="score-val">${{d.scores.pmfTruthAuditor}} / 5.0</div></div>
+          <div class="card"><div class="cat">Overall Readiness</div><div class="score-val">${{escHtml(d.overallScore)}} / 5.0</div><div>${{escHtml(d.verdict)}}</div></div>
+          <div class="card"><div class="cat">FI Mentor</div><div class="score-val">${{escHtml(d.scores.fiMentor)}} / 5.0</div></div>
+          <div class="card"><div class="cat">VC Lab Partner</div><div class="score-val">${{escHtml(d.scores.vcLabPartner)}} / 5.0</div></div>
+          <div class="card"><div class="cat">PMF Truth Auditor</div><div class="score-val">${{escHtml(d.scores.pmfTruthAuditor)}} / 5.0</div></div>
         </div>
-        <div class="card"><div class="cat">Top 3 Prioritized 7-Day Actions</div><ol style="margin:4px 0 0 18px;padding:0;color:#e2e8f0;">${{(d.topActions||[]).map(a => '<li>'+a+'</li>').join('')}}</ol></div>`;
+        <div class="card"><div class="cat">Top 3 Prioritized 7-Day Actions</div><ol style="margin:4px 0 0 18px;padding:0;color:#e2e8f0;">${{(d.topActions||[]).map(a => '<li>' + escHtml(a) + '</li>').join('')}}</ol></div>`;
     }}
 
     function openMetricsModal() {{ document.getElementById('metrics-modal').style.display = 'flex'; }}
@@ -581,7 +918,7 @@ def render_studio_shell(workspace: Path, plugin_root: Path) -> str:
       const q = (document.getElementById('res-search').value || '').toLowerCase().trim();
       const filtered = allResources.filter(item => !q || [item.title, item.category, item.summary, item.keyTakeaway, (item.tags || []).join(' ')].join(' ').toLowerCase().includes(q));
       document.getElementById('res-grid').innerHTML = filtered.map(item => `
-        <div class="card"><div class="cat">${{item.category}} • ${{item.format}}</div><a href="${{item.url}}" target="_blank" rel="noopener">${{item.title}}</a><p>${{item.summary}}</p><div class="takeaway"><strong>Takeaway:</strong> ${{item.keyTakeaway}}</div></div>
+        <div class="card"><div class="cat">${{escHtml(item.category)}} • ${{escHtml(item.format)}}</div><a href="${{escHtml(item.url)}}" target="_blank" rel="noopener">${{escHtml(item.title)}}</a><p>${{escHtml(item.summary)}}</p><div class="takeaway"><strong>Takeaway:</strong> ${{escHtml(item.keyTakeaway)}}</div></div>
       `).join('');
     }}
 
@@ -628,6 +965,7 @@ def create_studio_server(
 
     from board_review import run_board_review  # noqa: E402
     from build_deck import build_deck, lint_deck  # noqa: E402
+    from portfolio import build_portfolio  # noqa: E402
     from voice_pitch_coach import analyze_voice_pitch  # noqa: E402
     from war_room import run_war_room  # noqa: E402
     from weekly_rhythm import build_publish_bundle, run_weekly_rhythm  # noqa: E402
@@ -653,8 +991,12 @@ def create_studio_server(
             self.end_headers()
             self.wfile.write(data)
 
-        def _read_json_body(self) -> dict[str, Any]:
+        def _read_json_body(self) -> Any:
             length = int(self.headers.get("Content-Length", "0"))
+            if length < 0:
+                raise ValueError("Invalid negative Content-Length.")
+            if length > MAX_JSON_BODY_BYTES:
+                raise ValueError(f"Request body exceeds maximum size of {MAX_JSON_BODY_BYTES // (1024 * 1024)} MB.")
             raw = self.rfile.read(length).decode("utf-8") if length > 0 else "{}"
             return json.loads(raw)
 
@@ -665,6 +1007,85 @@ def create_studio_server(
                 body = self._read_json_body()
             except Exception as exc:
                 self._send_bytes(json.dumps({"ok": False, "error": str(exc)}).encode("utf-8"), "application/json", 400)
+                return
+
+            if path == "/api/import-snapshot":
+                valid, err = validate_snapshot_payload(body)
+                if not valid:
+                    self._send_bytes(json.dumps({"ok": False, "error": err}).encode("utf-8"), "application/json", 400)
+                    return
+
+                # Automatic pre-restore backup
+                sdir = ws / ".startup"
+                backup_dir = sdir / "backups"
+                backup_dir.mkdir(parents=True, exist_ok=True)
+                ts = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
+                backup_snap = _build_snapshot_dict(ws)
+                backup_path = backup_dir / f"pre-restore-{ts}.json"
+                backup_path.write_text(json.dumps(backup_snap, indent=2), encoding="utf-8")
+
+                try:
+                    # Restore validated .startup/*.json files and remove stale top-level JSON files
+                    restored_files: list[str] = []
+                    incoming_startup = body.get("startup")
+                    if isinstance(incoming_startup, dict) and incoming_startup:
+                        incoming_names = set(incoming_startup.keys())
+                        for existing_jf in sorted(sdir.glob("*.json")):
+                            if existing_jf.name not in incoming_names:
+                                existing_jf.unlink()
+                        for fname, content in incoming_startup.items():
+                            (sdir / fname).write_text(json.dumps(content, indent=2), encoding="utf-8")
+                            restored_files.append(fname)
+
+                    # Restore pitch-deck/deck.json & recompile if provided
+                    deck_restored = False
+                    if isinstance(body.get("deck"), dict):
+                        pdir = ws / "pitch-deck"
+                        pdir.mkdir(parents=True, exist_ok=True)
+                        deck_file = pdir / "deck.json"
+                        deck_file.write_text(json.dumps(body["deck"], indent=2), encoding="utf-8")
+                        build_deck(deck_file)
+                        deck_restored = True
+
+                    _rebuild_views(ws, p_root)
+                except Exception as exc:
+                    # Roll back workspace from pre-restore backup on failure
+                    prev_startup = backup_snap.get("startup") or {}
+                    for existing_jf in sorted(sdir.glob("*.json")):
+                        if existing_jf.name not in prev_startup:
+                            existing_jf.unlink()
+                    for fname, content in prev_startup.items():
+                        (sdir / fname).write_text(json.dumps(content, indent=2), encoding="utf-8")
+                    if isinstance(backup_snap.get("deck"), dict):
+                        deck_file = ws / "pitch-deck" / "deck.json"
+                        deck_file.parent.mkdir(parents=True, exist_ok=True)
+                        deck_file.write_text(json.dumps(backup_snap["deck"], indent=2), encoding="utf-8")
+                        try:
+                            build_deck(deck_file)
+                        except Exception:
+                            pass
+                    self._send_bytes(
+                        json.dumps({"ok": False, "error": f"Snapshot restore failed and was rolled back: {exc}"}).encode("utf-8"),
+                        "application/json",
+                        400,
+                    )
+                    return
+
+                self._send_bytes(
+                    json.dumps(
+                        {
+                            "ok": True,
+                            "restoredStartupFiles": restored_files,
+                            "deckRestored": deck_restored,
+                            "backupPath": str(backup_path),
+                        }
+                    ).encode("utf-8"),
+                    "application/json",
+                )
+                return
+
+            if not isinstance(body, dict):
+                self._send_bytes(json.dumps({"ok": False, "error": "JSON object body required"}).encode("utf-8"), "application/json", 400)
                 return
 
             if path == "/api/workspace":
@@ -750,9 +1171,17 @@ def create_studio_server(
                 pdir = ws / "pitch-deck"
                 pdir.mkdir(parents=True, exist_ok=True)
                 deck_file = pdir / "deck.json"
+                # If theme.preset changed from previous deck.json, drop stale palette overrides so the new preset takes effect
+                prev_deck = _load_json(deck_file, {})
+                prev_preset = (prev_deck.get("theme") or {}).get("preset") if isinstance(prev_deck, dict) else None
+                new_theme = deck_obj.get("theme")
+                if isinstance(new_theme, dict) and new_theme.get("preset") and new_theme.get("preset") != prev_preset:
+                    for key in THEME_PALETTE_KEYS:
+                        new_theme.pop(key, None)
                 deck_file.write_text(json.dumps(deck_obj, indent=2), encoding="utf-8")
                 lint_res = lint_deck(deck_obj)
                 build_deck(deck_file)
+                _rebuild_views(ws, p_root)
                 self._send_bytes(json.dumps({"ok": True, "lint": lint_res}).encode("utf-8"), "application/json")
                 return
 
@@ -809,6 +1238,17 @@ def create_studio_server(
                 self._send_bytes(json.dumps(run_board_review(ws, write_memo=True)).encode("utf-8"), "application/json")
                 return
 
+            if path == "/api/portfolio":
+                qs = parse_qs(parsed.query)
+                req_dir = (qs.get("dir") or [""])[0].strip()
+                target_dir = Path(req_dir).expanduser().resolve() if req_dir else ws.parent.resolve()
+                try:
+                    res = build_portfolio(target_dir, write_html=False)
+                    self._send_bytes(json.dumps(res).encode("utf-8"), "application/json")
+                except Exception as exc:
+                    self._send_bytes(json.dumps({"ok": False, "error": str(exc)}).encode("utf-8"), "application/json", 400)
+                return
+
             if path == "/api/x402/ledger":
                 self._send_bytes(json.dumps(load_x402_ledger(ws)).encode("utf-8"), "application/json")
                 return
@@ -823,15 +1263,7 @@ def create_studio_server(
                 return
 
             if path == "/api/export-snapshot":
-                snap: dict[str, Any] = {"ok": True, "workspace": ws.name, "startup": {}, "deck": None}
-                sdir = ws / ".startup"
-                if sdir.exists():
-                    for jf in sorted(sdir.glob("*.json")):
-                        snap["startup"][jf.name] = _load_json(jf, {})
-                deck_file = ws / "pitch-deck" / "deck.json"
-                if deck_file.exists():
-                    snap["deck"] = _load_json(deck_file, None)
-                self._send_bytes(json.dumps(snap, indent=2).encode("utf-8"), "application/json")
+                self._send_bytes(json.dumps(_build_snapshot_dict(ws), indent=2).encode("utf-8"), "application/json")
                 return
 
             if path == "/api/resources":
@@ -844,7 +1276,7 @@ def create_studio_server(
             if path.startswith("/workspace/"):
                 rel = path[len("/workspace/"):].lstrip("/")
                 target = (ws / rel).resolve()
-                if not str(target).startswith(str(ws)):
+                if not target.is_relative_to(ws.resolve()):
                     self._send_bytes(b"Forbidden", "text/plain", 403)
                     return
                 if not target.exists() or not target.is_file():

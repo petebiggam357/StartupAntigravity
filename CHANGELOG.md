@@ -4,6 +4,19 @@ All notable changes to **Startup Antigravity — Ethical Venture OS** are docume
 
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.5.0-beta] - 2026-11-26
+
+Major Web Studio UX & Standalone Investor Portal leap for **Startup Antigravity — Ethical Venture OS**.
+
+### Added & Improved in 0.5.0-beta
+- **1-Click Snapshot Import / Restore (`POST /api/import-snapshot` in `launcher/studio_server.py`)**: Pairs Export Snapshot with strict schema validation (rejecting path traversal, invalid filenames, and malformed JSON structures) plus automatic pre-restore backups saved under `.startup/backups/pre-restore-*.json`.
+- **Slide Add/Delete, Bullet Controls & Live Theme Switcher (`launcher/studio_server.py` + `build_deck.py`)**: Added `midnight`, `ivory`, `emerald`, and `crimson` deck theme presets (alongside existing presets) with live instant recompilation from the Visual Slide Editor dropdown and per-slide `+ Bullet` / `×` controls.
+- **Interactive War Room Scenario Presets & Board Review Cross-Navigation (`launcher/studio_server.py` + `war_room.py`)**: Added 1-click **Pricing Shock**, **Runway Crunch**, and **Pivot Audit** scenario presets in the Local Web Studio with tailored 4-executive arguments.
+- **Embedded Cohort Portfolio View (`GET /api/portfolio` in `launcher/studio_server.py` + `launcher/portfolio.py`)**: Added a dedicated **Portfolio** tab inside the Web Studio so FI Directors and mentors can inspect multiple startups in one browser tab and switch active workspaces in 1 click.
+- **Browser Voice Pitch Rehearsal Studio (`launcher/studio_server.py`)**: Upgraded the Web Speech API Voice Coach with real-time **WPM pace**, **word count**, **live filler-word detection** (`um`, `uh`, `like`, `you know`, `basically`, etc.), and **FI buzzword alerts** that pipe directly into `voice_pitch_coach`.
+- **1-Click Single-File Interactive Investor Data Room Portal (`build_data_room.py`)**: Upgraded `data-room/index.html` into a self-contained, 5-tab single-file HTML Investor Portal bundling the embedded 16:9 Pitch Deck, interactive 12-Month What-If Financial Model, PII-redacted PACT Pipeline, For-Progress iKPI Ledger, and expandable Due-Diligence Q&A — ready to drop on GitHub Pages or share privately.
+- **Automated GitHub Pages Showcase Smoke Check (`scripts/smoke_test_pages.py`)**: Zero-dependency HTTP/HTML/link verifier with optional `--playwright` headless Chromium validation wired into `.github/workflows/pages.yml` and `.github/workflows/ci.yml`.
+
 ## [0.4.2-beta] - 2026-11-22
 
 Founder Studio & Mentor Portfolio UX polish release for **Startup Antigravity — Ethical Venture OS**.

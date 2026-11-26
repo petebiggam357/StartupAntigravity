@@ -410,6 +410,391 @@ class TestNativeAppPackages(unittest.TestCase):
         ):
             self.assertTrue((ROOT / rel).exists(), f"Missing {rel}")
 
+    def test_v050_snapshot_import_validation_and_backup(self) -> None:
+        import threading
+        import urllib.error
+        import urllib.request
+
+        sys.path.insert(0, str(ROOT / "launcher"))
+        from studio_server import create_studio_server  # noqa: E402
+
+        with tempfile.TemporaryDirectory() as tmp:
+            demo_dir = Path(tmp) / "demo"
+            subprocess.run(
+                [sys.executable, str(ROOT / "scripts" / "generate_demo_workspace.py"), "--output", str(demo_dir)],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+
+            server = create_studio_server(demo_dir, plugin_root=ROOT, port=0)
+            port = server.server_address[1]
+            t = threading.Thread(target=server.serve_forever, daemon=True)
+            t.start()
+            try:
+                base = f"http://127.0.0.1:{port}"
+                original_snap = json.loads(urllib.request.urlopen(base + "/api/export-snapshot").read().decode("utf-8"))
+                original_mrr = original_snap["startup"]["state.json"]["metrics"]["mrrUsd"]
+
+                # Mutate MRR before restore so we can verify both restore and pre-restore backup
+                req_mut = urllib.request.Request(
+                    base + "/api/metrics",
+                    data=json.dumps({"mrrUsd": 99999}).encode("utf-8"),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+                urllib.request.urlopen(req_mut)
+
+                # Reject invalid snapshot schemas (path traversal, bad extension, empty, bad deck)
+                bad_payloads = [
+                    {},
+                    {"startup": {"../evil.json": {"a": 1}}},
+                    {"startup": {"state.txt": {"a": 1}}},
+                    {"startup": {"state.json": ["not-a-dict"]}},
+                    {"startup": {}, "deck": {"slides": "not-a-list"}},
+                ]
+                for bad in bad_payloads:
+                    req_bad = urllib.request.Request(
+                        base + "/api/import-snapshot",
+                        data=json.dumps(bad).encode("utf-8"),
+                        headers={"Content-Type": "application/json"},
+                        method="POST",
+                    )
+                    with self.assertRaises(urllib.error.HTTPError) as ctx_bad:
+                        urllib.request.urlopen(req_bad)
+                    self.assertEqual(ctx_bad.exception.code, 400)
+
+                # Valid restore succeeds, restores original MRR, and writes pre-restore backup
+                req_ok = urllib.request.Request(
+                    base + "/api/import-snapshot",
+                    data=json.dumps(original_snap).encode("utf-8"),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+                res_ok = json.loads(urllib.request.urlopen(req_ok).read().decode("utf-8"))
+                self.assertTrue(res_ok["ok"])
+                self.assertTrue(res_ok["deckRestored"])
+                self.assertIn("state.json", res_ok["restoredStartupFiles"])
+
+                backup_path = Path(res_ok["backupPath"])
+                self.assertTrue(backup_path.exists())
+                backup_data = json.loads(backup_path.read_text(encoding="utf-8"))
+                self.assertEqual(backup_data["startup"]["state.json"]["metrics"]["mrrUsd"], 99999.0)
+
+                restored_state = json.loads((demo_dir / ".startup" / "state.json").read_text(encoding="utf-8"))
+                self.assertEqual(restored_state["metrics"]["mrrUsd"], original_mrr)
+            finally:
+                server.shutdown()
+                server.server_close()
+
+    def test_v050_studio_portfolio_warroom_presets_voice_rehearsal_and_themes(self) -> None:
+        import threading
+        import urllib.request
+
+        sys.path.insert(0, str(ROOT / "launcher"))
+        from studio_server import create_studio_server  # noqa: E402
+
+        with tempfile.TemporaryDirectory() as tmp:
+            cohort = Path(tmp) / "cohort"
+            ws1 = cohort / "claimpulse"
+            ws2 = cohort / "solarledger"
+            subprocess.run(
+                [sys.executable, str(ROOT / "scripts" / "generate_demo_workspace.py"), "--output", str(ws1)],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            (ws2 / ".startup").mkdir(parents=True, exist_ok=True)
+            (ws2 / ".startup" / "state.json").write_text(
+                json.dumps({"companyName": "SolarLedger", "stage": "mvp", "metrics": {"mrrUsd": 8200, "grossMarginPct": 82}}),
+                encoding="utf-8",
+            )
+
+            server = create_studio_server(ws1, plugin_root=ROOT, port=0)
+            port = server.server_address[1]
+            t = threading.Thread(target=server.serve_forever, daemon=True)
+            t.start()
+            try:
+                base = f"http://127.0.0.1:{port}"
+                shell = urllib.request.urlopen(base + "/").read().decode("utf-8")
+                for marker in (
+                    "importSnapshotFile",
+                    "switchDeckTheme",
+                    "runWarRoomPreset",
+                    "loadPortfolio",
+                    "updateLiveVoiceTelemetry",
+                    "vc-live-wpm",
+                    "vc-live-fillers",
+                    'value="midnight"',
+                    'value="ivory"',
+                    'value="emerald"',
+                    'value="crimson"',
+                ):
+                    self.assertIn(marker, shell, f"Studio shell missing {marker}")
+
+                # Embedded Cohort Portfolio API
+                pf = json.loads(urllib.request.urlopen(base + "/api/portfolio").read().decode("utf-8"))
+                self.assertTrue(pf["ok"])
+                self.assertEqual(pf["startupCount"], 2)
+                self.assertIsNone(pf["htmlPath"])
+                names = {c["name"] for c in pf["companies"]}
+                self.assertIn("ClaimPulse", names)
+                self.assertIn("SolarLedger", names)
+
+                # War Room Scenario Presets
+                for prompt, expected_snippet in (
+                    ("Pricing Shock: Should we raise ACV by 35%?", "price war"),
+                    ("Runway Crunch: Cash runway drops below 9 months", "Runway defense"),
+                    ("Pivot Audit: Should we pivot to an adjacent ICP?", "pivot"),
+                ):
+                    req = urllib.request.Request(
+                        base + "/api/war-room",
+                        data=json.dumps({"question": prompt}).encode("utf-8"),
+                        headers={"Content-Type": "application/json"},
+                        method="POST",
+                    )
+                    wr = json.loads(urllib.request.urlopen(req).read().decode("utf-8"))
+                    self.assertTrue(wr["ok"])
+                    self.assertEqual(len(wr["perspectives"]), 4)
+                    combined = " ".join(p["argument"].lower() for p in wr["perspectives"])
+                    self.assertIn(expected_snippet.lower(), combined)
+
+                # Live Theme Switching via POST /api/deck
+                dk = json.loads(urllib.request.urlopen(base + "/api/deck").read().decode("utf-8"))["deck"]
+                for preset, expected_bg in (
+                    ("midnight", "#0B1120"),
+                    ("ivory", "#FAF8F5"),
+                    ("emerald", "#041410"),
+                    ("crimson", "#14080C"),
+                ):
+                    dk["theme"] = {"preset": preset}
+                    req_dk = urllib.request.Request(
+                        base + "/api/deck",
+                        data=json.dumps({"deck": dk}).encode("utf-8"),
+                        headers={"Content-Type": "application/json"},
+                        method="POST",
+                    )
+                    res_dk = json.loads(urllib.request.urlopen(req_dk).read().decode("utf-8"))
+                    self.assertTrue(res_dk["ok"])
+                    compiled = (ws1 / "pitch-deck" / "index.html").read_text(encoding="utf-8")
+                    self.assertIn(expected_bg, compiled)
+            finally:
+                server.shutdown()
+                server.server_close()
+
+    def test_v050_single_file_investor_portal_and_pages_smoke_test(self) -> None:
+        sys.path.insert(0, str(ROOT / "skills" / "vc-lab-fundraising-os" / "scripts"))
+        from build_data_room import build_data_room  # noqa: E402
+
+        with tempfile.TemporaryDirectory() as tmp:
+            demo_dir = Path(tmp) / "demo"
+            subprocess.run(
+                [sys.executable, str(ROOT / "scripts" / "generate_demo_workspace.py"), "--output", str(demo_dir)],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            dr = build_data_room(demo_dir)
+            self.assertTrue(dr["ok"])
+            self.assertTrue(dr["singleFilePortal"])
+            self.assertEqual(dr["embeddedSlideCount"], 13)
+            portal_html = Path(dr["portalHtml"]).read_text(encoding="utf-8")
+            for marker in (
+                "sec-overview",
+                "sec-deck",
+                "sec-financials",
+                "sec-pacts",
+                "sec-diligence",
+                "PORTAL_SLIDES",
+                "renderFinancialModel",
+                "Investor Due-Diligence Q&amp;A",
+                "For-Progress Impact Ledger",
+                "DR_I18N",
+            ):
+                self.assertIn(marker, portal_html, f"Single-file Investor Portal missing {marker}")
+
+        # Run automated GitHub Pages showcase smoke test
+        smoke = subprocess.run(
+            [sys.executable, str(ROOT / "scripts" / "smoke_test_pages.py")],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        smoke_res = json.loads(smoke.stdout)
+        self.assertTrue(smoke_res["ok"])
+        self.assertEqual(smoke_res["errors"], [])
+        self.assertIn("/demo/data-room/index.html", smoke_res["checkedRoutes"])
+
+    def test_v050_regressions_theme_strip_portal_all_slides_and_stale_snapshot_cleanup(self) -> None:
+        import re
+        import shutil
+        import threading
+        import urllib.error
+        import urllib.request
+
+        sys.path.insert(0, str(ROOT / "launcher"))
+        from studio_server import create_studio_server, render_studio_shell  # noqa: E402
+        sys.path.insert(0, str(ROOT / "skills" / "vc-lab-fundraising-os" / "scripts"))
+        from build_data_room import build_data_room  # noqa: E402
+
+        with tempfile.TemporaryDirectory() as tmp:
+            demo_dir = Path(tmp) / "demo"
+            subprocess.run(
+                [sys.executable, str(ROOT / "scripts" / "generate_demo_workspace.py"), "--output", str(demo_dir)],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+
+            server = create_studio_server(demo_dir, plugin_root=ROOT, port=0)
+            port = server.server_address[1]
+            t = threading.Thread(target=server.serve_forever, daemon=True)
+            t.start()
+            try:
+                base = f"http://127.0.0.1:{port}"
+
+                # 1. Real deck has explicit bg/surface/text keys; mutating ONLY theme.preset must still switch palette
+                dk = json.loads(urllib.request.urlopen(base + "/api/deck").read().decode("utf-8"))["deck"]
+                self.assertIn("bg", dk["theme"])  # confirm demo deck has hardcoded palette keys
+                dk["theme"]["preset"] = "ivory"
+                req_dk = urllib.request.Request(
+                    base + "/api/deck",
+                    data=json.dumps({"deck": dk}).encode("utf-8"),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+                res_dk = json.loads(urllib.request.urlopen(req_dk).read().decode("utf-8"))
+                self.assertTrue(res_dk["ok"])
+                compiled = (demo_dir / "pitch-deck" / "index.html").read_text(encoding="utf-8")
+                self.assertIn("#FAF8F5", compiled)
+                self.assertNotIn("--bg: #090D16", compiled)
+
+                # 2. Snapshot import rejects hidden/empty-stem filenames & cleans up stale .startup/*.json files
+                for bad_name in (".json", ".hidden.json"):
+                    req_bad = urllib.request.Request(
+                        base + "/api/import-snapshot",
+                        data=json.dumps({"startup": {bad_name: {"a": 1}}}).encode("utf-8"),
+                        headers={"Content-Type": "application/json"},
+                        method="POST",
+                    )
+                    with self.assertRaises(urllib.error.HTTPError) as ctx_bad:
+                        urllib.request.urlopen(req_bad)
+                    self.assertEqual(ctx_bad.exception.code, 400)
+
+                orig_snap = json.loads(urllib.request.urlopen(base + "/api/export-snapshot").read().decode("utf-8"))
+                stale_file = demo_dir / ".startup" / "stale_extra.json"
+                stale_file.write_text(json.dumps({"stale": True}), encoding="utf-8")
+                self.assertTrue(stale_file.exists())
+
+                req_restore = urllib.request.Request(
+                    base + "/api/import-snapshot",
+                    data=json.dumps(orig_snap).encode("utf-8"),
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+                res_restore = json.loads(urllib.request.urlopen(req_restore).read().decode("utf-8"))
+                self.assertTrue(res_restore["ok"])
+                self.assertFalse(stale_file.exists(), "Stale .startup/*.json file should be removed on restore")
+                backup_snap = json.loads(Path(res_restore["backupPath"]).read_text(encoding="utf-8"))
+                self.assertIn("stale_extra.json", backup_snap["startup"])
+            finally:
+                server.shutdown()
+                server.server_close()
+
+            # 3. Execute generated JS in Node.js (when available) to verify all 13 Investor Portal slides & Studio helpers
+            if shutil.which("node"):
+                dr = build_data_room(demo_dir)
+                portal_html = Path(dr["portalHtml"]).read_text(encoding="utf-8")
+                portal_js = re.findall(r"<script[^>]*>(.*?)</script>", portal_html, re.S)[0]
+                studio_html = render_studio_shell(demo_dir, ROOT)
+                studio_js = re.findall(r"<script[^>]*>(.*?)</script>", studio_html, re.S)[0]
+
+                harness = Path(tmp) / "verify_js.js"
+                harness.write_text(
+                    """
+const vm = require('vm');
+const fs = require('fs');
+const assert = require('assert');
+
+function makeDom() {
+  const els = {};
+  const getEl = (id) => {
+    if (!els[id]) {
+      els[id] = { id, textContent: '', innerHTML: '', value: '', style: {}, dataset: {}, options: [], classList: { toggle() {}, contains() { return false; } } };
+    }
+    return els[id];
+  };
+  return {
+    els,
+    document: {
+      documentElement: { lang: 'en', dir: 'ltr' },
+      getElementById: getEl,
+      querySelectorAll: () => [],
+      addEventListener: () => {},
+      createElement: () => ({ click() {}, style: {} }),
+    },
+    localStorage: { getItem: () => null, setItem: () => {} },
+    setInterval: () => 1,
+    clearInterval: () => {},
+    fetch: async () => ({ json: async () => ({ ok: true }) }),
+    URL: { createObjectURL: () => '' },
+    Blob: class {},
+    alert: () => {},
+    window: {},
+  };
+}
+
+// A. Verify Investor Portal renders ALL 13 slides with non-empty bodies + XSS escaping + $0 burn
+const pDom = makeDom();
+pDom.document.getElementById('fm-growth').value = '10';
+pDom.document.getElementById('fm-burn-adj').value = '0';
+const pCtx = vm.createContext(pDom);
+vm.runInContext(fs.readFileSync(process.argv[2], 'utf8'), pCtx);
+const slidesCount = vm.runInContext('PORTAL_SLIDES.length', pCtx);
+assert.strictEqual(slidesCount, 13);
+for (let i = 0; i < slidesCount; i++) {
+  vm.runInContext(`portalSlideIdx = ${i}; renderPortalSlide();`, pCtx);
+  const bullets = pDom.els['ps-bullets'].innerHTML.trim();
+  const body = pDom.els['ps-body'].innerHTML.trim();
+  const sub = pDom.els['ps-sub'].textContent.trim();
+  assert.ok(bullets.length > 0 || body.length > 0 || sub.length > 0, `Slide ${i + 1} rendered empty body`);
+}
+// XSS check in renderPortalSlide
+vm.runInContext(`PORTAL_SLIDES.push({ kicker: 'XSS', headline: 'Test', bullets: ['<img src=x onerror=alert(1)>'] }); portalSlideIdx = PORTAL_SLIDES.length - 1; renderPortalSlide();`, pCtx);
+assert.ok(pDom.els['ps-bullets'].innerHTML.includes('&lt;img'), 'Bullet HTML must be escaped');
+assert.ok(!pDom.els['ps-bullets'].innerHTML.includes('<img'), 'Raw <img> must not appear');
+// $0 burn check
+vm.runInContext('BASE_FIN.burn = 0; renderFinancialModel();', pCtx);
+assert.ok(pDom.els['fm-summary'].textContent.includes('Default-Alive ($0 monthly burn)'));
+
+// B. Verify Studio JS theme preset strip + live voice telemetry + escHtml
+const sDom = makeDom();
+const sCtx = vm.createContext(sDom);
+vm.runInContext(fs.readFileSync(process.argv[3], 'utf8'), sCtx);
+assert.strictEqual(vm.runInContext(`escHtml('<script>"x"</script>')`, sCtx), '&lt;script&gt;&quot;x&quot;&lt;/script&gt;');
+vm.runInContext(`currentDeckObj = { theme: { preset: 'obsidian-gold', bg: '#090D16', text: '#F8FAFC' }, slides: [] }; _applyThemePresetToDeck('ivory');`, sCtx);
+assert.strictEqual(vm.runInContext('currentDeckObj.theme.preset', sCtx), 'ivory');
+assert.strictEqual(vm.runInContext('currentDeckObj.theme.bg', sCtx), undefined);
+sDom.document.getElementById('vc-transcript').value = 'Um we are building a revolutionary platform, uh like you know basically great.';
+vm.runInContext('updateLiveVoiceTelemetry();', sCtx);
+assert.strictEqual(sDom.els['vc-live-fillers'].textContent, '5');
+assert.strictEqual(sDom.els['vc-live-buzz'].textContent, '1');
+console.log('NODE_JS_VERIFIED_OK');
+""",
+                    encoding="utf-8",
+                )
+                p_js = Path(tmp) / "portal.js"
+                s_js = Path(tmp) / "studio.js"
+                p_js.write_text(portal_js, encoding="utf-8")
+                s_js.write_text(studio_js, encoding="utf-8")
+                node_res = subprocess.run(
+                    ["node", str(harness), str(p_js), str(s_js)],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                )
+                self.assertIn("NODE_JS_VERIFIED_OK", node_res.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

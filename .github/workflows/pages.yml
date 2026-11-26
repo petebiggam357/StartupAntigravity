@@ -32,6 +32,9 @@ jobs:
       - name: Build public showcase & live SolarLedger demo
         run: python scripts/build_site.py --out-dir site_dist
 
+      - name: Smoke-test GitHub Pages showcase & single-file Investor Portal
+        run: python scripts/smoke_test_pages.py --site-dir site_dist
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
 

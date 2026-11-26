@@ -34,7 +34,12 @@ def _load_json(path: Path, default: Any) -> Any:
         return default
 
 
-def build_portfolio(parent_dir: Path, out_html: Path | None = None, open_browser: bool = False) -> dict[str, Any]:
+def build_portfolio(
+    parent_dir: Path,
+    out_html: Path | None = None,
+    open_browser: bool = False,
+    write_html: bool = True,
+) -> dict[str, Any]:
     root = parent_dir.resolve()
     if not root.exists() or not root.is_dir():
         raise FileNotFoundError(f"Portfolio directory not found: {root}")
@@ -143,14 +148,15 @@ def build_portfolio(parent_dir: Path, out_html: Path | None = None, open_browser
 </html>
 """
     dest = (out_html or (root / "cohort-portfolio.html")).resolve()
-    dest.write_text(page_html, encoding="utf-8")
-    if open_browser:
-        webbrowser.open(dest.as_uri())
+    if write_html:
+        dest.write_text(page_html, encoding="utf-8")
+        if open_browser:
+            webbrowser.open(dest.as_uri())
 
     return {
         "ok": True,
         "portfolioDir": str(root),
-        "htmlPath": str(dest),
+        "htmlPath": str(dest) if write_html else None,
         "startupCount": len(companies),
         "totalMrrUsd": round(total_mrr, 2),
         "avgBoardScore": avg_board,

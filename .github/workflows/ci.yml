@@ -30,3 +30,6 @@ jobs:
 
       - name: Verify clean release ZIP packaging
         run: python scripts/package_release.py
+
+      - name: Smoke-test GitHub Pages showcase & live demo
+        run: python scripts/smoke_test_pages.py
